@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../widgets/flomart_bottom_nav.dart';
 import '../widgets/flomart_header.dart';
+import './blog_detail.dart';
 
 class BlogPage extends StatelessWidget {
   const BlogPage({super.key});
@@ -217,14 +218,24 @@ class BlogPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Baca Lebih Lanjut',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: primaryGreen,
-              ),
-            ),
+            GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const BlogDetailPage(),
+      ),
+    );
+  },
+  child: const Text(
+    'Baca Lebih Lanjut',
+    style: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w700,
+      color: primaryGreen,
+    ),
+  ),
+),
           ],
         ),
       ),
