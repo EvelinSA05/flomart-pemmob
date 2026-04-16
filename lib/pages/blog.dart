@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/flomart_bottom_nav.dart';
+import '../widgets/flomart_header.dart';
+
 class BlogPage extends StatelessWidget {
   const BlogPage({super.key});
 
@@ -14,24 +17,25 @@ class BlogPage extends StatelessWidget {
   // =========================
   // ASSET HEADER
   // =========================
-  static const String headerLogoAsset = 'assets/Frame 4.png';
-  static const String headerWhatsappAsset = 'assets/Vector-1.png';
-  static const String headerShopAsset = 'assets/Vector (1).png';
-  static const String headerNotificationAsset = 'assets/Notification.png';
-  static const String headerCartAsset = 'assets/Shop Cart.png';
-  static const String headerProfileAsset = 'assets/Ellipse 27.png';
+  static const String headerLogoAsset = 'assets/img/system/LogoFlomart.png';
+  static const String headerWhatsappAsset = 'assets/img/system/logoChat.png';
+  static const String headerShopAsset = 'assets/img/system/logoKeranjang.png';
+  static const String headerNotificationAsset =
+      'assets/img/system/logoNotif.png';
+  static const String headerCartAsset = 'assets/img/system/logPesanan.png';
+  static const String headerProfileAsset = 'assets/img/system/logoProfile.png';
 
   // =========================
   // ASSET BOTTOM NAV
   // =========================
-  static const String navHomeAsset = 'assets/Vector (2).png';
-  static const String navStoreAsset = 'assets/Vector (4).png';
-  static const String navSellAsset = 'assets/Group.png';
-  static const String navBlogAsset = 'assets/Vector (6).png';
-  static const String navInfoAsset = 'assets/Vector (9).png';
+  static const String navHomeAsset = 'assets/img/system/toko.png';
+  static const String navStoreAsset = 'assets/img/system/logoKeranjang.png';
+  static const String navSellAsset = 'assets/img/system/logoChat.png';
+  static const String navBlogAsset = 'assets/img/system/logoNotif.png';
+  static const String navInfoAsset = 'assets/img/system/logoProfile.png';
 
   static const _heroArticle = _BlogArticle(
-    image: 'assets/NEWS.jpg',
+    image: 'assets/img/konten_blog/fotoMulaiJualan1.png',
     title: 'Peningkatan Aktivitas UMKM',
     date: '12 Desember 2025',
     author: 'Daniel Ang',
@@ -41,21 +45,19 @@ class BlogPage extends StatelessWidget {
 
   static const List<_BlogArticle> _popularArticles = [
     _BlogArticle(
-      image:
-          'assets/Farmer harvest or inspect farm products quality and fresh vegetables _ Premium Photo.jpg',
+      image: 'assets/img/konten_blog/fotoMulaiJualan1.png',
       title: 'Peningkatan Aktivitas UMKM oleh FLOMART',
       date: '12 Desember 2025',
       author: 'Titania Ang',
     ),
     _BlogArticle(
-      image:
-          'assets/Female biotechnologist inspecting potted plants in plant nursery and writing notes into clipboard _ Free Photo.jpg',
+      image: 'assets/img/konten_blog/Konten13.jpg',
       title: 'Strategi UMKM Tanaman Bertahan di Era Digital',
       date: '10 Desember 2025',
       author: 'Evelin Ang',
     ),
     _BlogArticle(
-      image: 'assets/25 Urban Garden Ideas_ Green Solutions for Small___.jpg',
+      image: 'assets/img/konten_blog/Konten12.jpg',
       title: 'Peran E-Commerce Hijau dalam Mendukung Petani Lokal',
       date: '05 Desember 2025',
       author: 'Fida Ang',
@@ -64,39 +66,37 @@ class BlogPage extends StatelessWidget {
 
   static const List<_BlogArticle> _categories = [
     _BlogArticle(
-      image: 'assets/Five mulches to use.jpg',
+      image: 'assets/img/konten_blog/Konten6.jpg',
       title: 'Pemupukan Alami untuk Tanaman Lebih Sehat',
       date: '06 Desember 2025',
       author: 'Daniel Ang',
     ),
     _BlogArticle(
-      image:
-          'assets/Vegetable Gardening for Beginners_ A Complete Guide to Growing Your Own Fresh Vegetables.jpg',
+      image: 'assets/img/konten_blog/Konten5.jpg',
       title: 'Tanaman Sayur Cepat Panen untuk Pemula',
       date: '05 Desember 2025',
       author: 'Tian Ang',
     ),
     _BlogArticle(
-      image:
-          'assets/Female biotechnologist inspecting potted plants in plant nursery and writing notes into clipboard _ Free Photo.jpg',
+      image: 'assets/img/konten_blog/Konten4.jpg',
       title: 'Meningkatnya Minat Berkebun Pasca Pandemi',
       date: '05 Desember 2025',
       author: 'Titania Ang',
     ),
     _BlogArticle(
-      image: 'assets/What You Should Know About The New US GMO Labeling Law.jpg',
+      image: 'assets/img/konten_blog/Konten3.jpg',
       title: 'Mengenal Jenis Tanah yang Cocok untuk Tanaman Sayur',
       date: '04 Desember 2025',
       author: 'Evelin Ang',
     ),
     _BlogArticle(
-      image: 'assets/tanah.jpg',
+      image: 'assets/img/konten_blog/Konten2.jpg',
       title: 'Tanah Humus vs Tanah Liat: Mana yang Lebih Baik?',
       date: '04 Desember 2025',
       author: 'Fida Ang',
     ),
     _BlogArticle(
-      image: 'assets/tanah lagi.jpg',
+      image: 'assets/img/konten_blog/Konten1.jpg',
       title: 'Cara Mengetahui Kualitas Tanah Sebelum Menanam',
       date: '03 Desember 2025',
       author: 'Daniel Ang',
@@ -114,7 +114,8 @@ class BlogPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundColor,
-      appBar: _buildAppBar(),
+      appBar: const FlomartHeader(),
+      bottomNavigationBar: const FlomartBottomNav(currentTab: FlomartTab.blog),
       body: SafeArea(
         top: false,
         child: Column(
@@ -151,85 +152,6 @@ class BlogPage extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
-      elevation: 0,
-      toolbarHeight: 64,
-      titleSpacing: 16,
-      title: _assetImage(
-        headerLogoAsset,
-        height: 24,
-        fit: BoxFit.contain,
-        fallback: const Text(
-          'FLOMART',
-          style: TextStyle(
-            color: primaryGreen,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-          ),
-        ),
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(right: 2),
-          child: _headerActionAsset(headerWhatsappAsset),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 2),
-          child: _headerActionAsset(headerShopAsset),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 2),
-          child: _headerActionAsset(headerNotificationAsset),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 2),
-          child: _headerActionAsset(headerCartAsset),
-        ),
-        Padding(
-  padding: const EdgeInsets.only(right: 10, left: 4),
-  child: GestureDetector(
-    onTap: () {},
-    child: SizedBox(
-      width: 32,
-      height: 32,
-      child: ClipOval(
-        child: _assetImage(
-          headerProfileAsset,
-          fit: BoxFit.cover,
-          fallback: const Icon(
-            Icons.person_outline,
-            color: Color(0xFFBEBEBE),
-            size: 18,
-          ),
-        ),
-      ),
-    ),
-  ),
-),
-      ],
-    );
-  }
-
-  Widget _headerActionAsset(String path) {
-    return IconButton(
-      onPressed: () {},
-      splashRadius: 20,
-      icon: _assetImage(
-        path,
-        width: 21,
-        height: 21,
-        fit: BoxFit.contain,
-        fallback: const Icon(
-          Icons.crop_square,
-          color: primaryGreen,
-          size: 20,
         ),
       ),
     );
@@ -284,11 +206,7 @@ class BlogPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            _buildArticleMeta(
-              _heroArticle,
-              dateSize: 11.5,
-              authorSize: 11.5,
-            ),
+            _buildArticleMeta(_heroArticle, dateSize: 11.5, authorSize: 11.5),
             const SizedBox(height: 8),
             Text(
               _heroArticle.description ?? '',
@@ -331,11 +249,7 @@ class BlogPage extends StatelessWidget {
             height: 1,
           ),
         ),
-        Container(
-          width: 1,
-          height: 12,
-          color: const Color(0xFF99A399),
-        ),
+        Container(width: 1, height: 12, color: const Color(0xFF99A399)),
         Text(
           article.author,
           style: TextStyle(
@@ -368,11 +282,7 @@ class BlogPage extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: _assetImage(
-                article.image,
-                width: 88,
-                height: 72,
-              ),
+              child: _assetImage(article.image, width: 88, height: 72),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -425,15 +335,8 @@ class BlogPage extends StatelessWidget {
             style: TextStyle(fontSize: 11.5),
             decoration: InputDecoration(
               hintText: 'Ketik Pencarianmu',
-              hintStyle: TextStyle(
-                fontSize: 11,
-                color: Color(0xFF9AA19A),
-              ),
-              prefixIcon: Icon(
-                Icons.search,
-                color: primaryGreen,
-                size: 18,
-              ),
+              hintStyle: TextStyle(fontSize: 11, color: Color(0xFF9AA19A)),
+              prefixIcon: Icon(Icons.search, color: primaryGreen, size: 18),
               border: InputBorder.none,
               isDense: true,
               contentPadding: EdgeInsets.symmetric(vertical: 9),
@@ -625,7 +528,8 @@ class BlogPage extends StatelessWidget {
           width: width,
           height: height,
           child: Center(
-            child: fallback ??
+            child:
+                fallback ??
                 Container(
                   width: width,
                   height: height,
@@ -650,11 +554,11 @@ class BottomNav extends StatelessWidget {
   static const Color _green = Color(0xFF14824C);
   static const Color _black = Color(0xFF181818);
 
-  static const String navHomeAsset = 'assets/nav_home.png';
-  static const String navStoreAsset = 'assets/nav_toko.png';
-  static const String navSellAsset = 'assets/nav_mulai_berjualan.png';
-  static const String navBlogAsset = 'assets/nav_blog.png';
-  static const String navInfoAsset = 'assets/nav_tentang_kami.png';
+  static const String navHomeAsset = 'assets/img/system/toko.png';
+  static const String navStoreAsset = 'assets/img/system/logoKeranjang.png';
+  static const String navSellAsset = 'assets/img/system/logoChat.png';
+  static const String navBlogAsset = 'assets/img/system/logoNotif.png';
+  static const String navInfoAsset = 'assets/img/system/logoProfile.png';
 
   @override
   Widget build(BuildContext context) {

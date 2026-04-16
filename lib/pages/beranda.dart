@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/flomart_bottom_nav.dart';
+import '../widgets/flomart_header.dart';
+
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -29,25 +32,25 @@ class HomePage extends StatelessWidget {
       title: 'Benih Sayuran',
       total: '12K + Produk',
       accent: _green,
-      imagePath: 'assets/download (1) 3.png',
+      imagePath: 'assets/img/produk/buahnaga.webp',
     ),
     _CategoryItem(
       title: 'Benih Buah',
       total: '9K + Produk',
       accent: _yellow,
-      imagePath: 'assets/download (1) 2.png',
+      imagePath: 'assets/img/produk/anggur_ungu.png',
     ),
     _CategoryItem(
       title: 'Benih Pangan',
       total: '15K + Produk',
       accent: Color(0xFFABB217),
-      imagePath: 'assets/download (1) 2 (1).png',
+      imagePath: 'assets/img/produk/anggur_hijau.jpg',
     ),
     _CategoryItem(
       title: 'Benih Herbal',
       total: '5K + Produk',
       accent: Color(0xFF7E9C1E),
-      imagePath: 'assets/Rectangle 315 (4).png',
+      imagePath: 'assets/img/produk/bunga_matahari.gif',
     ),
   ];
 
@@ -56,28 +59,28 @@ class HomePage extends StatelessWidget {
       name: 'Benih Kubis',
       price: 'Rp10.000',
       rating: '4.8',
-      imagePath: 'assets/download (1) 3.png',
+      imagePath: 'assets/img/produk/buahnaga.webp',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
     ),
     _ProductItem(
       name: 'Benih Kelengkeng',
       price: 'Rp18.000',
       rating: '4.9',
-      imagePath: 'assets/Rectangle 315.png',
+      imagePath: 'assets/img/produk/kiwi.jpg',
       tag: 'Benih Buah, Musim Hujan, Gambut',
     ),
     _ProductItem(
       name: 'Benih Sawi Hijau',
       price: 'Rp8.000',
       rating: '4.6',
-      imagePath: 'assets/Rectangle 315 (1).png',
+      imagePath: 'assets/img/produk/jagung.jpg',
       tag: 'Benih Sayur, Musim Hujan, Pasir',
     ),
     _ProductItem(
       name: 'Benih Jagung',
       price: 'Rp25.000',
       rating: '4.8',
-      imagePath: 'assets/Rectangle 315 (2).png',
+      imagePath: 'assets/img/produk/padi.jpg',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
     ),
   ];
@@ -87,28 +90,28 @@ class HomePage extends StatelessWidget {
       name: 'Benih Kubis',
       price: 'Rp10.000',
       rating: '4.8',
-      imagePath: 'assets/download (1) 3.png',
+      imagePath: 'assets/img/produk/buahnaga.webp',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
     ),
     _ProductItem(
       name: 'Benih Sawi Hijau',
       price: 'Rp8.000',
       rating: '4.6',
-      imagePath: 'assets/Rectangle 315 (1).png',
+      imagePath: 'assets/img/produk/jagung.jpg',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
     ),
     _ProductItem(
       name: 'Benih Labu',
       price: 'Rp14.000',
       rating: '4.5',
-      imagePath: 'assets/Rectangle 315 (4).png',
+      imagePath: 'assets/img/produk/bunga_matahari.gif',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
     ),
     _ProductItem(
       name: 'Benih Tomat',
       price: 'Rp12.000',
       rating: '4.5',
-      imagePath: 'assets/Rectangle 315 (5).png',
+      imagePath: 'assets/img/produk/salak.webp',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
     ),
   ];
@@ -117,193 +120,159 @@ class HomePage extends StatelessWidget {
     _BenefitItem(
       title: 'Benih Tepat Guna',
       description: 'Bibit tanaman sesuai kebutuhan untuk hasil tanam yang baik',
-      iconPath: 'assets/mdi_plant-outline.png',
+      iconPath: 'assets/img/system/Instagram.png',
     ),
     _BenefitItem(
       title: 'Pengiriman Aman',
       description: 'Pengiriman aman menjaga kualitas tanaman',
-      iconPath: 'assets/material-symbols_delivery-truck-speed-outline (1).png',
+      iconPath: 'assets/img/system/logoChat.png',
     ),
     _BenefitItem(
       title: 'Kualitas Terjamin',
       description: 'Produk terjamin berkualitas dan terpercaya',
-      iconPath: 'assets/uiw_safety.png',
+      iconPath: 'assets/img/system/safety.png',
     ),
   ];
 
   @override
-Widget build(BuildContext context) {
-  return Scaffold(
-    backgroundColor: Colors.white,
-    body: SafeArea(
-      child: SingleChildScrollView(
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: const FlomartHeader(),
+      body: ListView(
+        padding: const EdgeInsets.only(bottom: 18),
         physics: const BouncingScrollPhysics(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 14),
-            _buildHeader(),
-            const SizedBox(height: 14),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: Divider(
-                height: 1,
-                thickness: 2.5,
-                color: Color(0xFFD9D9D9),
-              ),
-            ),
-            _buildHeroBanner(),
-            const SizedBox(height: 14),
-            _buildSectionHeader('Belanja Berdasarkan Kategori', 'Lihat Semua Item'),
-            const SizedBox(height: 10),
-            _buildCategoryList(),
-            const SizedBox(height: 10),
-            _buildPromoRow(),
-            const SizedBox(height: 18),
-            _buildSectionHeader('Rekomendasi Benih Berkualitas', 'Lihat Semua'),
-            const SizedBox(height: 10),
-            _buildProductList(_recommendedProducts),
-            const SizedBox(height: 20),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 24),
-              child: Center(
-                child: Text(
-                  'Kita Menyediakan kamu\nBenih Yang Terbaik',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    height: 1.25,
-                    fontWeight: FontWeight.w800,
-                    color: _dark,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            _buildBenefits(),
-            const SizedBox(height: 20),
-            _buildSectionHeader('Pilihan Benih Terbaik', 'Lihat Semua'),
-            const SizedBox(height: 8),
-            _buildChips(),
-            const SizedBox(height: 10),
-            _buildProductList(_bestProducts),
-            const SizedBox(height: 90),
-          ],
-        ),
-      ),
-    ),
-    bottomNavigationBar: const BottomNav(),
-  );
-}
-
-Widget _buildHeader() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 20),
-    child: Row(
-      children: [
-        /// LOGO
-        Expanded(
-          child: SizedBox(
-            height: 32,
-            child: Image.asset(
-              'assets/Frame 4.png',
-              fit: BoxFit.fitHeight,
-              alignment: Alignment.centerLeft,
-            ),
-          ),
-        ),
-
-        /// ICONS
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _HeaderIcon(path: 'assets/ri_whatsapp-fill.png'),
-            const SizedBox(width: 12),
-            _HeaderIcon(path: 'assets/Shop Cart.png'),
-            const SizedBox(width: 12),
-            _HeaderIcon(path: 'assets/Notification.png'),
-            const SizedBox(width: 12),
-            const Icon(Icons.shopping_cart_rounded, color: _green, size: 18),
-            const SizedBox(width: 12),
-
-            /// PROFILE
-            Container(
-              width: 28,
-              height: 28,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: _green, width: 1),
-                color: Colors.white,
-              ),
-              child: const Icon(
-                Icons.person_outline,
-                size: 14,
-                color: Color(0xFFBDBDBD),
-              ),
-            ),
-          ],
-        ),
-      ],
-    ),
-  );
-}
-
-  
-  Widget _buildHeroBanner() {
-    return SizedBox(
-      height: 265,
-      width: double.infinity,
-      child: Stack(
         children: [
-          Positioned.fill(
-            child: ClipRect(
-              child: Image.asset('assets/Rectangle 278.png', fit: BoxFit.cover),
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildHeroBanner(),
+          ),
+          const SizedBox(height: 18),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildSectionHeader(
+              'Belanja Berdasarkan Kategori',
+              'Lihat Semua Item',
             ),
           ),
-          Positioned(
-            left: 24,
-            top: 28,
-            right: 150,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Belanja Pintar\nuntuk Masa Depan\nyang Lebih Hijau',
-                  style: TextStyle(
-                    fontSize: 22,
-                    height: 1.2,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0E6F42),
+          const SizedBox(height: 10),
+          _buildCategoryList(),
+          const SizedBox(height: 12),
+          _buildPromoRow(),
+          const SizedBox(height: 22),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildSectionHeader(
+              'Rekomendasi Benih Berkualitas',
+              'Lihat Semua',
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildProductList(_recommendedProducts),
+          const SizedBox(height: 18),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: const Center(
+              child: Text(
+                'Kita Menyediakan kamu\nBenih Yang Terbaik',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  height: 1.25,
+                  fontWeight: FontWeight.w800,
+                  color: _dark,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          _buildBenefits(),
+          const SizedBox(height: 22),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _buildSectionHeader('Pilihan Benih Terbaik', 'Lihat Semua'),
+          ),
+          const SizedBox(height: 8),
+          _buildChips(),
+          const SizedBox(height: 10),
+          _buildProductList(_bestProducts),
+          const SizedBox(height: 120),
+        ],
+      ),
+      bottomNavigationBar: const FlomartBottomNav(currentTab: FlomartTab.home),
+    );
+  }
+
+  Widget _buildHeroBanner() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        height: 280,
+        decoration: BoxDecoration(
+          color: Colors.green.shade50,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/img/konten_blog/Konten12.jpg',
+                fit: BoxFit.cover,
+              ),
+            ),
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withOpacity(0.12),
+                      Colors.black.withOpacity(0.18),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  'Temukan produk tanaman\nramah lingkungan dari penjual\nterpercaya dengan proses\nbelanja yang mudah dan aman',
-                  style: TextStyle(
-                    fontSize: 13,
-                    height: 1.35,
-                    color: Colors.black.withOpacity(0.55),
+              ),
+            ),
+            Positioned(
+              left: 20,
+              top: 22,
+              right: 140,
+              bottom: 20,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Belanja Pintar\nuntuk Masa Depan\nyang Lebih Hijau',
+                    style: TextStyle(
+                      fontSize: 22,
+                      height: 1.2,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF0E6F42),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 18),
-                IntrinsicWidth(
-                child: Container(
-                  constraints: const BoxConstraints(
-                    minWidth: 90,
-                    maxWidth: 120,
-                    minHeight: 36,
+                  const SizedBox(height: 10),
+                  Text(
+                    'Temukan produk tanaman ramah lingkungan dari penjual terpercaya dengan proses belanja yang mudah dan aman.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.35,
+                      color: Colors.black.withOpacity(0.7),
+                    ),
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: _yellow,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  alignment: Alignment.center,
-                  child: const FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 18,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: _yellow,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Text(
                       'Belanja',
-                      maxLines: 1,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -311,191 +280,177 @@ Widget _buildHeader() {
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-              ],
             ),
-          ),
-          Positioned(
-          right: 10,
-          bottom: 0,
-          child: SizedBox(
-            width: 150,
-            height: 200,
+            Positioned(
+              right: 16,
+              bottom: 10,
               child: Image.asset(
-                'assets/Gemini_Generated_Image_ruvoksruvoksruvo 2.png',
+                'assets/img/produk/anggur_ungu.png',
+                width: 145,
+                height: 195,
                 fit: BoxFit.contain,
               ),
             ),
-          ),
-          const Positioned(
-          right: 16,
-          bottom: 10,
-          child: Row(
-            children: [
-              Icon(Icons.chevron_left, color: Colors.white, size: 16),
-              Icon(Icons.chevron_left, color: Colors.white, size: 16),
-              Icon(Icons.chevron_left, color: Colors.white, size: 16),
-            ],
-          ),
+          ],
         ),
-        ],
       ),
     );
   }
 
   Widget _buildSectionHeader(String title, String action) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w700,
-              color: _dark,
-              height: 1.2,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: _dark,
+                height: 1.2,
+              ),
             ),
           ),
-        ),
-        Text(
-          action,
-          style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w500,
-            color: _dark,
+          Text(
+            action,
+            style: const TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              color: _dark,
+            ),
           ),
-        ),
-      ],
-    ),
-  );
-}
+        ],
+      ),
+    );
+  }
 
   Widget _buildCategoryList() {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      const horizontalPadding = 16.0;
-      const spacing = 10.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const horizontalPadding = 16.0;
+        const spacing = 10.0;
 
-      final availableWidth = constraints.maxWidth - (horizontalPadding * 2);
-      final itemWidth = (availableWidth - (spacing * 2)) / 3;
+        final availableWidth = constraints.maxWidth - (horizontalPadding * 2);
+        final itemWidth = (availableWidth - (spacing * 2)) / 3;
 
-      return SizedBox(
-        height: 110,
-        child: ListView.separated(
-          padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
-          scrollDirection: Axis.horizontal,
-          itemCount: _categories.length,
-          separatorBuilder: (_, __) => const SizedBox(width: spacing),
-          itemBuilder: (context, index) {
-            return SizedBox(
-              width: itemWidth,
-              child: _CategoryCard(item: _categories[index]),
-            );
-          },
-        ),
-      );
-    },
-  );
-}
+        return SizedBox(
+          height: 110,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
+            scrollDirection: Axis.horizontal,
+            itemCount: _categories.length,
+            separatorBuilder: (_, __) => const SizedBox(width: spacing),
+            itemBuilder: (context, index) {
+              return SizedBox(
+                width: itemWidth,
+                child: _CategoryCard(item: _categories[index]),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
   Widget _buildPromoRow() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Row(
-      children: const [
-        Expanded(
-          child: _PromoCard(
-            title: 'Dari Bibit\nBerkualitas, Hasil\nPanen Maksimal',
-            imagePath: 'assets/download (1) 2.png',
-            accent: _green,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: const [
+          Expanded(
+            child: _PromoCard(
+              title: 'Dari Bibit\nBerkualitas, Hasil\nPanen Maksimal',
+              imagePath: 'assets/img/produk/anggur_ungu.png',
+              accent: _green,
+            ),
           ),
-        ),
-        SizedBox(width: 10),
-        Expanded(
-          child: _PromoCard(
-            title: 'Bibit Terjamin,\nDikirim Aman,\nTumbuh Optimal',
-            imagePath: 'assets/image 9.png',
-            accent: Color(0xFFB6C000),
+          SizedBox(width: 10),
+          Expanded(
+            child: _PromoCard(
+              title: 'Bibit Terjamin,\nDikirim Aman,\nTumbuh Optimal',
+              imagePath: 'assets/img/produk/kaktus.jpg',
+              accent: Color(0xFFB6C000),
+            ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
   }
 
   Widget _buildProductList(List<_ProductItem> items) {
-  return SizedBox(
-    height: 150,
-    child: ListView.separated(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      scrollDirection: Axis.horizontal,
-      itemCount: items.length,
-      separatorBuilder: (_, __) => const SizedBox(width: 10),
-      itemBuilder: (context, index) => _ProductCard(item: items[index]),
-    ),
-  );
+    return SizedBox(
+      height: 150,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (context, index) => _ProductCard(item: items[index]),
+      ),
+    );
   }
 
   Widget _buildBenefits() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: _benefits
-          .map(
-            (item) => Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: _BenefitCard(item: item),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: _benefits
+            .map(
+              (item) => Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: _BenefitCard(item: item),
+                ),
               ),
-            ),
-          )
-          .toList(),
-    ),
-  );
+            )
+            .toList(),
+      ),
+    );
   }
 
   Widget _buildChips() {
-  return SingleChildScrollView(
-    scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    child: Row(
-      children: List.generate(_chips.length, (index) {
-        final isActive = index == 0;
-        return Padding(
-          padding: EdgeInsets.only(right: index == _chips.length - 1 ? 0 : 6),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: isActive ? _green : _chipGray,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Text(
-              _chips[index],
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w500,
-                color: isActive ? Colors.white : const Color(0xFF555555),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: List.generate(_chips.length, (index) {
+          final isActive = index == 0;
+          return Padding(
+            padding: EdgeInsets.only(right: index == _chips.length - 1 ? 0 : 6),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: isActive ? _green : _chipGray,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                _chips[index],
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w500,
+                  color: isActive ? Colors.white : const Color(0xFF555555),
+                ),
               ),
             ),
-          ),
-        );
-      }),
-    ),
-  );
+          );
+        }),
+      ),
+    );
   }
 
-    Widget _buildFooterBrand() {
+  Widget _buildFooterBrand() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
           height: 34,
           child: Image.asset(
-            'assets/Frame 4.png',
+            'assets/img/system/LogoFlomart.png',
             fit: BoxFit.fitHeight,
             color: Colors.white,
             colorBlendMode: BlendMode.srcIn,
@@ -581,24 +536,6 @@ Widget _buildHeader() {
   }
 }
 
-class _HeaderIcon extends StatelessWidget {
-  const _HeaderIcon({required this.path});
-
-  final String path;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 20,
-      height: 20,
-      child: Image.asset(
-        path,
-        fit: BoxFit.contain,
-      ),
-    );
-  }
-}
-
 class _CategoryCard extends StatelessWidget {
   const _CategoryCard({required this.item});
 
@@ -617,10 +554,7 @@ class _CategoryCard extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: Center(
-                child: Image.asset(
-                  item.imagePath,
-                  fit: BoxFit.contain,
-                ),
+                child: Image.asset(item.imagePath, fit: BoxFit.contain),
               ),
             ),
           ),
@@ -717,10 +651,7 @@ class _PromoCard extends StatelessWidget {
                   SizedBox(width: 3),
                   Text(
                     'Safe Delivery',
-                    style: TextStyle(
-                      fontSize: 7,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 7, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -743,11 +674,7 @@ class _PromoCard extends StatelessWidget {
           Positioned(
             right: 4,
             bottom: 0,
-            child: Image.asset(
-              imagePath,
-              height: 56,
-              fit: BoxFit.contain,
-            ),
+            child: Image.asset(imagePath, height: 56, fit: BoxFit.contain),
           ),
         ],
       ),
@@ -783,17 +710,17 @@ class _ProductCard extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Padding(
                   padding: const EdgeInsets.all(6),
-                  child: Image.asset(
-                    item.imagePath,
-                    fit: BoxFit.contain,
-                  ),
+                  child: Image.asset(item.imagePath, fit: BoxFit.contain),
                 ),
               ),
               Positioned(
                 top: 4,
                 right: 4,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF13824B),
                     borderRadius: BorderRadius.circular(10),
@@ -801,11 +728,7 @@ class _ProductCard extends StatelessWidget {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.star,
-                        size: 9,
-                        color: Color(0xFFF2C94C),
-                      ),
+                      const Icon(Icons.star, size: 9, color: Color(0xFFF2C94C)),
                       const SizedBox(width: 2),
                       Text(
                         item.rating,
@@ -986,11 +909,17 @@ class _FooterSocial extends StatelessWidget {
           ),
         ),
         SizedBox(height: 14),
-        _SocialRow(iconPath: 'assets/Instagram.png', label: '@flomart.Id'),
+        _SocialRow(
+          iconPath: 'assets/img/system/Instagram.png',
+          label: '@flomart.Id',
+        ),
         SizedBox(height: 10),
-        _SocialRow(iconPath: 'assets/Facebook.png', label: 'FLOMART'),
+        _SocialRow(
+          iconPath: 'assets/img/system/facebook.png',
+          label: 'FLOMART',
+        ),
         SizedBox(height: 10),
-        _SocialRow(iconPath: 'assets/X.png', label: '@flowmart_id'),
+        _SocialRow(iconPath: 'assets/img/system/X.png', label: '@flowmart_id'),
       ],
     );
   }

@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../app_routes.dart';
+import '../widgets/flomart_bottom_nav.dart';
+import '../widgets/flomart_header.dart';
+import 'beranda.dart';
+import 'blog.dart';
+import 'tentang_kami.dart';
+import 'toko.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -9,52 +17,28 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: HomePage(),
+      initialRoute: sellRoute,
+      routes: {
+        homeRoute: (_) => const HomePage(),
+        shopRoute: (_) => const ShopPage(),
+        sellRoute: (_) => const StartSellingPage(),
+        blogRoute: (_) => const BlogPage(),
+        aboutRoute: (_) => const AboutUsPage(),
+      },
     );
   }
 }
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class StartSellingPage extends StatelessWidget {
+  const StartSellingPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Image.asset('assets/img/system/logoFlomart.png', height: 30),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.chat, color: Colors.green),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_bag, color: Colors.green),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.notifications, color: Colors.green),
-            onPressed: () {},
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart, color: Colors.green),
-            onPressed: () {},
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () {},
-              child: const CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(Icons.person, color: Colors.green),
-              ),
-            ),
-          ),
-        ],
-      ),
+      appBar: const FlomartHeader(),
+      bottomNavigationBar: const FlomartBottomNav(currentTab: FlomartTab.sell),
 
       body: const SingleChildScrollView(
         child: Column(
