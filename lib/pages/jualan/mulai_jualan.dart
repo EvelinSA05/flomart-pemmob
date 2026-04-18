@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../app_routes.dart';
-import '../widgets/flomart_bottom_nav.dart';
-import '../widgets/flomart_header.dart';
-import 'beranda.dart';
-import 'blog.dart';
-import 'login.dart';
-import 'registrasi.dart';
-import 'tentang_kami.dart';
-import 'toko.dart';
+import '../../app_routes.dart';
+import '../../widgets/flomart_bottom_nav.dart';
+import '../../widgets/flomart_header.dart';
+import '../beranda/beranda.dart';
+import '../blog/blog.dart';
+import '../auth/login.dart';
+import '../auth/registrasi.dart';
+import '../info/tentang_kami.dart';
+import '../toko/toko.dart';
 
 void main() {
   runApp(const MyApp());

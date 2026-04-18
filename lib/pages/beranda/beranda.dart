@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flomart_pemmob/pages/beranda/detail_produk.dart';
 
-import '../widgets/flomart_bottom_nav.dart';
-import '../widgets/flomart_header.dart';
+import '../../widgets/flomart_bottom_nav.dart';
+import '../../widgets/flomart_header.dart';
+import '../toko/toko.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -32,25 +34,25 @@ class HomePage extends StatelessWidget {
       title: 'Benih Sayuran',
       total: '12K + Produk',
       accent: _green,
-      imagePath: 'assets/img/produk/buahnaga.webp',
+      imagePath: 'assets/img/produk/15.png',
     ),
     _CategoryItem(
       title: 'Benih Buah',
       total: '9K + Produk',
       accent: _yellow,
-      imagePath: 'assets/img/produk/anggur_ungu.png',
+      imagePath: 'assets/img/produk/download (1) 2.png',
     ),
     _CategoryItem(
       title: 'Benih Pangan',
       total: '15K + Produk',
       accent: Color(0xFFABB217),
-      imagePath: 'assets/img/produk/anggur_hijau.jpg',
+      imagePath: 'assets/img/produk/padi.png',
     ),
     _CategoryItem(
       title: 'Benih Herbal',
       total: '5K + Produk',
       accent: Color(0xFF7E9C1E),
-      imagePath: 'assets/img/produk/bunga_matahari.gif',
+      imagePath: 'assets/img/produk/jahe.png',
     ),
   ];
 
@@ -59,29 +61,49 @@ class HomePage extends StatelessWidget {
       name: 'Benih Kubis',
       price: 'Rp10.000',
       rating: '4.8',
-      imagePath: 'assets/img/produk/buahnaga.webp',
+      imagePath: 'assets/img/produk/kubis.jpg',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
     ),
     _ProductItem(
       name: 'Benih Kelengkeng',
       price: 'Rp18.000',
       rating: '4.9',
-      imagePath: 'assets/img/produk/kiwi.jpg',
+      imagePath: 'assets/img/produk/kelengkeng.png',
       tag: 'Benih Buah, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkelengkeng1.jpg',
+        'assets/img/konten_beranda/tkelengkeng2.jpg',
+        'assets/img/konten_beranda/tkelengkeng3.jpg',
+      ],
     ),
     _ProductItem(
       name: 'Benih Sawi Hijau',
       price: 'Rp8.000',
       rating: '4.6',
-      imagePath: 'assets/img/produk/jagung.jpg',
+      imagePath: 'assets/img/produk/15.png',
       tag: 'Benih Sayur, Musim Hujan, Pasir',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
     ),
     _ProductItem(
       name: 'Benih Jagung',
       price: 'Rp25.000',
       rating: '4.8',
-      imagePath: 'assets/img/produk/padi.jpg',
+      imagePath: 'assets/img/produk/jagung.jpg',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkelengkeng1.jpg',
+        'assets/img/konten_beranda/tkelengkeng2.jpg',
+        'assets/img/konten_beranda/tkelengkeng3.jpg',
+      ],
     ),
   ];
 
@@ -90,29 +112,49 @@ class HomePage extends StatelessWidget {
       name: 'Benih Kubis',
       price: 'Rp10.000',
       rating: '4.8',
-      imagePath: 'assets/img/produk/buahnaga.webp',
+      imagePath: 'assets/img/produk/kubis.jpg',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
     ),
     _ProductItem(
       name: 'Benih Sawi Hijau',
       price: 'Rp8.000',
       rating: '4.6',
-      imagePath: 'assets/img/produk/jagung.jpg',
+      imagePath: 'assets/img/produk/15.png',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
     ),
     _ProductItem(
       name: 'Benih Labu',
       price: 'Rp14.000',
       rating: '4.5',
-      imagePath: 'assets/img/produk/bunga_matahari.gif',
+      imagePath: 'assets/img/produk/labu.png',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
     ),
     _ProductItem(
       name: 'Benih Tomat',
       price: 'Rp12.000',
       rating: '4.5',
-      imagePath: 'assets/img/produk/salak.webp',
+      imagePath: 'assets/img/produk/tomat.png',
       tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
     ),
   ];
 
@@ -120,12 +162,12 @@ class HomePage extends StatelessWidget {
     _BenefitItem(
       title: 'Benih Tepat Guna',
       description: 'Bibit tanaman sesuai kebutuhan untuk hasil tanam yang baik',
-      iconPath: 'assets/img/system/Instagram.png',
+      iconPath: 'assets/img/system/lingkungan.png',
     ),
     _BenefitItem(
       title: 'Pengiriman Aman',
       description: 'Pengiriman aman menjaga kualitas tanaman',
-      iconPath: 'assets/img/system/logoChat.png',
+      iconPath: 'assets/img/system/logo_logistik.png',
     ),
     _BenefitItem(
       title: 'Kualitas Terjamin',
@@ -139,162 +181,165 @@ class HomePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: const FlomartHeader(),
-      body: ListView(
-        padding: const EdgeInsets.only(bottom: 18),
-        physics: const BouncingScrollPhysics(),
-        children: [
-          const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildHeroBanner(),
-          ),
-          const SizedBox(height: 18),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildSectionHeader(
-              'Belanja Berdasarkan Kategori',
-              'Lihat Semua Item',
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildCategoryList(),
-          const SizedBox(height: 12),
-          _buildPromoRow(),
-          const SizedBox(height: 22),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildSectionHeader(
-              'Rekomendasi Benih Berkualitas',
-              'Lihat Semua',
-            ),
-          ),
-          const SizedBox(height: 10),
-          _buildProductList(_recommendedProducts),
-          const SizedBox(height: 18),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: const Center(
-              child: Text(
-                'Kita Menyediakan kamu\nBenih Yang Terbaik',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  height: 1.25,
-                  fontWeight: FontWeight.w800,
-                  color: _dark,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: Divider(
+                  height: 1,
+                  thickness: 2.5,
+                  color: Color(0xFFD9D9D9),
                 ),
               ),
-            ),
+              _buildHeroBanner(),
+              const SizedBox(height: 14),
+              _buildSectionHeader(
+                'Belanja Berdasarkan Kategori',
+                'Lihat Semua Item',
+              ),
+              const SizedBox(height: 10),
+              _buildCategoryList(),
+              const SizedBox(height: 10),
+              _buildPromoRow(),
+              const SizedBox(height: 18),
+              _buildSectionHeader(
+                'Rekomendasi Benih Berkualitas',
+                'Lihat Semua',
+              ),
+              const SizedBox(height: 10),
+              _buildProductList(_recommendedProducts),
+              const SizedBox(height: 20),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24),
+                child: Center(
+                  child: Text(
+                    'Kita Menyediakan kamu\nBenih Yang Terbaik',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      height: 1.25,
+                      fontWeight: FontWeight.w800,
+                      color: _dark,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildBenefits(),
+              const SizedBox(height: 20),
+              _buildSectionHeader('Pilihan Benih Terbaik', 'Lihat Semua'),
+              const SizedBox(height: 8),
+              _buildChips(),
+              const SizedBox(height: 10),
+              _buildProductList(_bestProducts),
+              const SizedBox(height: 90),
+            ],
           ),
-          const SizedBox(height: 20),
-          _buildBenefits(),
-          const SizedBox(height: 22),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: _buildSectionHeader('Pilihan Benih Terbaik', 'Lihat Semua'),
-          ),
-          const SizedBox(height: 8),
-          _buildChips(),
-          const SizedBox(height: 10),
-          _buildProductList(_bestProducts),
-          const SizedBox(height: 120),
-        ],
+        ),
       ),
       bottomNavigationBar: const FlomartBottomNav(currentTab: FlomartTab.home),
     );
   }
 
   Widget _buildHeroBanner() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        height: 280,
-        decoration: BoxDecoration(
-          color: Colors.green.shade50,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Image.asset(
-                'assets/img/konten_blog/Konten12.jpg',
-                fit: BoxFit.cover,
-              ),
+    return SizedBox(
+      height: 265,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: ClipRect(
+              child: Image.asset('assets/img/system/BannerBg.png', fit: BoxFit.cover),
             ),
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white.withOpacity(0.12),
-                      Colors.black.withOpacity(0.18),
-                    ],
+          ),
+          Positioned(
+            left: 24,
+            top: 28,
+            right: 150,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Belanja Pintar\nuntuk Masa Depan\nyang Lebih Hijau',
+                  style: TextStyle(
+                    fontSize: 22,
+                    height: 1.2,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0E6F42),
                   ),
                 ),
-              ),
-            ),
-            Positioned(
-              left: 20,
-              top: 22,
-              right: 140,
-              bottom: 20,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Belanja Pintar\nuntuk Masa Depan\nyang Lebih Hijau',
-                    style: TextStyle(
-                      fontSize: 22,
-                      height: 1.2,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0E6F42),
-                    ),
+                const SizedBox(height: 10),
+                Text(
+                  'Temukan produk tanaman\nramah lingkungan dari penjual\nterpercaya dengan proses\nbelanja yang mudah dan aman',
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.35,
+                    color: Colors.black.withOpacity(0.55),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Temukan produk tanaman ramah lingkungan dari penjual terpercaya dengan proses belanja yang mudah dan aman.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      height: 1.35,
-                      color: Colors.black.withOpacity(0.7),
+                ),
+                const SizedBox(height: 18),
+                IntrinsicWidth(
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 90,
+                      maxWidth: 120,
+                      minHeight: 36,
                     ),
-                  ),
-                  const Spacer(),
-                  Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
-                      vertical: 10,
+                      vertical: 8,
                     ),
                     decoration: BoxDecoration(
                       color: _yellow,
                       borderRadius: BorderRadius.circular(24),
                     ),
-                    child: const Text(
-                      'Belanja',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                    alignment: Alignment.center,
+                    child: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Belanja',
+                        maxLines: 1,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Positioned(
-              right: 16,
-              bottom: 10,
+          ),
+          Positioned(
+            right: 10,
+            bottom: 0,
+            child: SizedBox(
+              width: 210,
+              height: 260,
               child: Image.asset(
-                'assets/img/produk/anggur_ungu.png',
-                width: 145,
-                height: 195,
+                'assets/img/system/orangBeranda.png',
                 fit: BoxFit.contain,
               ),
             ),
-          ],
-        ),
+          ),
+          const Positioned(
+            right: 16,
+            bottom: 10,
+            child: Row(
+              children: [
+                Icon(Icons.chevron_left, color: Colors.white, size: 16),
+                Icon(Icons.chevron_left, color: Colors.white, size: 16),
+                Icon(Icons.chevron_left, color: Colors.white, size: 16),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -364,7 +409,7 @@ class HomePage extends StatelessWidget {
           Expanded(
             child: _PromoCard(
               title: 'Dari Bibit\nBerkualitas, Hasil\nPanen Maksimal',
-              imagePath: 'assets/img/produk/anggur_ungu.png',
+              imagePath: 'assets/img/produk/strawberry.png',
               accent: _green,
             ),
           ),
@@ -372,7 +417,7 @@ class HomePage extends StatelessWidget {
           Expanded(
             child: _PromoCard(
               title: 'Bibit Terjamin,\nDikirim Aman,\nTumbuh Optimal',
-              imagePath: 'assets/img/produk/kaktus.jpg',
+              imagePath: 'assets/img/system/petani.png',
               accent: Color(0xFFB6C000),
             ),
           ),
@@ -450,7 +495,7 @@ class HomePage extends StatelessWidget {
         SizedBox(
           height: 34,
           child: Image.asset(
-            'assets/img/system/LogoFlomart.png',
+            'assets/img/system/logoFlomart.png',
             fit: BoxFit.fitHeight,
             color: Colors.white,
             colorBlendMode: BlendMode.srcIn,
@@ -543,11 +588,18 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF4F1F1),
-        borderRadius: BorderRadius.circular(10),
-      ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ShopPage()),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F1F1),
+          borderRadius: BorderRadius.circular(10),
+        ),
       child: Column(
         children: [
           Expanded(
@@ -610,6 +662,7 @@ class _CategoryCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }
@@ -689,113 +742,136 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 104,
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF4F1F1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Stack(
-            children: [
-              Container(
-                height: 68,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                alignment: Alignment.center,
-                child: Padding(
-                  padding: const EdgeInsets.all(6),
-                  child: Image.asset(item.imagePath, fit: BoxFit.contain),
-                ),
-              ),
-              Positioned(
-                top: 4,
-                right: 4,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 2,
-                  ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailProdukPage(
+              name: item.name,
+              price: item.price,
+              rating: item.rating,
+              imagePath: item.imagePath,
+              tag: item.tag,
+
+              shortDesc: '${item.name} merupakan benih berkualitas yang dirancang untuk menghasilkan tanaman dengan pertumbuhan optimal dan seragam.',
+
+              longDesc: '${item.name} merupakan benih berkualitas yang dirancang untuk menghasilkan tanaman dengan pertumbuhan optimal dan seragam. Benih ini memiliki tingkat perkecambahan yang tinggi serta daya adaptasi yang baik di berbagai kondisi lingkungan, sehingga cocok digunakan oleh petani pemula maupun berpengalaman.\n\n'
+                  '${item.name} diproduksi melalui proses seleksi dan pengemasan yang terkontrol guna menjaga kualitas dan kebersihan produk. Tanaman yang dihasilkan umumnya memiliki pertumbuhan yang sehat, kuat, dan mampu memberikan hasil panen yang maksimal dengan perawatan yang tepat.\n\n'
+                  '${item.name} sangat direkomendasikan untuk berbagai jenis lahan dan kondisi iklim. Cocok digunakan untuk kebutuhan rumah tangga, kebun pribadi, hingga pertanian skala kecil dan menengah. Dengan kualitas terjaga, ${item.name} siap menjadi pilihan terbaik untuk budidaya Anda.',
+              images: item.images,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        width: 104,
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F1F1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                Container(
+                  height: 68,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF13824B),
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.star, size: 9, color: Color(0xFFF2C94C)),
-                      const SizedBox(width: 2),
-                      Text(
-                        item.rating,
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                  alignment: Alignment.center,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Image.asset(item.imagePath, fit: BoxFit.contain),
+                  ),
+                ),
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 5,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF13824B),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.star, size: 9, color: Color(0xFFF2C94C)),
+                        const SizedBox(width: 2),
+                        Text(
+                          item.rating,
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(
+              item.tag,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 6,
+                color: Color(0xFF13824B),
+                fontWeight: FontWeight.w500,
               ),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Text(
-            item.tag,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 6,
-              color: Color(0xFF13824B),
-              fontWeight: FontWeight.w500,
             ),
-          ),
-          const SizedBox(height: 3),
-          Text(
-            item.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF151515),
+            const SizedBox(height: 3),
+            Text(
+              item.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF151515),
+              ),
             ),
-          ),
-          const SizedBox(height: 2),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  item.price,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF151515),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    item.price,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFF151515),
+                    ),
                   ),
                 ),
-              ),
-              Container(
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2BE00),
-                  borderRadius: BorderRadius.circular(6),
+                Container(
+                  width: 18,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2BE00),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Icon(
+                    Icons.shopping_cart_rounded,
+                    size: 11,
+                    color: Colors.white,
+                  ),
                 ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.shopping_cart_rounded,
-                  size: 11,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -852,45 +928,6 @@ class _BenefitCard extends StatelessWidget {
   }
 }
 
-class BottomNav extends StatelessWidget {
-  const BottomNav({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed,
-      backgroundColor: Colors.white,
-      selectedItemColor: const Color(0xFF13824B),
-      unselectedItemColor: const Color(0xFF7A7A7A),
-      selectedFontSize: 10,
-      unselectedFontSize: 10,
-      elevation: 10,
-      currentIndex: 0,
-      items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home_rounded, size: 20),
-          label: 'Beranda',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.storefront_rounded, size: 20),
-          label: 'Toko',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.add_business_rounded, size: 20),
-          label: 'Jual',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.article_rounded, size: 20),
-          label: 'Blog',
-        ),
-        BottomNavigationBarItem(
-          icon: Icon(Icons.info_outline_rounded, size: 20),
-          label: 'Tentang',
-        ),
-      ],
-    );
-  }
-}
 
 class _FooterSocial extends StatelessWidget {
   const _FooterSocial();
@@ -909,17 +946,11 @@ class _FooterSocial extends StatelessWidget {
           ),
         ),
         SizedBox(height: 14),
-        _SocialRow(
-          iconPath: 'assets/img/system/Instagram.png',
-          label: '@flomart.Id',
-        ),
+        _SocialRow(iconPath: 'assets/Instagram.png', label: '@flomart.Id'),
         SizedBox(height: 10),
-        _SocialRow(
-          iconPath: 'assets/img/system/facebook.png',
-          label: 'FLOMART',
-        ),
+        _SocialRow(iconPath: 'assets/Facebook.png', label: 'FLOMART'),
         SizedBox(height: 10),
-        _SocialRow(iconPath: 'assets/img/system/X.png', label: '@flowmart_id'),
+        _SocialRow(iconPath: 'assets/X.png', label: '@flowmart_id'),
       ],
     );
   }
@@ -972,6 +1003,7 @@ class _ProductItem {
     required this.rating,
     required this.imagePath,
     required this.tag,
+    required this.images,
   });
 
   final String name;
@@ -979,6 +1011,7 @@ class _ProductItem {
   final String rating;
   final String imagePath;
   final String tag;
+  final List<String> images;
 }
 
 class _BenefitItem {

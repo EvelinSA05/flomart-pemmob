@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/product_model.dart';
+import '../../models/product_model.dart';
 import 'detail_produk.dart';
 
 class ProfilSellerPage extends StatefulWidget {

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/flomart_bottom_nav.dart';
-import '../widgets/flomart_header.dart';
+import '../../widgets/flomart_bottom_nav.dart';
+import '../../widgets/flomart_header.dart';
 import './blog_detail.dart';
 
 class BlogPage extends StatefulWidget {

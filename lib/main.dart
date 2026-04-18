@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'app_routes.dart';
-import 'pages/beranda.dart';
-import 'pages/blog.dart';
-import 'pages/mulai_jualan.dart';
-import 'pages/tentang_kami.dart';
-import 'pages/toko.dart';
+import 'pages/beranda/beranda.dart';
+import 'pages/blog/blog.dart';
+import 'pages/jualan/mulai_jualan.dart';
+import 'pages/info/tentang_kami.dart';
+import 'pages/toko/toko.dart';
 
 void main() {
   runApp(const MyApp());

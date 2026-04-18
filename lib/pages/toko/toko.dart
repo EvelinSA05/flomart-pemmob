@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
-import '../app_routes.dart';
-import '../models/product_model.dart';
-import '../widgets/flomart_bottom_nav.dart';
-import '../widgets/flomart_header.dart';
-import 'blog.dart';
-import 'beranda.dart';
+import '../../app_routes.dart';
+import '../../models/product_model.dart';
+import '../../widgets/flomart_bottom_nav.dart';
+import '../../widgets/flomart_header.dart';
+import '../blog/blog.dart';
+import '../beranda/beranda.dart';
 import 'detail_produk.dart';
-import 'mulai_jualan.dart';
-import 'tentang_kami.dart';
+import '../jualan/mulai_jualan.dart';
+import '../info/tentang_kami.dart';
 
 void main() {
   runApp(const MyApp());
@@ -117,6 +117,12 @@ class _ShopPageState extends State<ShopPage> {
       price: 'Rp20.000',
       rating: 4.9,
       image: 'assets/img/produk/kiwi.jpg',
+    ),
+    Product(
+      name: 'Benih Tomat',
+      price: 'Rp15.000',
+      rating: 4.6,
+      image: 'assets/img/produk/tomat.png',
     ),
   ];
 

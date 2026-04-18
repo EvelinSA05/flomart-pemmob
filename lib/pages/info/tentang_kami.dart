@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../widgets/flomart_bottom_nav.dart';
-import '../widgets/flomart_header.dart';
+import '../../widgets/flomart_bottom_nav.dart';
+import '../../widgets/flomart_header.dart';
+import '../auth/login.dart';
+import '../auth/registrasi.dart';
 
 class AboutUsPage extends StatefulWidget {
   const AboutUsPage({super.key});
@@ -555,7 +557,14 @@ class _AboutUsPageState extends State<AboutUsPage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const regisPage(),
+                                ),
+                              );
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFE8B931),
                               foregroundColor: Colors.black,
@@ -579,7 +588,14 @@ class _AboutUsPageState extends State<AboutUsPage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const LoginPage(),
+                                ),
+                              );
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFE8B931),
                               foregroundColor: Colors.black,

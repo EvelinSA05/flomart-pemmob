@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../models/product_model.dart';
-import '../widgets/flomart_bottom_nav.dart';
-import '../widgets/flomart_header.dart';
+import '../../models/product_model.dart';
+import '../../widgets/flomart_bottom_nav.dart';
+import '../../widgets/flomart_header.dart';
 import 'profil_seller.dart';
 
 class ProductDetailPage extends StatefulWidget {
