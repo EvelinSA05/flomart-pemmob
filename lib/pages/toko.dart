@@ -150,7 +150,7 @@ class _ShopPageState extends State<ShopPage> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(18),
                       child: Image.asset(
-                        'assets/img/konten_blog/Konten12.jpg',
+                        'assets/img/konten_blog/Konten14.png',
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -197,28 +197,26 @@ class _FilterAndSearchRow extends StatelessWidget {
         const SizedBox(width: 14),
         Expanded(
           child: Container(
-            height: 30,
+            height: 36,
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: const Color(0xFF19804B), width: 1.4),
             ),
-            child: Row(
-              children: [
-                const SizedBox(width: 10),
-                Image.asset(
-                  'assets/img/system/search.png',
-                  width: 16,
-                  height: 16,
+            child: TextField(
+              style: const TextStyle(fontSize: 12, color: Color(0xFF3D5347)),
+              decoration: InputDecoration(
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  size: 20,
+                  color: Color(0xFF3D5347),
                 ),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'Ketik Pencarianmu',
-                    style: TextStyle(fontSize: 10, color: Color(0xFFA2A99D)),
-                  ),
-                ),
-              ],
+                hintText: 'Ketik Pencarianmu',
+                hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFA2A99D)),
+                border: InputBorder.none,
+              ),
             ),
           ),
         ),
@@ -624,19 +622,31 @@ class _PriceField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: 92,
-      height: 24,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF6F3EF),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: const Color(0xFFD6D1C7)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      alignment: Alignment.centerLeft,
-      child: Text(
-        hint,
-        style: const TextStyle(fontSize: 8, color: Color(0xFFA7AA9D)),
+      height: 30,
+      child: TextField(
+        style: const TextStyle(fontSize: 10, color: Color(0xFF3D5347)),
+        decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          hintText: hint,
+          hintStyle: const TextStyle(fontSize: 10, color: Color(0xFFA7AA9D)),
+          filled: true,
+          fillColor: const Color(0xFFF6F3EF),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: const BorderSide(color: Color(0xFFD6D1C7)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: const BorderSide(color: Color(0xFFD6D1C7)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(6),
+            borderSide: const BorderSide(color: Color(0xFF19804B)),
+          ),
+        ),
+        keyboardType: TextInputType.number,
       ),
     );
   }

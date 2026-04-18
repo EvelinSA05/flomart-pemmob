@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
 class BlogDetailPage extends StatelessWidget {
-  const BlogDetailPage({super.key});
+  const BlogDetailPage({
+    super.key,
+    this.title = 'Peningkatan Aktivitas UMKM oleh FLOMART',
+    this.author = 'Daniel Ang',
+    this.date = '12 Desember 2025',
+    this.location = 'Surabaya',
+    this.image = heroImage,
+    this.summary =
+        'FLOMART hadir sebagai platform e-commerce berbasis tanaman yang bertujuan mendukung pertumbuhan UMKM lokal di sektor pertanian dan hortikultura. Melalui digitalisasi proses penjualan, FLOMART membantu pelaku usaha kecil untuk menjangkau pasar yang lebih luas secara efisien dan berkelanjutan.',
+  });
 
   static const Color backgroundColor = Color(0xFFF4F2ED);
   static const Color primaryGreen = Color(0xFF14824C);
@@ -15,6 +24,13 @@ class BlogDetailPage extends StatelessWidget {
 
   static const String heroImage =
       'assets/img/konten_blog/fotoMulaiJualan1.png';
+
+  final String title;
+  final String author;
+  final String date;
+  final String location;
+  final String image;
+  final String summary;
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +50,11 @@ class BlogDetailPage extends StatelessWidget {
                   children: [
 
                     // ================= TITLE =================
-                    const Center(
+                    Center(
                       child: Text(
-                        'Peningkatan Aktivitas\nUMKM oleh FLOMART',
+                        title,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                           color: textColor,
@@ -53,25 +69,25 @@ class BlogDetailPage extends StatelessWidget {
                     Center(
                       child: RichText(
                         textAlign: TextAlign.center,
-                        text: const TextSpan(
-                          style: TextStyle(fontSize: 13),
+                        text: TextSpan(
+                          style: const TextStyle(fontSize: 13),
                           children: [
                             TextSpan(
-                              text: 'Daniel Ang',
-                              style: TextStyle(
+                              text: author,
+                              style: const TextStyle(
                                 color: primaryGreen,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             TextSpan(
-                              text: ', 12 Desember 2025, ',
-                              style: TextStyle(
+                              text: ', $date, ',
+                              style: const TextStyle(
                                 color: textColor,
                               ),
                             ),
                             TextSpan(
-                              text: 'Surabaya',
-                              style: TextStyle(
+                              text: location,
+                              style: const TextStyle(
                                 color: primaryGreen,
                               ),
                             ),
@@ -86,7 +102,7 @@ class BlogDetailPage extends StatelessWidget {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(26),
                       child: Image.asset(
-                        heroImage,
+                        image,
                         width: double.infinity,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) {
@@ -103,10 +119,10 @@ class BlogDetailPage extends StatelessWidget {
                     const SizedBox(height: 22),
 
                     // ================= CONTENT =================
-                    const Text(
-                      'FLOMART hadir sebagai platform e-commerce berbasis tanaman yang bertujuan mendukung pertumbuhan UMKM lokal di sektor pertanian dan hortikultura. Melalui digitalisasi proses penjualan, FLOMART membantu pelaku usaha kecil untuk menjangkau pasar yang lebih luas secara efisien dan berkelanjutan.',
+                    Text(
+                      summary,
                       textAlign: TextAlign.justify,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         height: 1.5,
                         fontWeight: FontWeight.w600,

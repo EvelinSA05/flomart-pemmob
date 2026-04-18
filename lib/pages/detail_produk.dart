@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/product_model.dart';
 import '../widgets/flomart_bottom_nav.dart';
 import '../widgets/flomart_header.dart';
+import 'profil_seller.dart';
 
 class ProductDetailPage extends StatefulWidget {
   const ProductDetailPage({super.key, required this.product});
@@ -249,8 +250,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ],
               ),
               const SizedBox(height: 20),
-              Container(
-                width: double.infinity,
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfilSellerPage(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -296,7 +306,14 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       splashRadius: 24,
                     ),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProfilSellerPage(),
+                          ),
+                        );
+                      },
                       icon: const Icon(
                         Icons.storefront,
                         color: Color(0xFF14824C),
@@ -306,7 +323,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+            ),
+            const SizedBox(height: 24),
               const Text(
                 'Deskripsi Produk',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),

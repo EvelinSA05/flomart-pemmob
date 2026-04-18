@@ -4,8 +4,11 @@ import '../widgets/flomart_bottom_nav.dart';
 import '../widgets/flomart_header.dart';
 import './blog_detail.dart';
 
-class BlogPage extends StatelessWidget {
+class BlogPage extends StatefulWidget {
   const BlogPage({super.key});
+
+  @override
+  State<BlogPage> createState() => _BlogPageState();
 
   static const Color backgroundColor = Color(0xFFF4F2ED);
   static const Color primaryGreen = Color(0xFF14824C);
@@ -40,6 +43,7 @@ class BlogPage extends StatelessWidget {
     title: 'Peningkatan Aktivitas UMKM',
     date: '12 Desember 2025',
     author: 'Daniel Ang',
+    category: 'All',
     description:
         'UMKM lokal memanfaatkan FLOMART untuk menjual produk tanaman secara online dengan lebih mudah dan aman.',
   );
@@ -50,18 +54,21 @@ class BlogPage extends StatelessWidget {
       title: 'Peningkatan Aktivitas UMKM oleh FLOMART',
       date: '12 Desember 2025',
       author: 'Titania Ang',
+      category: 'All',
     ),
     _BlogArticle(
       image: 'assets/img/konten_blog/Konten13.jpg',
       title: 'Strategi UMKM Tanaman Bertahan di Era Digital',
       date: '10 Desember 2025',
       author: 'Evelin Ang',
+      category: 'All',
     ),
     _BlogArticle(
       image: 'assets/img/konten_blog/Konten12.jpg',
       title: 'Peran E-Commerce Hijau dalam Mendukung Petani Lokal',
       date: '05 Desember 2025',
       author: 'Fida Ang',
+      category: 'All',
     ),
   ];
 
@@ -71,36 +78,42 @@ class BlogPage extends StatelessWidget {
       title: 'Pemupukan Alami untuk Tanaman Lebih Sehat',
       date: '06 Desember 2025',
       author: 'Daniel Ang',
+      category: 'Perawatan',
     ),
     _BlogArticle(
       image: 'assets/img/konten_blog/Konten5.jpg',
       title: 'Tanaman Sayur Cepat Panen untuk Pemula',
       date: '05 Desember 2025',
       author: 'Tian Ang',
+      category: 'Perawatan',
     ),
     _BlogArticle(
       image: 'assets/img/konten_blog/Konten4.jpg',
       title: 'Meningkatnya Minat Berkebun Pasca Pandemi',
       date: '05 Desember 2025',
       author: 'Titania Ang',
+      category: 'Lagi Trend',
     ),
     _BlogArticle(
       image: 'assets/img/konten_blog/Konten3.jpg',
       title: 'Mengenal Jenis Tanah yang Cocok untuk Tanaman Sayur',
       date: '04 Desember 2025',
       author: 'Evelin Ang',
+      category: 'Jenis Tanah',
     ),
     _BlogArticle(
       image: 'assets/img/konten_blog/Konten2.jpg',
       title: 'Tanah Humus vs Tanah Liat: Mana yang Lebih Baik?',
       date: '04 Desember 2025',
       author: 'Fida Ang',
+      category: 'Jenis Tanah',
     ),
     _BlogArticle(
       image: 'assets/img/konten_blog/Konten1.jpg',
       title: 'Cara Mengetahui Kualitas Tanah Sebelum Menanam',
       date: '03 Desember 2025',
       author: 'Daniel Ang',
+      category: 'Jenis Tanah',
     ),
   ];
 
@@ -110,18 +123,41 @@ class BlogPage extends StatelessWidget {
     'Perawatan',
     'Jenis Tanah',
   ];
+}
+
+class _BlogPageState extends State<BlogPage> {
+  int _selectedChipIndex = 0;
+  int _currentPage = 0;
+  static const int _itemsPerPage = 3;
+
+  void _openArticleDetail(_BlogArticle article) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BlogDetailPage(
+          title: article.title,
+          image: article.image,
+          author: article.author,
+          date: article.date,
+          summary:
+              article.description ??
+              'Artikel ini membahas tips praktis seputar pertanian dan UMKM hijau bersama FLOMART.',
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: BlogPage.backgroundColor,
       appBar: const FlomartHeader(),
       bottomNavigationBar: const FlomartBottomNav(currentTab: FlomartTab.blog),
       body: SafeArea(
         top: false,
         child: Column(
           children: [
-            const Divider(height: 1, thickness: 1, color: lineColor),
+            const Divider(height: 1, thickness: 1, color: BlogPage.lineColor),
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
@@ -135,14 +171,20 @@ class BlogPage extends StatelessWidget {
                       const SizedBox(height: 22),
                       _buildSectionTitle('Artikel Populer'),
                       const SizedBox(height: 14),
-                      ..._popularArticles.map(
+                      ...BlogPage._popularArticles.map(
                         (article) => Padding(
                           padding: const EdgeInsets.only(bottom: 14),
                           child: _buildPopularArticleCard(article),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      _buildSearchAndCategorySection(),
+                      _buildSearchAndCategorySection(
+                        _selectedChipIndex,
+                        (index) => setState(() {
+                          _selectedChipIndex = index;
+                          _currentPage = 0;
+                        }),
+                      ),
                       const SizedBox(height: 14),
                       _buildCategoryGrid(),
                       const SizedBox(height: 18),
@@ -158,20 +200,23 @@ class BlogPage extends StatelessWidget {
     );
   }
 
+
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
       style: const TextStyle(
         fontSize: 21,
         fontWeight: FontWeight.w800,
-        color: textColor,
+        color: BlogPage.textColor,
         height: 1.1,
       ),
     );
   }
 
   Widget _buildFeaturedArticle(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => _openArticleDetail(BlogPage._heroArticle),
+      child: Container(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
@@ -191,55 +236,45 @@ class BlogPage extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(20),
               child: _assetImage(
-                _heroArticle.image,
+                BlogPage._heroArticle.image,
                 width: double.infinity,
                 height: MediaQuery.of(context).size.width * 0.52,
               ),
             ),
             const SizedBox(height: 10),
             Text(
-              _heroArticle.title,
+              BlogPage._heroArticle.title,
               style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: textColor,
+                color: BlogPage.textColor,
                 height: 1.2,
               ),
             ),
             const SizedBox(height: 8),
-            _buildArticleMeta(_heroArticle, dateSize: 11.5, authorSize: 11.5),
+            _buildArticleMeta(BlogPage._heroArticle, dateSize: 11.5, authorSize: 11.5),
             const SizedBox(height: 8),
             Text(
-              _heroArticle.description ?? '',
+              BlogPage._heroArticle.description ?? '',
               style: const TextStyle(
                 fontSize: 11.5,
-                color: mutedText,
+                color: BlogPage.mutedText,
                 height: 1.25,
               ),
             ),
             const SizedBox(height: 8),
-            GestureDetector(
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const BlogDetailPage(),
-      ),
-    );
-  },
-  child: const Text(
-    'Baca Lebih Lanjut',
-    style: TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w700,
-      color: primaryGreen,
-    ),
-  ),
-),
+            const Text(
+              'Baca Lebih Lanjut',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: BlogPage.primaryGreen,
+              ),
+            ),
           ],
         ),
       ),
-    );
+    ));
   }
 
   Widget _buildArticleMeta(
@@ -255,7 +290,7 @@ class BlogPage extends StatelessWidget {
           article.date,
           style: TextStyle(
             fontSize: dateSize,
-            color: textColor,
+            color: BlogPage.textColor,
             fontWeight: FontWeight.w500,
             height: 1,
           ),
@@ -265,7 +300,7 @@ class BlogPage extends StatelessWidget {
           article.author,
           style: TextStyle(
             fontSize: authorSize,
-            color: primaryGreen,
+            color: BlogPage.primaryGreen,
             fontWeight: FontWeight.w500,
             height: 1,
           ),
@@ -275,54 +310,145 @@ class BlogPage extends StatelessWidget {
   }
 
   Widget _buildPopularArticleCard(_BlogArticle article) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x20000000),
-            blurRadius: 8,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Row(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: _assetImage(article.image, width: 88, height: 72),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    article.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: textColor,
-                      height: 1.15,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  _buildArticleMeta(article),
-                ],
-              ),
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => _openArticleDetail(article),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x20000000),
+              blurRadius: 8,
+              offset: Offset(0, 4),
             ),
           ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _assetImage(article.image, width: 88, height: 72),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      article.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: BlogPage.textColor,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildArticleMeta(article),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSearchAndCategorySection() {
+  Widget _buildCategoryArticleCard(_BlogArticle item) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: () => _openArticleDetail(item),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x20000000),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(7, 7, 7, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: _assetImage(
+                  item.image,
+                  width: double.infinity,
+                  height: 84,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: Text(
+                  item.title,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 10.2,
+                    fontWeight: FontWeight.w800,
+                    color: BlogPage.textColor,
+                    height: 1.15,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                item.date,
+                style: const TextStyle(
+                  fontSize: 9.2,
+                  color: BlogPage.textColor,
+                  fontWeight: FontWeight.w500,
+                  height: 1,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Row(
+                children: [
+                  Container(
+                    width: 1,
+                    height: 10,
+                    margin: const EdgeInsets.only(right: 5),
+                    color: const Color(0xFF99A399),
+                  ),
+                  Expanded(
+                    child: Text(
+                      item.author,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 9.2,
+                        color: BlogPage.primaryGreen,
+                        fontWeight: FontWeight.w500,
+                        height: 1,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchAndCategorySection(
+    int selectedIndex,
+    ValueChanged<int> onChipTap,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -331,7 +457,7 @@ class BlogPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w800,
-            color: textColor,
+            color: BlogPage.textColor,
           ),
         ),
         const SizedBox(height: 10),
@@ -340,14 +466,14 @@ class BlogPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: primaryGreen, width: 1.5),
+            border: Border.all(color: BlogPage.primaryGreen, width: 1.5),
           ),
           child: const TextField(
             style: TextStyle(fontSize: 11.5),
             decoration: InputDecoration(
               hintText: 'Ketik Pencarianmu',
               hintStyle: TextStyle(fontSize: 11, color: Color(0xFF9AA19A)),
-              prefixIcon: Icon(Icons.search, color: primaryGreen, size: 18),
+              prefixIcon: Icon(Icons.search, color: BlogPage.primaryGreen, size: 18),
               border: InputBorder.none,
               isDense: true,
               contentPadding: EdgeInsets.symmetric(vertical: 9),
@@ -359,25 +485,28 @@ class BlogPage extends StatelessWidget {
           height: 30,
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
-            itemCount: _chips.length,
+            itemCount: BlogPage._chips.length,
             separatorBuilder: (_, __) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
-              final bool active = index == 0;
+              final bool active = index == selectedIndex;
 
-              return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: active ? primaryGreen : Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  border: active ? null : Border.all(color: chipBorder),
-                ),
-                child: Center(
-                  child: Text(
-                    _chips[index],
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w600,
-                      color: active ? Colors.white : textColor,
+              return GestureDetector(
+                onTap: () => onChipTap(index),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: active ? BlogPage.primaryGreen : Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    border: active ? null : Border.all(color: BlogPage.chipBorder),
+                  ),
+                  child: Center(
+                    child: Text(
+                      BlogPage._chips[index],
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
+                        color: active ? Colors.white : BlogPage.textColor,
+                      ),
                     ),
                   ),
                 ),
@@ -389,11 +518,36 @@ class BlogPage extends StatelessWidget {
     );
   }
 
+  List<_BlogArticle> _filteredCategoryItems() {
+    if (_selectedChipIndex == 0) {
+      return BlogPage._categories;
+    }
+
+    final selectedCategory = BlogPage._chips[_selectedChipIndex];
+    return BlogPage._categories
+        .where((article) => article.category == selectedCategory)
+        .toList();
+  }
+
+  List<_BlogArticle> _pagedCategoryItems() {
+    final filtered = _filteredCategoryItems();
+    final start = _currentPage * _itemsPerPage;
+    return filtered.skip(start).take(_itemsPerPage).toList();
+  }
+
+  int get _pageCount {
+    final filtered = _filteredCategoryItems();
+    final pageCount = (filtered.length / _itemsPerPage).ceil();
+    return pageCount < 1 ? 1 : pageCount;
+  }
+
   Widget _buildCategoryGrid() {
+    final filteredCategories = _pagedCategoryItems();
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      itemCount: _categories.length,
+      itemCount: filteredCategories.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 10,
@@ -401,123 +555,73 @@ class BlogPage extends StatelessWidget {
         mainAxisExtent: 174,
       ),
       itemBuilder: (context, index) {
-        final item = _categories[index];
-
-        return Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x20000000),
-                blurRadius: 8,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(7, 7, 7, 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: _assetImage(
-                    item.image,
-                    width: double.infinity,
-                    height: 84,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: Text(
-                    item.title,
-                    maxLines: 4,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 10.2,
-                      fontWeight: FontWeight.w800,
-                      color: textColor,
-                      height: 1.15,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  item.date,
-                  style: const TextStyle(
-                    fontSize: 9.2,
-                    color: textColor,
-                    fontWeight: FontWeight.w500,
-                    height: 1,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Row(
-                  children: [
-                    Container(
-                      width: 1,
-                      height: 10,
-                      margin: const EdgeInsets.only(right: 5),
-                      color: const Color(0xFF99A399),
-                    ),
-                    Expanded(
-                      child: Text(
-                        item.author,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 9.2,
-                          color: primaryGreen,
-                          fontWeight: FontWeight.w500,
-                          height: 1,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
+        final item = filteredCategories[index];
+        return _buildCategoryArticleCard(item);
       },
     );
   }
 
   Widget _buildPagination() {
-    const int activePage = 1;
-    const List<int> pages = [1, 2, 3];
+    final pageCount = _pageCount;
+    final pages = List<int>.generate(pageCount, (index) => index + 1);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.chevron_left_rounded, size: 36, color: Colors.black),
+        GestureDetector(
+          onTap: _currentPage > 0
+              ? () => setState(() {
+                    _currentPage -= 1;
+                  })
+              : null,
+          child: Icon(
+            Icons.chevron_left_rounded,
+            size: 36,
+            color: _currentPage > 0 ? Colors.black : Colors.grey.shade400,
+          ),
+        ),
         const SizedBox(width: 10),
         ...pages.map((page) {
-          final bool active = page == activePage;
+          final bool active = page - 1 == _currentPage;
 
-          return Container(
-            width: 26,
-            height: 26,
-            margin: const EdgeInsets.symmetric(horizontal: 7),
-            decoration: BoxDecoration(
-              color: active ? accentYellow : Colors.transparent,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                '$page',
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black,
+          return GestureDetector(
+            onTap: () => setState(() {
+              _currentPage = page - 1;
+            }),
+            child: Container(
+              width: 26,
+              height: 26,
+              margin: const EdgeInsets.symmetric(horizontal: 7),
+              decoration: BoxDecoration(
+                color: active ? BlogPage.accentYellow : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  '$page',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
           );
         }),
         const SizedBox(width: 10),
-        const Icon(Icons.chevron_right_rounded, size: 36, color: Colors.black),
+        GestureDetector(
+          onTap: _currentPage < pageCount - 1
+              ? () => setState(() {
+                    _currentPage += 1;
+                  })
+              : null,
+          child: Icon(
+            Icons.chevron_right_rounded,
+            size: 36,
+            color: _currentPage < pageCount - 1 ? Colors.black : Colors.grey.shade400,
+          ),
+        ),
       ],
     );
   }
@@ -686,6 +790,7 @@ class _BlogArticle {
     required this.title,
     required this.date,
     required this.author,
+    required this.category,
     this.description,
   });
 
@@ -693,5 +798,6 @@ class _BlogArticle {
   final String title;
   final String date;
   final String author;
+  final String category;
   final String? description;
 }

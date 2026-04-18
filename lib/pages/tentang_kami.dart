@@ -488,7 +488,7 @@ class _AboutUsPageState extends State<AboutUsPage> {
             // Background image from asset
             Positioned.fill(
               child: Image.asset(
-                'assets/img/konten_blog/Konten13.jpg',
+                'assets/img/konten_blog/Konten15.png',
                 fit: BoxFit.cover,
               ),
             ),

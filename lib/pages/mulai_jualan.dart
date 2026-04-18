@@ -5,6 +5,8 @@ import '../widgets/flomart_bottom_nav.dart';
 import '../widgets/flomart_header.dart';
 import 'beranda.dart';
 import 'blog.dart';
+import 'login.dart';
+import 'registrasi.dart';
 import 'tentang_kami.dart';
 import 'toko.dart';
 
@@ -112,7 +114,14 @@ class HeroSection extends StatelessWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const regisPage(),
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.yellow,
                           foregroundColor: Colors.black,
@@ -133,7 +142,14 @@ class HeroSection extends StatelessWidget {
 
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginPage(),
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.yellow,
                           foregroundColor: Colors.black,
