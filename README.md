@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🛍️ Flomart Pemmob
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.11.4+-02569B?logo=flutter)](https://flutter.dev)
