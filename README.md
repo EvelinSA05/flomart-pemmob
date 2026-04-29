@@ -224,20 +224,3 @@ Aplikasi Flomart menggunakan beberapa model bisnis monetisasi untuk menghasilkan
 1. **Direct Sales (Penjualan Langsung)**: Pendapatan utama berasal dari margin keuntungan penjualan produk bunga, buket, dan aksesorisnya secara langsung kepada konsumen melalui aplikasi.
 2. **Delivery Fees (Biaya Pengiriman)**: Memperoleh pendapatan dari layanan pengiriman, termasuk opsi pengiriman reguler, *same-day delivery*, atau pengiriman terjadwal yang memiliki tarif bervariasi.
 3. **Layanan Kustomisasi (Customization Service)**: Mengenakan biaya tambahan untuk permintaan kustomisasi khusus dari pelanggan, seperti desain buket khusus, penambahan hadiah (coklat/boneka), atau kartu ucapan premium.
-
-## 📸 Screenshot Layar Utama Aplikasi
-
-*(Catatan: Pastikan untuk mengganti path gambar di bawah ini dengan lokasi file screenshot yang sesuai dari aplikasi Anda, atau unggah gambar ke repository dan gunakan linknya)*
-
-### 1. Halaman Beranda / Home
-![Halaman Beranda](assets/img/screenshot_1.png)
-*Menampilkan produk unggulan, kategori bunga, dan promo menarik.*
-
-### 2. Halaman Detail Produk / Toko
-![Halaman Detail Produk](assets/img/screenshot_2.png)
-*Menampilkan detail informasi produk, harga, dan tombol aksi untuk membeli atau menambah ke keranjang.*
-
-### 3. Halaman Keranjang / Checkout
-![Halaman Checkout](assets/img/screenshot_3.png)
-*Menampilkan ringkasan pesanan pengguna, total harga, dan proses pembayaran.*
->>>>>>> fd9f4ec (menambahkan halaman penjual)
