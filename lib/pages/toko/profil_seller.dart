@@ -222,22 +222,48 @@ class _ProfilSellerPageState extends State<ProfilSellerPage>
                           style: TextStyle(
                             color: Color(0xFF14824C),
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontSize: 10,
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: () {},
-                        icon: const Icon(Icons.chat, color: Color(0xFF14824C), size: 16),
+                        icon: const Icon(Icons.chat, color: Color(0xFF14824C), size: 14),
                         label: const Text(
-                          'Hubungi Toko',
+                          'Hubungi',
                           style: TextStyle(
                             color: Color(0xFF14824C),
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontSize: 10,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF14824C)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          backgroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          minimumSize: const Size(0, 36),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/dashboard-seller');
+                        },
+                        icon: const Icon(Icons.settings, color: Color(0xFF14824C), size: 14),
+                        label: const Text(
+                          'Kelola',
+                          style: TextStyle(
+                            color: Color(0xFF14824C),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 10,
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
