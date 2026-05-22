@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 class ProdukSayaPage extends StatefulWidget {
@@ -11,83 +13,67 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late TabController _tabController;
 
-  final List<Map<String, dynamic>> _myProducts = [
-    {
-      'name': 'Bibit Ubi Ungu',
-      'brand': 'Vida Verda',
-      'season': 'Musim Hujan',
-      'price': 'Rp12.000',
-      'stock': 100,
-      'sales': 0,
-      'analysis': '10x Dikunjungi\nProduk Masih Banyak',
-      'image': 'assets/img/produk/padi.jpg',
-    },
-    {
-      'name': 'Bibit Kentang',
-      'brand': 'Vida Verda',
-      'season': 'Musim Hujan',
-      'price': 'Rp15.000',
-      'stock': 150,
-      'sales': 0,
-      'analysis': '5x Dikunjungi\nProduk Masih Banyak',
-      'image': 'assets/img/produk/kentang.png',
-    },
-    {
-      'name': 'Bibit Kubis',
-      'brand': 'Vida Verda',
-      'season': 'Musim Hujan',
-      'price': 'Rp10.000',
-      'stock': 200,
-      'sales': 100,
-      'analysis': '100x Dikunjungi\nPerlu dikirim\nProduk Masih Banyak',
-      'image': 'assets/img/produk/kubis.jpg',
-    },
-    {
-      'name': 'Bibit Labu',
-      'brand': 'Vida Verda',
-      'season': 'Musim Hujan',
-      'price': 'Rp18.000',
-      'stock': 300,
-      'sales': 0,
-      'analysis': '20x Dikunjungi\nProduk Masih Banyak',
-      'image': 'assets/img/produk/labu.png',
-    },
-    {
-      'name': 'Bibit Mawar',
-      'brand': 'Vida Verda',
-      'season': 'Musim Hujan',
-      'price': 'Rp20.000',
-      'stock': 0,
-      'sales': 50,
-      'analysis': '50x Dikunjungi\nStok Habis\nProduk Masih Banyak',
-      'image': 'assets/img/produk/mawar.jpg',
-    },
-    {
-      'name': 'Pupuk Organik',
-      'brand': 'Vida Verda',
-      'season': 'Semua Musim',
-      'price': 'Rp8.000',
-      'stock': 120,
-      'sales': 0,
-      'analysis': '29x Dikunjungi\nProduk Perlu di restok',
-      'image': 'assets/img/produk/pupukOrganik.jpg',
-    },
-    {
-      'name': 'Pupuk Kering',
-      'brand': 'Vida Verda',
-      'season': 'Semua Musim',
-      'price': 'Rp8.500',
-      'stock': 10,
-      'sales': 30,
-      'analysis': '30x Dikunjungi\nStok Menipis\nProduk Perlu di restok',
-      'image': 'assets/img/produk/organik_kompos.jpg',
-    },
-  ];
+  List<Map<String, dynamic>> _myProducts = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _fetchProducts();
+  }
+
+  Future<void> _fetchProducts() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await http.get(Uri.parse('http://127.0.0.1/flomart_api/get_produk.php'));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success') {
+          List dynamicList = data['data'];
+          setState(() {
+            _myProducts = dynamicList.map<Map<String, dynamic>>((item) {
+              int stok = int.parse(item['stok'].toString());
+              return {
+                'id_produk': item['id_produk'],
+                'name': item['nama_produk'],
+                'brand': item['nama_kategori'] ?? 'Kategori',
+                'season': 'Semua Musim',
+                'price': 'Rp' + double.parse(item['harga'].toString()).toInt().toString(),
+                'stock': stok,
+                'sales': 0,
+                'analysis': stok > 5 ? 'Produk Masih Banyak' : 'Stok Menipis',
+                'image': 'assets/img/produk/15.png', // Fallback
+              };
+            }).toList();
+            _isLoading = false;
+          });
+        }
+      }
+    } catch (e) {
+      print('Error: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _deleteProduct(String id) async {
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1/flomart_api/hapus_produk.php'),
+        body: {'id_produk': id},
+      );
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk berhasil dihapus', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green));
+          _fetchProducts();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'], style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+        }
+      }
+    } catch (e) {
+      print('Error delete: $e');
+    }
   }
 
   @override
@@ -238,8 +224,9 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
             ],
           ),
           ElevatedButton.icon(
-            onPressed: () {
-              Navigator.pushNamed(context, '/tambah-produk');
+            onPressed: () async {
+              await Navigator.pushNamed(context, '/tambah-produk');
+              _fetchProducts();
             },
             icon: const Icon(Icons.add, size: 18),
             label: const Text('Tambah Produk'),
@@ -340,6 +327,20 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
   }
 
   Widget _buildProductTable() {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(child: CircularProgressIndicator(color: Color(0xFF14824C))),
+      );
+    }
+
+    if (_myProducts.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(child: Text('Tidak ada produk.')),
+      );
+    }
+
     return Column(
       children: [
         const SizedBox(height: 16),
@@ -354,6 +355,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
               Expanded(flex: 1, child: Text('Stok', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
               Expanded(flex: 2, child: Text('Perfoma', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
               Expanded(flex: 2, child: Text('Analisis Produk', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10))),
+              SizedBox(width: 32),
             ],
           ),
         ),
@@ -408,6 +410,19 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
                         color: _getAnalysisColor(p['analysis']),
                         fontWeight: FontWeight.w500,
                       ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 32,
+                    child: IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        if (p['id_produk'] != null) {
+                          _deleteProduct(p['id_produk'].toString());
+                        }
+                      },
                     ),
                   ),
                 ],

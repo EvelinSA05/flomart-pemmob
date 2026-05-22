@@ -1,30 +1,20 @@
 import 'package:flutter/material.dart';
-import '../pages/beranda/notifikasi.dart';
-import '../pages/auth/login.dart';
+import '../pages/profile/profile.dart';
 import '../pages/chat/chat_page.dart';
 import '../pages/beranda/cart_page.dart';
+import '../pages/beranda/notifikasi.dart';
 import '../pages/profile/pesanan_saya.dart';
-import '../pages/profile/profile.dart';
-
 import '../services/app_state.dart';
 
-
-class FlomartHeader extends StatelessWidget implements PreferredSizeWidget {
-  final List<Map<String, dynamic>> pesananSaya;
-
-  const FlomartHeader({
-    super.key,
-    this.pesananSaya = const [],
-  });
-
+class FlomartHeaderLoggedIn extends StatelessWidget implements PreferredSizeWidget {
+  const FlomartHeaderLoggedIn({super.key});
 
   static const String headerLogoAsset = 'assets/img/system/logoFlomart.png';
   static const String headerWhatsappAsset = 'assets/img/system/logoChat.png';
   static const String headerShopAsset = 'assets/img/system/logoKeranjang.png';
-  static const String headerNotificationAsset =
-      'assets/img/system/logoNotif.png';
+  static const String headerNotificationAsset ='assets/img/system/logoNotif.png';
   static const String headerCartAsset = 'assets/img/system/logPesanan.png';
-  static const String headerProfileAsset = 'assets/img/system/logoProfile.png';
+  static const String headerProfileAsset = 'assets/img/system/pengguna_login.png';
 
   @override
   Widget build(BuildContext context) {
@@ -63,47 +53,33 @@ class FlomartHeader extends StatelessWidget implements PreferredSizeWidget {
           padding: const EdgeInsets.only(right: 2),
           child: _headerActionAsset(context, headerCartAsset),
         ),
-
-        ListenableBuilder(
-          listenable: AppState(),
-          builder: (context, child) {
-            final isLoggedIn = AppState().isLoggedIn;
-            return Padding(
-              padding: const EdgeInsets.only(right: 10, left: 4),
-              child: GestureDetector(
-                onTap: () {
-                  if (isLoggedIn) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const ProfilePage()),
-                    );
-                  } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const LoginPage()),
-                    );
-                  }
-                },
-                child: SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: ClipOval(
-                    child: _assetImage(
-                      isLoggedIn
-                          ? 'assets/img/system/pengguna_login.png'
-                          : headerProfileAsset,
-                      fit: BoxFit.cover,
-                      fallback: const Icon(
-                        Icons.person_outline,
-                        color: Color(0xFFBEBEBE),
-                        size: 18,
-                      ),
-                    ),
+        Padding(
+          padding: const EdgeInsets.only(right: 10, left: 4),
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePage(),
+                ),
+              );
+            },
+            child: SizedBox(
+              width: 32,
+              height: 32,
+              child: ClipOval(
+                child: _assetImage(
+                  headerProfileAsset,
+                  fit: BoxFit.cover,
+                  fallback: const Icon(
+                    Icons.person_outline,
+                    color: Color(0xFFBEBEBE),
+                    size: 18,
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
         ),
       ],
     );
@@ -116,10 +92,6 @@ class FlomartHeader extends StatelessWidget implements PreferredSizeWidget {
     return IconButton(
       onPressed: () {
         if (path == headerWhatsappAsset) {
-          if (!AppState().isLoggedIn) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
-            return;
-          }
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -127,10 +99,6 @@ class FlomartHeader extends StatelessWidget implements PreferredSizeWidget {
             ),
           );
         } else if (path == headerShopAsset) {
-          if (!AppState().isLoggedIn) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
-            return;
-          }
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -138,23 +106,13 @@ class FlomartHeader extends StatelessWidget implements PreferredSizeWidget {
             ),
           );
         } else if (path == headerNotificationAsset) {
-          if (!AppState().isLoggedIn) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
-            return;
-          }
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => NotificationPage(
-                pesananSaya: pesananSaya,
-              ),
+              builder: (_) => const NotificationPage(),
             ),
           );
         } else if (path == headerCartAsset) {
-          if (!AppState().isLoggedIn) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
-            return;
-          }
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -163,7 +121,6 @@ class FlomartHeader extends StatelessWidget implements PreferredSizeWidget {
           );
         }
       },
-
       splashRadius: 20,
       icon: path == headerShopAsset
           ? ListenableBuilder(

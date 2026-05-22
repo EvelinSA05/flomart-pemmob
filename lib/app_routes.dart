@@ -12,3 +12,11 @@ const String keuanganSellerRoute = '/keuangan-seller';
 const String pengaturanSellerRoute = '/pengaturan-seller';
 const String chatListSellerRoute = '/chat-list-seller';
 const String chatDetailSellerRoute = '/chat-detail-seller';
+const String loginRoute = '/login';
+const String registerRoute = '/register';
+const String homeAfterLoginRoute = '/beranda-login';
+const String profileRoute = '/profile';
+const String pesananSayaRoute = '/pesanan-saya-buyer';
+const String cartRoute = '/cart';
+const String notificationRoute = '/notifikasi';
+

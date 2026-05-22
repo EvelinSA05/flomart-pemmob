@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
 class TambahProdukPage extends StatefulWidget {
@@ -9,6 +11,57 @@ class TambahProdukPage extends StatefulWidget {
 
 class _TambahProdukPageState extends State<TambahProdukPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  
+  bool _isSaving = false;
+
+  Future<void> _simpanProduk() async {
+    setState(() {
+      _isSaving = true;
+    });
+
+    String nama = _namaController.text;
+    String stok = _stokController.text;
+    String hargaRaw = _hargaController.text;
+    String harga = hargaRaw.replaceAll(RegExp(r'[^0-9]'), '');
+    String deskripsi = _deskripsiController.text;
+    
+    int idKategori = 1;
+    if (_selectedKategori == 'Bunga') idKategori = 3;
+    else if (_selectedKategori == 'Buah') idKategori = 2;
+    else if (_selectedKategori == 'Sayur') idKategori = 1;
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1/flomart_api/tambah_produk.php'),
+        body: {
+          'id_kategori': idKategori.toString(),
+          'nama_produk': nama,
+          'harga': harga,
+          'stok': stok,
+          'deskripsi': deskripsi,
+        },
+      );
+      
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk berhasil ditambahkan', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green));
+          Navigator.pop(context);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'], style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+        }
+      }
+    } catch (e) {
+      print('Error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Terjadi kesalahan', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
+  }
 
   final TextEditingController _namaController = TextEditingController(text: 'Bunga Sepatu');
   final TextEditingController _stokController = TextEditingController(text: '100');
@@ -241,15 +294,14 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
           const SizedBox(height: 16),
           const Text('Deskripsi', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black),
-              color: Colors.white.withOpacity(0.5),
-            ),
-            child: Text(
-              _deskripsiController.text,
-              style: const TextStyle(fontSize: 10),
+          TextField(
+            controller: _deskripsiController,
+            maxLines: 4,
+            style: const TextStyle(fontSize: 10),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white.withOpacity(0.5),
+              border: const OutlineInputBorder(borderSide: BorderSide(color: Colors.black)),
             ),
           ),
           const SizedBox(height: 24),
@@ -259,13 +311,15 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
               width: 150,
               height: 40,
               child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: _isSaving ? null : _simpanProduk,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFF0BF00),
                   foregroundColor: Colors.black,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 ),
-                child: const Text('Simpan', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: _isSaving
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                    : const Text('Simpan', style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ),

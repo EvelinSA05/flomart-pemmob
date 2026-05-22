@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../app_routes.dart';
+import '../services/app_state.dart';
+
 
 enum FlomartTab { home, shop, sell, blog, about }
 
@@ -84,7 +86,7 @@ class FlomartBottomNav extends StatelessWidget {
   String _routeFor(FlomartTab tab) {
     switch (tab) {
       case FlomartTab.home:
-        return homeRoute;
+        return AppState().isLoggedIn ? homeAfterLoginRoute : homeRoute;
       case FlomartTab.shop:
         return shopRoute;
       case FlomartTab.sell:

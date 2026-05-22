@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'login.dart'; // ✅ WAJIB ADA
 
@@ -42,7 +44,7 @@ class regisHeader extends StatelessWidget {
             },
           ),
           const SizedBox(width: 10),
-          Image.asset('img/system/LogoFlomart.png', height: 30),
+          Image.asset('assets/img/system/LogoFlomart.png', height: 30),
         ],
       ),
     );
@@ -67,7 +69,7 @@ class regisHero extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-          Image.asset('img/system/fotocewe_kelola.png', height: 180),
+          Image.asset('assets/img/system/FotoRegis.png', height: 180),
         ],
       ),
     );
@@ -83,6 +85,80 @@ class regisForm extends StatefulWidget {
 
 class _regisFormState extends State<regisForm> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _kontakController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _register() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_passwordController.text != _confirmPasswordController.text) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password dan Konfirmasi Password tidak cocok!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1/flomart_api/register.php'),
+        body: {
+          'nama': _namaController.text,
+          'kontak': _kontakController.text,
+          'password': _passwordController.text,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success') {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Registrasi Berhasil! Silakan Login.', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const LoginPage(),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'], style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+          );
+        }
+      } else if (response.statusCode == 409) {
+         final data = json.decode(response.body);
+         ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Email atau No HP sudah terdaftar', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+         );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Gagal melakukan registrasi', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+        );
+      }
+    } catch (e) {
+      print('Register error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Terjadi kesalahan koneksi', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _namaController.dispose();
+    _kontakController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -98,18 +174,18 @@ class _regisFormState extends State<regisForm> {
         child: Column(
           children: [
             const Text(
-              "Daftar Sebagai Penjual Flomart",
+              "Register",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
 
-            _inputField("Nama Lengkap"),
+            _inputField("Nama Lengkap", _namaController),
             const SizedBox(height: 12),
-            _inputField("Email / No HP"),
+            _inputField("Email / No HP", _kontakController),
             const SizedBox(height: 12),
-            _inputField("Password", isPassword: true),
+            _inputField("Password", _passwordController, isPassword: true),
             const SizedBox(height: 12),
-            _inputField("Konfirmasi Password", isPassword: true),
+            _inputField("Konfirmasi Password", _confirmPasswordController, isPassword: true),
 
             const SizedBox(height: 15),
 
@@ -123,14 +199,10 @@ class _regisFormState extends State<regisForm> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Registrasi Berhasil!')),
-                    );
-                  }
-                },
-                child: const Text("Daftar", style: TextStyle(color: Colors.black)),
+                onPressed: _isLoading ? null : _register,
+                child: _isLoading 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                  : const Text("Daftar", style: TextStyle(color: Colors.black)),
               ),
             ),
 
@@ -170,9 +242,11 @@ class _regisFormState extends State<regisForm> {
                 const Text("Sudah punya akun? "),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const LoginPage()),
+                      MaterialPageRoute(
+                        builder: (_) => const LoginPage(),
+                      ),
                     );
                   },
                   child: const Text(
@@ -188,8 +262,9 @@ class _regisFormState extends State<regisForm> {
     );
   }
 
-  Widget _inputField(String hint, {bool isPassword = false}) {
+  Widget _inputField(String hint, TextEditingController controller, {bool isPassword = false}) {
     return TextFormField(
+      controller: controller,
       obscureText: isPassword,
       validator: (value) {
         if (value == null || value.isEmpty) {

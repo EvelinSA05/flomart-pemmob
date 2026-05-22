@@ -105,7 +105,7 @@ class HeroSection extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'Gabung sebagai penjual di FLOMART dan perluas jangkauan bisnismu.',
+                  'Login sebagai admin di FLOMART dan perluas jangkauan bisnismu.',
                   style: TextStyle(color: Colors.black),
                 ),
                 const SizedBox(height: 20),
@@ -212,7 +212,7 @@ class ManfaatSection extends StatelessWidget {
       child: Column(
         children: [
           const Text(
-            'Manfaat FLOMART Seller',
+            'Manfaat FLOMART Admin',
             style: TextStyle(color: Colors.white, fontSize: 18),
           ),
           item('Mudah Digunakan', 'Kelola produk dengan cepat'),

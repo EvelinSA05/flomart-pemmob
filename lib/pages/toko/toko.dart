@@ -9,6 +9,9 @@ import '../beranda/beranda.dart';
 import 'detail_produk.dart';
 import '../jualan/mulai_jualan.dart';
 import '../info/tentang_kami.dart';
+import '../../services/app_state.dart';
+import '../beranda/cart_page.dart';
+import '../auth/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -470,18 +473,43 @@ class _ProductCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF0BF00),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Center(
-                      child: Image.asset(
-                        'assets/img/system/logoKeranjangPutih.png',
-                        width: 14,
-                        height: 14,
+                  GestureDetector(
+                    onTap: () {
+                      if (!AppState().isLoggedIn) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginPage()),
+                        );
+                        return;
+                      }
+                      AppState().addToCart(CartItem(
+                        name: product.name,
+                        price: product.price,
+                        imagePath: product.image,
+                        size: 'Reguler',
+                        quantity: 1,
+                      ));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('${product.name} ditambahkan ke keranjang'),
+                          backgroundColor: const Color(0xFF0D9650),
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0BF00),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Center(
+                        child: Image.asset(
+                          'assets/img/system/logoKeranjangPutih.png',
+                          width: 14,
+                          height: 14,
+                        ),
                       ),
                     ),
                   ),

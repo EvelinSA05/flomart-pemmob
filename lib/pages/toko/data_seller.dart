@@ -260,7 +260,7 @@ class _DataSellerPageState extends State<DataSellerPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Grafik Penjualn\ndan Total Pengunjung',
+            'Grafik Penjualan\ndan Total Pengunjung',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, height: 1.3),
           ),
           Column(

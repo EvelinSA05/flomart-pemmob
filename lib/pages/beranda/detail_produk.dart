@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../services/app_state.dart';
+import 'cart_page.dart';
+import '../auth/login.dart';
+
+
 
 class DetailProdukPage extends StatefulWidget {
   const DetailProdukPage({
@@ -359,6 +364,38 @@ Widget _thumbItem(String path) {
                 label: 'Add Cart',
                 background: DetailProdukPage._yellow,
                 foreground: Colors.black,
+                onTap: () {
+                  if (!AppState().isLoggedIn) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                    );
+                    return;
+                  }
+                  if (_qty > 0) {
+                    AppState().addToCart(CartItem(
+                      name: widget.name,
+                      price: widget.price,
+                      imagePath: widget.imagePath,
+                      size: _selectedSize,
+                      quantity: _qty,
+                    ));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${widget.name} ditambahkan ke keranjang'),
+                        backgroundColor: DetailProdukPage._green,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Pilih jumlah terlebih dahulu'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
               ),
             ),
             const SizedBox(width: 10),
@@ -368,6 +405,35 @@ Widget _thumbItem(String path) {
                 label: 'Buy Now',
                 background: DetailProdukPage._yellow,
                 foreground: Colors.black,
+                onTap: () {
+                  if (!AppState().isLoggedIn) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginPage()),
+                    );
+                    return;
+                  }
+                  if (_qty > 0) {
+                    AppState().addToCart(CartItem(
+                      name: widget.name,
+                      price: widget.price,
+                      imagePath: widget.imagePath,
+                      size: _selectedSize,
+                      quantity: _qty,
+                    ));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const CartPage()),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Pilih jumlah terlebih dahulu'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
               ),
             ),
           ],
@@ -681,27 +747,33 @@ class _ActionButton extends StatelessWidget {
     required this.label,
     required this.background,
     required this.foreground,
+    this.onTap,
   });
 
   final String label;
   final Color background;
   final Color foreground;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 32,
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      alignment: Alignment.center,
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: foreground,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        height: 32,
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: foreground,
+          ),
         ),
       ),
     );

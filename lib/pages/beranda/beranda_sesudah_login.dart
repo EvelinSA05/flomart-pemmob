@@ -1,99 +1,23 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:flomart_pemmob/pages/beranda/detail_produk.dart';
+import 'package:flomart_pemmob/pages/beranda/detail_produk.dart'; //Untuk navigasi ke halaman detail produk.
 
-import '../../widgets/flomart_bottom_nav.dart';
-import '../../widgets/flomart_header.dart';
-import '../toko/toko.dart';
-
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchProducts();
-  }
-
-  Future<void> _fetchProducts() async {
-    try {
-      final response = await http.get(Uri.parse('http://127.0.0.1/flomart_api/get_produk.php'));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 'success') {
-          List dynamicList = data['data'];
-          List<_ProductItem> loadedProducts = dynamicList.map((item) {
-            return _ProductItem(
-              name: item['nama_produk'],
-              price: 'Rp' + double.parse(item['harga']).toInt().toString(),
-              rating: '4.8',
-              imagePath: 'assets/img/produk/15.png', // Fallback
-              tag: (item['nama_kategori'] ?? '') + ', Musim Hujan',
-              images: [
-                'assets/img/konten_beranda/tkubis1.jpg',
-                'assets/img/konten_beranda/tkubis2.jpg',
-                'assets/img/konten_beranda/tkubis3.jpg',
-              ],
-            );
-          }).toList();
-          
-          setState(() {
-            _recommendedProducts = List.from(loadedProducts);
-            _bestProducts = List.from(loadedProducts);
-            _isLoading = false;
-          });
-        }
-      }
-    } catch (e) {
-      print('Error fetching products: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
+import '../../widgets/flomart_bottom_nav.dart'; //Mengimpor bottom navigation custom.
+import '../../widgets/flomart_header.dart'; //Mengimpor header custom.
+import '../toko/toko.dart'; // Untuk navigasi ke halaman toko
+import '../profile/profile.dart';
 
 
+//Halaman ini memakai StatelessWidget, artinya tampilan tidak menyimpan state yang berubah sendiri.
+class BerandaSesudahLogin extends StatelessWidget {
+  const BerandaSesudahLogin({super.key});
+
+
+  //Kumpulan warna tema yang dipakai berulang di halaman ini. KONSTANTA WARNA
   static const Color _green = Color(0xFF13824B);
   static const Color _dark = Color(0xFF151515);
   static const Color _yellow = Color(0xFFE2BE00);
   static const Color _lightBg = Color(0xFFF4F1F1);
   static const Color _chipGray = Color(0xFFE8E8E8);
-
-  final List<Map<String, dynamic>> pesananSaya = const [
-    {
-      'status': 'Belum Bayar',
-      'idPesanan': 'ORD-20251210-001',
-      'totalHarga': 'Rp 12.000',
-      'asset': 'assets/img/produk/kubis.jpg',
-    },
-    {
-      'status': 'Dikemas',
-      'idPesanan': 'ORD-20251209-005',
-      'totalHarga': 'Rp 25.000',
-      'asset': 'assets/img/produk/jagung.jpg',
-    },
-    {
-      'status': 'Dikirim',
-      'idPesanan': 'ORD-20251208-012',
-      'totalHarga': 'Rp 18.000',
-      'asset': 'assets/img/produk/kelengkeng.png',
-    },
-    {
-      'status': 'Selesai',
-      'idPesanan': 'ORD-20251207-020',
-      'totalHarga': 'Rp 8.000',
-      'asset': 'assets/img/produk/15.png',
-    },
-  ];
-
 
   static const List<String> _menus = [
     // 'Beranda',
@@ -103,6 +27,7 @@ class _HomePageState extends State<HomePage> {
     // 'Tentang Kami',
   ];
 
+  //Dipakai untuk chip kategori di bagian "Pilihan Benih Terbaik".
   static const List<String> _chips = [
     'Benih Sayuran',
     'Benih Buah',
@@ -110,6 +35,8 @@ class _HomePageState extends State<HomePage> {
     'Benih Herbal',
   ];
 
+
+  // Data listview kategori produk.
   static const List<_CategoryItem> _categories = [
     _CategoryItem(
       title: 'Benih Sayuran',
@@ -137,9 +64,114 @@ class _HomePageState extends State<HomePage> {
     ),
   ];
 
-  List<_ProductItem> _recommendedProducts = [];
-  List<_ProductItem> _bestProducts = [];
+  //Produk Rekomendasi
+  // Data produk yang ditampilkan pada section rekomendasi. (LISTVIEW)
+  static const List<_ProductItem> _recommendedProducts = [
+    _ProductItem(
+      name: 'Benih Kubis',
+      price: 'Rp10.000',
+      rating: '4.8',
+      imagePath: 'assets/img/produk/kubis.jpg',
+      tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
+    ),
+    _ProductItem(
+      name: 'Benih Kelengkeng',
+      price: 'Rp18.000',
+      rating: '4.9',
+      imagePath: 'assets/img/produk/kelengkeng.png',
+      tag: 'Benih Buah, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkelengkeng1.jpg',
+        'assets/img/konten_beranda/tkelengkeng2.jpg',
+        'assets/img/konten_beranda/tkelengkeng3.jpg',
+      ],
+    ),
+    _ProductItem(
+      name: 'Benih Sawi Hijau',
+      price: 'Rp8.000',
+      rating: '4.6',
+      imagePath: 'assets/img/produk/15.png',
+      tag: 'Benih Sayur, Musim Hujan, Pasir',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
+    ),
+    _ProductItem(
+      name: 'Benih Jagung',
+      price: 'Rp25.000',
+      rating: '4.8',
+      imagePath: 'assets/img/produk/jagung.jpg',
+      tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkelengkeng1.jpg',
+        'assets/img/konten_beranda/tkelengkeng2.jpg',
+        'assets/img/konten_beranda/tkelengkeng3.jpg',
+      ],
+    ),
+  ];
 
+  //Data produk listview pada section "Pilihan Benih Terbaik". PRODUK TERBAIK
+  static const List<_ProductItem> _bestProducts = [
+    _ProductItem(
+      name: 'Benih Kubis',
+      price: 'Rp10.000',
+      rating: '4.8',
+      imagePath: 'assets/img/produk/kubis.jpg',
+      tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
+    ),
+    _ProductItem(
+      name: 'Benih Sawi Hijau',
+      price: 'Rp8.000',
+      rating: '4.6',
+      imagePath: 'assets/img/produk/15.png',
+      tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
+    ),
+    _ProductItem(
+      name: 'Benih Labu',
+      price: 'Rp14.000',
+      rating: '4.5',
+      imagePath: 'assets/img/produk/labu.png',
+      tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
+    ),
+    _ProductItem(
+      name: 'Benih Tomat',
+      price: 'Rp12.000',
+      rating: '4.5',
+      imagePath: 'assets/img/produk/tomat.png',
+      tag: 'Benih Sayur, Musim Hujan, Gambut',
+      images: [
+        'assets/img/konten_beranda/tkubis1.jpg',
+        'assets/img/konten_beranda/tkubis2.jpg',
+        'assets/img/konten_beranda/tkubis3.jpg',
+      ],
+    ),
+  ];
+
+
+  //Data keunggulan layanan.
+  //Ditampilkan berjajar menggunakan Row + Expanded
   static const List<_BenefitItem> _benefits = [
     _BenefitItem(
       title: 'Benih Tepat Guna',
@@ -158,11 +190,13 @@ class _HomePageState extends State<HomePage> {
     ),
   ];
 
+
+  // BUILD UTAMA HALAMAN
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: FlomartHeader(pesananSaya: pesananSaya),
+      appBar: const FlomartHeader(),
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -224,14 +258,18 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+      //untuk menampilkan menu di bagian bawah layar
       bottomNavigationBar: const FlomartBottomNav(currentTab: FlomartTab.home),
     );
   }
 
+
+  //Menampilkan banner utama di bagian atas.
   Widget _buildHeroBanner() {
     return SizedBox(
       height: 265,
       width: double.infinity,
+      //untuk menumpuk background, teks, tombol, gambar orang, dan icon panah di atas satu area banner.
       child: Stack(
         children: [
           Positioned.fill(
@@ -326,6 +364,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
+  //Menampilkan judul section dan teks aksi seperti "Lihat Semua".
   Widget _buildSectionHeader(String title, String action) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -356,6 +396,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCategoryList() {
+    //LayoutBuilder = menghitung lebar item sesuai ruang layar
     return LayoutBuilder(
       builder: (context, constraints) {
         const horizontalPadding = 16.0;
@@ -366,6 +407,7 @@ class _HomePageState extends State<HomePage> {
 
         return SizedBox(
           height: 110,
+          //ListView.separated = daftar scroll horizontal dengan jarak antar item
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
             scrollDirection: Axis.horizontal,
@@ -383,6 +425,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  //Menampilkan 2 kartu promo berdampingan.
   Widget _buildPromoRow() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -408,19 +451,9 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
+  //Menampilkan produk dalam bentuk card secara horizontal.
   Widget _buildProductList(List<_ProductItem> items) {
-    if (_isLoading) {
-      return const SizedBox(
-        height: 150,
-        child: Center(child: CircularProgressIndicator(color: Color(0xFF13824B))),
-      );
-    }
-    if (items.isEmpty) {
-      return const SizedBox(
-        height: 150,
-        child: Center(child: Text('Tidak ada produk.', style: TextStyle(color: Color(0xFF151515)))),
-      );
-    }
     return SizedBox(
       height: 150,
       child: ListView.separated(
@@ -433,6 +466,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
+  //Menampilkan keunggulan layanan.
   Widget _buildBenefits() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -452,7 +487,10 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+
+  //Menampilkan chip filter kategori
   Widget _buildChips() {
+    //Membuat satu widget bisa di-scroll (digeser)
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -482,6 +520,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+//BUAT FOOTER TPI TIDAK DIPAKAI
   Widget _buildFooterBrand() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -575,6 +614,8 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
+
+//GestureDetector dipakai agar card pada belanja berdasarkan kategori bisa diklik.
 class _CategoryCard extends StatelessWidget {
   const _CategoryCard({required this.item});
 
@@ -584,9 +625,10 @@ class _CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        //Menggunakan navigator push nanti jika di klik akakn pindah ke halaman toko.dart
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const ShopPage()),
+          MaterialPageRoute(builder: (context) => const ShopPage()), //membuat perpindahan halaman
         );
       },
       child: Container(
@@ -662,6 +704,8 @@ class _CategoryCard extends StatelessWidget {
   }
 }
 
+
+//Menampilkan kartu promo.
 class _PromoCard extends StatelessWidget {
   const _PromoCard({
     required this.title,
@@ -681,6 +725,7 @@ class _PromoCard extends StatelessWidget {
         color: accent,
         borderRadius: BorderRadius.circular(12),
       ),
+      // Stack dipakai agar label "Safe Delivery", teks promo, dan gambar bisa ditempatkan saling menumpuk.
       child: Stack(
         children: [
           Positioned(
@@ -729,6 +774,7 @@ class _PromoCard extends StatelessWidget {
   }
 }
 
+//menampilkan seluruh productcasr
 class _ProductCard extends StatelessWidget {
   const _ProductCard({required this.item});
 
@@ -738,6 +784,7 @@ class _ProductCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
+        //Navigator push Mengarah ke DetailProdukPage. Data yang dikirim name, price, rating, imagePath, tag, shortDesc, longDesc, images
         Navigator.push(
           context,
           MaterialPageRoute(
@@ -768,6 +815,7 @@ class _ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            //Stack dipakai pada area gambar untuk menaruh badge rating di atas gambar
             Stack(
               children: [
                 Container(
@@ -871,6 +919,8 @@ class _ProductCard extends StatelessWidget {
   }
 }
 
+
+// Menampilkan icon benefit, judul, dan deskripsi.
 class _BenefitCard extends StatelessWidget {
   const _BenefitCard({required this.item});
 
@@ -976,6 +1026,7 @@ class _SocialRow extends StatelessWidget {
   }
 }
 
+//Menyimpan  data/ variabel title, total, accent, dan imagePath.
 class _CategoryItem {
   const _CategoryItem({
     required this.title,

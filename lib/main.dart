@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
+
 import 'app_routes.dart';
 import 'pages/beranda/beranda.dart';
 import 'pages/blog/blog.dart';
@@ -14,9 +16,18 @@ import 'pages/toko/keuangan_seller.dart';
 import 'pages/toko/pengaturan_seller.dart';
 import 'pages/toko/chat_list_seller.dart';
 import 'pages/toko/chat_detail_seller.dart';
+import 'pages/auth/login.dart';
+import 'pages/auth/registrasi.dart';
+import 'pages/beranda/beranda_sesudah_login.dart';
+import 'pages/profile/profile.dart';
+import 'pages/profile/pesanan_saya.dart';
+import 'pages/beranda/cart_page.dart';
+import 'pages/beranda/notifikasi.dart';
 
 void main() {
-  runApp(const MyApp());
+  initializeDateFormatting('id_ID', null).then((_) {
+    runApp(const MyApp());
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -30,7 +41,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      initialRoute: dashboardSellerRoute,
+      initialRoute: homeRoute,
       routes: {
         homeRoute: (_) => const HomePage(),
         shopRoute: (_) => const ShopPage(),
@@ -46,6 +57,13 @@ class MyApp extends StatelessWidget {
         pengaturanSellerRoute: (_) => const PengaturanSellerPage(),
         chatListSellerRoute: (_) => const ChatListSellerPage(),
         chatDetailSellerRoute: (_) => const ChatDetailSellerPage(),
+        loginRoute: (_) => const LoginPage(),
+        registerRoute: (_) => const regisPage(),
+        homeAfterLoginRoute: (_) => const BerandaSesudahLogin(),
+        profileRoute: (_) => const ProfilePage(),
+        pesananSayaRoute: (_) => const PesananSayaPage(),
+        cartRoute: (_) => const CartPage(),
+        notificationRoute: (_) => const NotificationPage(),
       },
     );
   }

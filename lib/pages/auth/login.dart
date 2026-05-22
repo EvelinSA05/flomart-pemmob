@@ -1,5 +1,10 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'registrasi.dart';
+import '../beranda/beranda_sesudah_login.dart';
+import '../../services/app_state.dart';
+
 
 void main() {
   runApp(const MyApp());
@@ -58,7 +63,7 @@ class LoginHeader extends StatelessWidget {
             },
           ),
           const SizedBox(width: 10),
-          Image.asset('img/system/LogoFlomart.png', height: 30),
+          Image.asset('assets/img/system/LogoFlomart.png', height: 30),
         ],
       ),
     );
@@ -83,7 +88,7 @@ class LoginHero extends StatelessWidget {
               shape: BoxShape.circle,
             ),
           ),
-          Image.asset('img/system/FotoJualan.png', height: 180),
+          Image.asset('assets/img/system/FotoLogin.png', height: 180),
         ],
       ),
     );
@@ -99,6 +104,59 @@ class LoginForm extends StatefulWidget {
 
 class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1/flomart_api/login.php'),
+        body: {
+          'username': _usernameController.text,
+          'password': _passwordController.text,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['status'] == 'success') {
+          AppState().loginUser(data['data']);
+          
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login berhasil', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green));
+          
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const BerandaSesudahLogin(),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'], style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Username atau password salah', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+      }
+    } catch (e) {
+      print('Login error: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Terjadi kesalahan koneksi', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,14 +172,14 @@ class _LoginFormState extends State<LoginForm> {
         child: Column(
           children: [
             const Text(
-              "Log in ke Seller Center",
+              "Log in",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
 
-            _inputField("No Handphone/Username/Email"),
+            _inputField("No Handphone/Username/Email", _usernameController),
             const SizedBox(height: 12),
-            _inputField("Password", isPassword: true),
+            _inputField("Password", _passwordController, isPassword: true),
 
             const SizedBox(height: 10),
 
@@ -145,14 +203,10 @@ class _LoginFormState extends State<LoginForm> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Login Berhasil!')),
-                    );
-                  }
-                },
-                child: const Text("Login", style: TextStyle(color: Colors.black)),
+                onPressed: _isLoading ? null : _login,
+                child: _isLoading 
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black))
+                  : const Text("Login", style: TextStyle(color: Colors.black)),
               ),
             ),
 
@@ -192,9 +246,11 @@ class _LoginFormState extends State<LoginForm> {
                 const Text("Baru di Flomart? "),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(
+                    Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const regisPage()),
+                      MaterialPageRoute(
+                        builder: (_) => const regisPage(),
+                      ),
                     );
                   },
                   child: const Text(
@@ -210,8 +266,9 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 
-  Widget _inputField(String hint, {bool isPassword = false}) {
+  Widget _inputField(String hint, TextEditingController controller, {bool isPassword = false}) {
     return TextFormField(
+      controller: controller,
       obscureText: isPassword,
       validator: (value) {
         if (value == null || value.isEmpty) {

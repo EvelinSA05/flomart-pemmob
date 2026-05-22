@@ -4,6 +4,10 @@ import '../../models/product_model.dart';
 import '../../widgets/flomart_bottom_nav.dart';
 import '../../widgets/flomart_header.dart';
 import 'profil_seller.dart';
+import '../../services/app_state.dart';
+import '../beranda/cart_page.dart';
+import '../auth/login.dart';
+
 
 class ProductDetailPage extends StatefulWidget {
   const ProductDetailPage({super.key, required this.product});
@@ -228,7 +232,29 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        if (!AppState().isLoggedIn) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginPage()),
+                          );
+                          return;
+                        }
+                        AppState().addToCart(CartItem(
+                          name: widget.product.name,
+                          price: widget.product.price,
+                          imagePath: widget.product.image,
+                          size: _sizes[_selectedSizeIndex],
+                          quantity: _quantity,
+                        ));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('${widget.product.name} ditambahkan ke keranjang'),
+                            backgroundColor: const Color(0xFF0D9650),
+                            duration: const Duration(seconds: 1),
+                          ),
+                        );
+                      },
                       child: const Text('Add Cart'),
                     ),
                   ),
@@ -243,7 +269,26 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        if (!AppState().isLoggedIn) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginPage()),
+                          );
+                          return;
+                        }
+                        AppState().addToCart(CartItem(
+                          name: widget.product.name,
+                          price: widget.product.price,
+                          imagePath: widget.product.image,
+                          size: _sizes[_selectedSizeIndex],
+                          quantity: _quantity,
+                        ));
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const CartPage()),
+                        );
+                      },
                       child: const Text('Buy Now'),
                     ),
                   ),
