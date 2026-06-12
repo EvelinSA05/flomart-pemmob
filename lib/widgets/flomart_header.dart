@@ -31,6 +31,7 @@ class FlomartHeader extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
+      automaticallyImplyLeading: false,
       toolbarHeight: 64,
       titleSpacing: 16,
       title: _assetImage(

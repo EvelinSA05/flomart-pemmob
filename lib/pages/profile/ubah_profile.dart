@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/app_state.dart';
 
 class UbahProfilePage extends StatefulWidget {
   const UbahProfilePage({super.key});
@@ -8,10 +9,8 @@ class UbahProfilePage extends StatefulWidget {
 }
 
 class _UbahProfilePageState extends State<UbahProfilePage> {
-  final TextEditingController namaController =
-      TextEditingController(text: 'Agung Prasetyo');
-  final TextEditingController emailController =
-      TextEditingController(text: 'Agungpras@gmail.com');
+  late final TextEditingController namaController;
+  late final TextEditingController emailController;
   final TextEditingController teleponController =
       TextEditingController(text: '085855900600');
   final TextEditingController tanggalController =
@@ -22,6 +21,14 @@ class _UbahProfilePageState extends State<UbahProfilePage> {
 
   static const Color bg = Color(0xFFF4F1F1);
   static const Color yellow = Color(0xFFE2BE00);
+
+  @override
+  void initState() {
+    super.initState();
+    final appState = AppState();
+    namaController = TextEditingController(text: appState.userName ?? 'Pengguna');
+    emailController = TextEditingController(text: appState.userEmail ?? '');
+  }
 
   @override
   void dispose() {
@@ -243,8 +250,8 @@ class _UbahProfilePageState extends State<UbahProfilePage> {
 
   Widget _usernameRow() {
     return Row(
-      children: const [
-        SizedBox(
+      children: [
+        const SizedBox(
           width: 115,
           child: Text(
             'Username',
@@ -255,12 +262,12 @@ class _UbahProfilePageState extends State<UbahProfilePage> {
           child: Padding(
             padding: const EdgeInsets.only(left: 10),
             child: Text(
-            'Agung Prasetyo',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.bold,
+              AppState().userName ?? 'Pengguna',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
           )
         ),
       ],

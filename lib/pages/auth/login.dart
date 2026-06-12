@@ -1,9 +1,9 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'registrasi.dart';
 import '../beranda/beranda_sesudah_login.dart';
 import '../../services/app_state.dart';
+import '../toko/dashboard_seller.dart';
 
 
 void main() {
@@ -107,6 +107,7 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
@@ -114,36 +115,56 @@ class _LoginFormState extends State<LoginForm> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1/flomart_api/login.php'),
-        body: {
-          'username': _usernameController.text,
-          'password': _passwordController.text,
-        },
-      );
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('kontak', isEqualTo: _usernameController.text)
+          .where('password', isEqualTo: _passwordController.text)
+          .get();
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 'success') {
-          AppState().loginUser(data['data']);
-          
+      if (snapshot.docs.isNotEmpty) {
+        final userDoc = snapshot.docs.first;
+        final userData = userDoc.data();
+        
+        // Buat map sesuai format yang dibutuhkan AppState
+        final loginData = {
+          'id': userDoc.id,
+          'nama': userData['nama'] ?? 'User',
+          'kontak': userData['kontak'] ?? '',
+          'role': userData['role'] ?? 'user',
+        };
+
+        AppState().loginUser(loginData);
+        
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Login berhasil', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green));
           
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const BerandaSesudahLogin(),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'], style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+          String role = loginData['role'] as String;
+          if (role == 'admin' || role == 'owner') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const DashboardSellerPage(),
+              ),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const BerandaSesudahLogin(),
+              ),
+            );
+          }
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Username atau password salah', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email/No HP atau password salah!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+        }
       }
     } catch (e) {
       print('Login error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Terjadi kesalahan koneksi', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Terjadi kesalahan koneksi database', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -269,7 +290,7 @@ class _LoginFormState extends State<LoginForm> {
   Widget _inputField(String hint, TextEditingController controller, {bool isPassword = false}) {
     return TextFormField(
       controller: controller,
-      obscureText: isPassword,
+      obscureText: isPassword ? _obscurePassword : false,
       validator: (value) {
         if (value == null || value.isEmpty) {
           return '$hint tidak boleh kosong';
@@ -282,6 +303,19 @@ class _LoginFormState extends State<LoginForm> {
       decoration: InputDecoration(
         hintText: hint,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        suffixIcon: isPassword
+            ? IconButton(
+                icon: Icon(
+                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _obscurePassword = !_obscurePassword;
+                  });
+                },
+              )
+            : null,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(30),
           borderSide: const BorderSide(color: Colors.green),

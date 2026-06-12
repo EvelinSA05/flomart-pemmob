@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TambahProdukPage extends StatefulWidget {
   const TambahProdukPage({super.key});
@@ -15,45 +16,76 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
   bool _isSaving = false;
 
   Future<void> _simpanProduk() async {
+    String nama = _namaController.text.trim();
+    String hargaRaw = _hargaController.text.trim();
+    String deskripsi = _deskripsiController.text.trim();
+
+    // Validasi 1: Nama produk tidak boleh kosong
+    if (nama.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nama produk tidak boleh kosong!', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    // Validasi 2: Harga tidak boleh kosong
+    if (hargaRaw.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Harga tidak boleh kosong!', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
     setState(() {
       _isSaving = true;
     });
 
-    String nama = _namaController.text;
-    String stok = _stokController.text;
-    String hargaRaw = _hargaController.text;
     String harga = hargaRaw.replaceAll(RegExp(r'[^0-9]'), '');
-    String deskripsi = _deskripsiController.text;
-    
-    int idKategori = 1;
-    if (_selectedKategori == 'Bunga') idKategori = 3;
-    else if (_selectedKategori == 'Buah') idKategori = 2;
-    else if (_selectedKategori == 'Sayur') idKategori = 1;
+    double priceValue = double.tryParse(harga) ?? 0.0;
+
+    String categoryName = 'Benih Sayuran';
+    if (_selectedKategori == 'Bunga') categoryName = 'Benih Bunga';
+    else if (_selectedKategori == 'Buah') categoryName = 'Benih Buah';
+    else if (_selectedKategori == 'Sayur') categoryName = 'Benih Sayuran';
 
     try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1/flomart_api/tambah_produk.php'),
-        body: {
-          'id_kategori': idKategori.toString(),
-          'nama_produk': nama,
-          'harga': harga,
-          'stok': stok,
-          'deskripsi': deskripsi,
-        },
-      );
+      final docRef = FirebaseFirestore.instance.collection('products').doc();
       
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 'success') {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk berhasil ditambahkan', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green));
-          Navigator.pop(context);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'], style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
-        }
+      await docRef.set({
+        'id': docRef.id,
+        'name': nama,
+        'price': priceValue,
+        'rating': 0.0, // Default rating untuk produk baru
+        'category': categoryName,
+        'image': 'assets/img/produk/15.png', // Gambar default
+        'desc': deskripsi,
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Produk berhasil ditambahkan ke Firebase!', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.green,
+          )
+        );
+        Navigator.pop(context);
       }
     } catch (e) {
-      print('Error: $e');
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Terjadi kesalahan', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+      print('Error saving to Firebase: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Terjadi kesalahan saat menyimpan data', style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.red,
+          )
+        );
+      }
     } finally {
       if (mounted) {
         setState(() {

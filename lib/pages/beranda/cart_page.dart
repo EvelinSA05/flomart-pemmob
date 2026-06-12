@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 
 import '../profile/detail_pesanan.dart';
 import '../../services/app_state.dart';
 import 'package:intl/intl.dart';
+import '../profile/alamat_saya.dart' as flomart_alamat;
 
 
 class CartPage extends StatefulWidget {
@@ -21,6 +23,7 @@ class _CartPageState extends State<CartPage> {
   String _selectedAddress = 'Alamat Pengiriman';
   final TextEditingController _catatanController = TextEditingController();
   bool _isLoading = false;
+  double _ongkirPrice = 0;
 
   final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
@@ -272,7 +275,8 @@ class _CartPageState extends State<CartPage> {
 
   Widget _buildSummaryCard(List<CartItem> cartItems) {
     double subtotal = AppState().subtotal;
-    double ongkir = 13000;
+    bool ongkirReady = _selectedAddress != 'Alamat Pengiriman' && _selectedShipping != 'Opsi Pengiriman';
+    double ongkir = ongkirReady ? _ongkirPrice : 0;
     double pajak = 500;
     double total = subtotal + ongkir + pajak;
 
@@ -303,7 +307,7 @@ class _CartPageState extends State<CartPage> {
           ),
           const SizedBox(height: 20),
           _summaryRow(Icons.list_alt, 'Subtotal', _currencyFormat.format(subtotal)),
-          _summaryRow(Icons.local_shipping_outlined, 'Ongkir', _currencyFormat.format(ongkir)),
+          _summaryRow(Icons.local_shipping_outlined, 'Ongkir', ongkirReady ? _currencyFormat.format(ongkir) : '-'),
           _summaryRow(Icons.description_outlined, 'Pajak Admin', _currencyFormat.format(pajak)),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 10),
@@ -370,25 +374,37 @@ class _CartPageState extends State<CartPage> {
                     };
                   }).toList();
 
-                  final response = await http.post(
-                    Uri.parse('http://127.0.0.1/flomart_api/checkout.php'),
-                    body: {
-                      'id_user': appState.userId.toString(),
-                      'total_harga': total.toString(),
-                      'alamat_kirim': _selectedAddress,
-                      'metode_pembayaran': _selectedPayment,
-                      'catatan': _catatanController.text,
-                      'nama_penerima': appState.userName ?? '',
-                      'no_hp': '08120000000', // Can be fetched from user profile if available
-                      'items': json.encode(itemsJson),
-                    },
-                  );
+                  final docRef = FirebaseFirestore.instance.collection('orders').doc();
+                  await docRef.set({
+                    'id_pesanan': docRef.id,
+                    'id_user': appState.userId,
+                    'total_harga': total,
+                    'alamat_kirim': _selectedAddress,
+                    'metode_pembayaran': _selectedPayment,
+                    'catatan': _catatanController.text,
+                    'nama_penerima': appState.userName ?? '',
+                    'items': itemsJson,
+                    'status': 'Menunggu Pembayaran',
+                    'created_at': FieldValue.serverTimestamp(),
+                  });
 
-                  final data = json.decode(response.body);
+                  final data = {'status': 'success', 'id_pesanan': docRef.id};
 
-                  if (response.statusCode == 200 && data['status'] == 'success') {
+                  if (data['status'] == 'success') {
                     final firstItem = cartItems.first;
                     
+                    // Build order items before clearing cart
+                    final orderItems = cartItems.map((item) {
+                      double itemPrice = double.tryParse(item.price.replaceAll('Rp', '').replaceAll('.', '')) ?? 0;
+                      return OrderItem(
+                        name: item.name,
+                        image: item.imagePath,
+                        size: item.size,
+                        quantity: item.quantity,
+                        price: itemPrice,
+                      );
+                    }).toList();
+
                     // Add order notification
                     appState.addNotification(AppNotification(
                       title: 'Selesaikan Pembayaranmu',
@@ -397,6 +413,20 @@ class _CartPageState extends State<CartPage> {
                       status: 'Belum Bayar',
                       orderId: 'FLM${data['id_pesanan']}',
                       total: _currencyFormat.format(total),
+                    ));
+
+                    // Add order to history
+                    appState.addOrder(AppOrder(
+                      orderId: 'FLM${data['id_pesanan']}',
+                      title: firstItem.name,
+                      image: firstItem.imagePath,
+                      itemName: firstItem.name,
+                      qty: '${firstItem.size} ${firstItem.quantity}x',
+                      price: firstItem.price,
+                      total: _currencyFormat.format(total),
+                      status: 'Belum Bayar',
+                      buttons: const ['Pembatalan', 'Hubungi Penjual'],
+                      showRating: false,
                     ));
 
                     // Clear local cart
@@ -416,6 +446,13 @@ class _CartPageState extends State<CartPage> {
                           total: _currencyFormat.format(total),
                           status: 'Menunggu Pembayaran',
                           showSuccessDialog: true,
+                          orderItems: orderItems,
+                          subtotal: subtotal,
+                          ongkir: ongkir,
+                          paymentMethod: _selectedPayment,
+                          shippingMethod: _selectedShipping,
+                          recipientName: appState.userName ?? '',
+                          recipientAddress: _selectedAddress,
                         ),
                       ),
                     );
@@ -514,12 +551,17 @@ class _CartPageState extends State<CartPage> {
       builder: (context) => _buildSelectionModal(
         'Pilih Layanan Pengiriman',
         [
-          {'label': 'Antareja Regular', 'desc': 'Rp3.000 (7 Hari)', 'icon': Icons.local_shipping},
-          {'label': 'ID Express', 'desc': 'Rp4.000 (5-6 Hari)', 'icon': Icons.local_shipping},
-          {'label': 'JNE Regular', 'desc': 'Rp13.000 (3-4 Hari)', 'icon': Icons.local_shipping},
-          {'label': 'JNT Express', 'desc': 'Rp20.000 (1-2 Hari)', 'icon': Icons.local_shipping},
+          {'label': 'Antareja Regular', 'desc': 'Rp3.000 (7 Hari)', 'icon': Icons.local_shipping, 'price': 3000.0},
+          {'label': 'ID Express', 'desc': 'Rp4.000 (5-6 Hari)', 'icon': Icons.local_shipping, 'price': 4000.0},
+          {'label': 'JNE Regular', 'desc': 'Rp13.000 (3-4 Hari)', 'icon': Icons.local_shipping, 'price': 13000.0},
+          {'label': 'JNT Express', 'desc': 'Rp20.000 (1-2 Hari)', 'icon': Icons.local_shipping, 'price': 20000.0},
         ],
-        (val) => setState(() => _selectedShipping = val),
+        (val, {double? price}) {
+          setState(() {
+            _selectedShipping = val;
+            if (price != null) _ongkirPrice = price;
+          });
+        },
       ),
     );
   }
@@ -528,17 +570,45 @@ class _CartPageState extends State<CartPage> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (context) => _buildSelectionModal(
-        'Pilih Alamat Tersedia',
-        [
-          {'label': 'Agung Prasetyo', 'desc': 'Sidoarjo Indah ai no 12, SIDOARJO, KAB. SIDOARJO, JAWA TIMUR, ID, 61212', 'icon': Icons.location_on},
-        ],
-        (val) => setState(() => _selectedAddress = val),
-      ),
+      builder: (context) {
+        final address = AppState().userAddress;
+        final hasAddress = address != null && address.isNotEmpty;
+        
+        return _buildSelectionModal(
+          'Pilih Alamat Tersedia',
+          hasAddress
+              ? [
+                  {'label': AppState().userName ?? 'Pengguna', 'desc': address, 'icon': Icons.location_on},
+                ]
+              : [
+                  {'label': 'Masukkan alamat anda', 'desc': 'Ketuk untuk menambah alamat', 'icon': Icons.add_location_alt},
+                ],
+          (val) {
+            if (val == 'Masukkan alamat anda') {
+              // Jika belum ada alamat, arahkan ke AlamatSayaPage
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const flomart_alamat.AlamatSayaPage()),
+              ).then((_) {
+                if (AppState().userAddress != null && AppState().userAddress!.isNotEmpty) {
+                  setState(() {
+                    _selectedAddress = AppState().userAddress!;
+                  });
+                }
+              });
+            } else {
+              // Extract the description as the selected address
+              if (hasAddress) {
+                setState(() => _selectedAddress = address);
+              }
+            }
+          },
+        );
+      },
     );
   }
 
-  Widget _buildSelectionModal(String title, List<Map<String, dynamic>> items, Function(String) onSelect) {
+  Widget _buildSelectionModal(String title, List<Map<String, dynamic>> items, Function onSelect) {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -577,8 +647,12 @@ class _CartPageState extends State<CartPage> {
                   subtitle: Text(item['desc'] as String, style: const TextStyle(fontSize: 11, color: Colors.grey)),
                   trailing: const Icon(Icons.chevron_right, size: 20, color: Colors.grey),
                   onTap: () {
-                    onSelect(item['label'] as String);
                     Navigator.pop(context);
+                    if (item.containsKey('price')) {
+                      onSelect(item['label'] as String, price: item['price'] as double);
+                    } else {
+                      onSelect(item['label'] as String);
+                    }
                   },
                 );
               },

@@ -34,6 +34,17 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
           setState(() {
             _myProducts = dynamicList.map<Map<String, dynamic>>((item) {
               int stok = int.parse(item['stok'].toString());
+              
+              String imageUrl = 'assets/img/produk/15.png';
+              if (item['gambar'] != null && item['gambar'].toString().isNotEmpty) {
+                 String g = item['gambar'].toString();
+                 if (g.startsWith('http')) {
+                   imageUrl = g;
+                 } else {
+                   imageUrl = 'http://127.0.0.1/flomart_api/uploads/$g';
+                 }
+              }
+
               return {
                 'id_produk': item['id_produk'],
                 'name': item['nama_produk'],
@@ -43,7 +54,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
                 'stock': stok,
                 'sales': 0,
                 'analysis': stok > 5 ? 'Produk Masih Banyak' : 'Stok Menipis',
-                'image': 'assets/img/produk/15.png', // Fallback
+                'image': imageUrl,
               };
             }).toList();
             _isLoading = false;
@@ -305,7 +316,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
         children: [
-          const Text('7 Produk', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Text('${_myProducts.length} Produk', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(width: 12),
           _buildChip('Perlu Dikirimkan'),
           const SizedBox(width: 8),
@@ -382,7 +393,9 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
-                          child: Image.asset(p['image'], width: 40, height: 40, fit: BoxFit.cover),
+                          child: p['image'].startsWith('http') 
+                            ? Image.network(p['image'], width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', width: 40, height: 40, fit: BoxFit.cover))
+                            : Image.asset(p['image'], width: 40, height: 40, fit: BoxFit.cover),
                         ),
                         const SizedBox(width: 8),
                         Expanded(

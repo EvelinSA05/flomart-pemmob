@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../services/app_state.dart';
 import 'cart_page.dart';
+import 'notifikasi.dart';
 import '../auth/login.dart';
+import '../chat/chat_page.dart';
+import '../profile/pesanan_saya.dart';
+import '../profile/profile.dart';
 
 
 
@@ -39,36 +43,62 @@ class DetailProdukPage extends StatefulWidget {
 class _DetailProdukPageState extends State<DetailProdukPage> {
   final List<String> _sizes = ['20g', '50g', '100g'];
   String _selectedSize = '20g';
-  int _qty = 0;
+  int _qty = 1;
+  bool _isFavorite = false;
+  int _currentReviewPage = 1;
+
+  String _getCalculatedPrice() {
+    final basePriceStr = widget.price.replaceAll(RegExp(r'[^0-9]'), '');
+    int basePrice = 0;
+    if (basePriceStr.isNotEmpty) {
+      basePrice = int.parse(basePriceStr);
+    }
+    
+    int calculatedPrice = basePrice;
+    if (_selectedSize == '50g') {
+      calculatedPrice = (basePrice * 2.5).toInt();
+    } else if (_selectedSize == '100g') {
+      calculatedPrice = basePrice * 5;
+    }
+    
+    return 'Rp$calculatedPrice';
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color(0xFFF3F1F1),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              _buildHeader(context),
-              const SizedBox(height: 16),
-              _buildBreadcrumb(context),
-              const SizedBox(height: 16),
-              _buildImage(),
-              const SizedBox(height: 12),
-              _buildThumbnail(),
-              const SizedBox(height: 20),
-              _buildInfo(),
-              const SizedBox(height: 20),
-              _buildDescription(),
-              const SizedBox(height: 20),
-              _buildReview(),
-              const SizedBox(height: 18),
-              _buildPagination(),
-              const SizedBox(height: 20),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 16),
+            _buildHeader(context),
+            const SizedBox(height: 16),
+            _buildBreadcrumb(context),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildImage(),
+                    const SizedBox(height: 12),
+                    _buildThumbnail(),
+                    const SizedBox(height: 20),
+                    _buildInfo(),
+                    const SizedBox(height: 20),
+                    _buildDescription(),
+                    const SizedBox(height: 20),
+                    _buildReview(),
+                    const SizedBox(height: 18),
+                    _buildPagination(),
+                    const SizedBox(height: 20),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -76,7 +106,7 @@ class _DetailProdukPageState extends State<DetailProdukPage> {
 
   Widget _buildHeader(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
           IconButton(
@@ -87,16 +117,183 @@ class _DetailProdukPageState extends State<DetailProdukPage> {
             splashRadius: 24,
           ),
           const SizedBox(width: 16),
-          Expanded(
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Image.asset(
-                'assets/img/system/logoFlomart.png',
-                height: 34,
-                fit: BoxFit.contain,
+          Image.asset(
+            'assets/img/system/logoFlomart.png',
+            height: 24,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const Text(
+              'FLOMART',
+              style: TextStyle(
+                color: Color(0xFF14824C),
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
               ),
             ),
           ),
+          const Spacer(),
+          Padding(
+            padding: const EdgeInsets.only(right: 2),
+            child: _headerIconButton(
+              context,
+              'assets/img/system/logoChat.png',
+              Icons.chat_bubble_outline,
+              onTap: () {
+                if (!AppState().isLoggedIn) {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+                  return;
+                }
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatPage()));
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 2),
+            child: ListenableBuilder(
+              listenable: AppState(),
+              builder: (context, child) {
+                final count = AppState().cartItems.length;
+                return _headerIconButton(
+                  context,
+                  'assets/img/system/logoKeranjang.png',
+                  Icons.shopping_cart_outlined,
+                  badgeCount: count,
+                  onTap: () {
+                    if (!AppState().isLoggedIn) {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+                      return;
+                    }
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const CartPage()));
+                  },
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 2),
+            child: _headerIconButton(
+              context,
+              'assets/img/system/logoNotif.png',
+              Icons.notifications_outlined,
+              onTap: () {
+                if (!AppState().isLoggedIn) {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+                  return;
+                }
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationPage()));
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 2),
+            child: _headerIconButton(
+              context,
+              'assets/img/system/logPesanan.png',
+              Icons.shopping_bag_outlined,
+              onTap: () {
+                if (!AppState().isLoggedIn) {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const LoginPage()));
+                  return;
+                }
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const PesananSayaPage()));
+              },
+            ),
+          ),
+          // Profile icon
+          ListenableBuilder(
+            listenable: AppState(),
+            builder: (context, child) {
+              final isLoggedIn = AppState().isLoggedIn;
+              return Padding(
+                padding: const EdgeInsets.only(right: 2, left: 4),
+                child: GestureDetector(
+                  onTap: () {
+                    if (isLoggedIn) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const ProfilePage()),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
+                      );
+                    }
+                  },
+                  child: SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: ClipOval(
+                      child: Image.asset(
+                        isLoggedIn
+                            ? 'assets/img/system/pengguna_login.png'
+                            : 'assets/img/system/logoProfile.png',
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.person_outline,
+                          color: Color(0xFFBEBEBE),
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerIconButton(
+    BuildContext context,
+    String assetPath,
+    IconData fallbackIcon, {
+    int badgeCount = 0,
+    required VoidCallback onTap,
+  }) {
+    return IconButton(
+      onPressed: onTap,
+      splashRadius: 20,
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Image.asset(
+            assetPath,
+            width: 21,
+            height: 21,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Icon(
+              fallbackIcon,
+              color: const Color(0xFF14824C),
+              size: 20,
+            ),
+          ),
+          if (badgeCount > 0)
+            Positioned(
+              right: -4,
+              top: -4,
+              child: Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                constraints: const BoxConstraints(
+                  minWidth: 14,
+                  minHeight: 14,
+                ),
+                child: Text(
+                  '$badgeCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 8,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -220,13 +417,33 @@ Widget _thumbItem(String path) {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         /// NAMA PRODUK
-        Text(
-          widget.name,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF151515),
-          ),
+        /// NAMA PRODUK DAN FAVORIT (STATE DASAR UAS)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                widget.name,
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF151515),
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  _isFavorite = !_isFavorite;
+                });
+              },
+              icon: Icon(
+                _isFavorite ? Icons.favorite : Icons.favorite_border,
+                color: _isFavorite ? Colors.red : Colors.grey,
+                size: 24,
+              ),
+            ),
+          ],
         ),
 
         const SizedBox(height: 8),
@@ -260,7 +477,7 @@ Widget _thumbItem(String path) {
 
         /// HARGA
         Text(
-          widget.price,
+          _getCalculatedPrice(),
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w800,
@@ -375,7 +592,7 @@ Widget _thumbItem(String path) {
                   if (_qty > 0) {
                     AppState().addToCart(CartItem(
                       name: widget.name,
-                      price: widget.price,
+                      price: _getCalculatedPrice(),
                       imagePath: widget.imagePath,
                       size: _selectedSize,
                       quantity: _qty,
@@ -416,7 +633,7 @@ Widget _thumbItem(String path) {
                   if (_qty > 0) {
                     AppState().addToCart(CartItem(
                       name: widget.name,
-                      price: widget.price,
+                      price: _getCalculatedPrice(),
                       imagePath: widget.imagePath,
                       size: _selectedSize,
                       quantity: _qty,
@@ -478,6 +695,11 @@ Widget _thumbItem(String path) {
             _StoreAction(
               imagePath: 'assets/img/system/logoChat.png',
               label: 'Hubungi Toko',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Membuka chat dengan penjual...')),
+                );
+              },
             ),
 
             const SizedBox(width: 14),
@@ -485,6 +707,11 @@ Widget _thumbItem(String path) {
             _StoreAction(
               imagePath: 'assets/img/system/toko.png',
               label: 'Kunjungi Toko',
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Membuka halaman toko penjual...')),
+                );
+              },
             ),
           ],
         ),
@@ -591,46 +818,56 @@ Widget _thumbItem(String path) {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: const BoxDecoration(
-              color: Color(0xFFE2BE00),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Text(
-              '1',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
+          if (_currentReviewPage > 1)
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _currentReviewPage--;
+                });
+              },
+              child: const Padding(
+                padding: EdgeInsets.only(right: 18),
+                child: Icon(Icons.chevron_left, size: 20),
               ),
             ),
-          ),
-          const SizedBox(width: 18),
-          const Text(
-            '2',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF151515),
-            ),
-          ),
-          const SizedBox(width: 18),
-          const Text(
-            '3',
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFF151515),
-            ),
-          ),
-          const SizedBox(width: 18),
-          const Icon(
-            Icons.chevron_right_rounded,
-            size: 28,
-            color: Colors.black,
+          
+          ...List.generate(3, (index) {
+            int page = index + 1;
+            bool isActive = _currentReviewPage == page;
+            return GestureDetector(
+              onTap: () {
+                setState(() {
+                  _currentReviewPage = page;
+                });
+              },
+              child: Container(
+                width: 28,
+                height: 28,
+                margin: const EdgeInsets.only(right: 18),
+                decoration: BoxDecoration(
+                  color: isActive ? const Color(0xFFE2BE00) : Colors.transparent,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  page.toString(),
+                  style: TextStyle(
+                    color: isActive ? Colors.white : const Color(0xFF151515),
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                    fontSize: isActive ? 12 : 13,
+                  ),
+                ),
+              ),
+            );
+          }),
+          
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                if (_currentReviewPage < 3) _currentReviewPage++;
+              });
+            },
+            child: const Icon(Icons.chevron_right, size: 20),
           ),
         ],
       ),
@@ -784,39 +1021,45 @@ class _StoreAction extends StatelessWidget {
   const _StoreAction({
     required this.imagePath,
     required this.label,
+    this.onTap,
   });
 
   final String imagePath;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 74,
-      child: Column(
-        children: [
-          Image.asset(
-            imagePath,
-            width: 34,
-            height: 34,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 9,
-              color: Color(0xFF151515),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(10),
+      child: SizedBox(
+        width: 74,
+        child: Column(
+          children: [
+            Image.asset(
+              imagePath,
+              width: 34,
+              height: 34,
+              fit: BoxFit.contain,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 9,
+                color: Color(0xFF151515),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _ReviewItem extends StatelessWidget {
+class _ReviewItem extends StatefulWidget {
   const _ReviewItem({
     required this.imagePath,
     required this.name,
@@ -832,6 +1075,19 @@ class _ReviewItem extends StatelessWidget {
   final bool isFavorite;
 
   @override
+  State<_ReviewItem> createState() => _ReviewItemState();
+}
+
+class _ReviewItemState extends State<_ReviewItem> {
+  late bool _isFavorite;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorite = widget.isFavorite;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -840,7 +1096,7 @@ class _ReviewItem extends StatelessWidget {
         children: [
           CircleAvatar(
             radius: 22,
-            backgroundImage: AssetImage(imagePath),
+            backgroundImage: AssetImage(widget.imagePath),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -848,7 +1104,7 @@ class _ReviewItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name,
+                  widget.name,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -871,7 +1127,7 @@ class _ReviewItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  date,
+                  widget.date,
                   style: const TextStyle(
                     fontSize: 10,
                     color: Colors.black54,
@@ -883,7 +1139,7 @@ class _ReviewItem extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        review,
+                        widget.review,
                         style: const TextStyle(
                           fontSize: 11,
                           height: 1.4,
@@ -891,10 +1147,17 @@ class _ReviewItem extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Icon(
-                      isFavorite ? Icons.favorite : Icons.favorite_border,
-                      color: const Color(0xFFE91E63),
-                      size: 20,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isFavorite = !_isFavorite;
+                        });
+                      },
+                      child: Icon(
+                        _isFavorite ? Icons.favorite : Icons.favorite_border,
+                        color: const Color(0xFFE91E63),
+                        size: 20,
+                      ),
                     ),
                   ],
                 ),

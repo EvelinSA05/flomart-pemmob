@@ -1,33 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flomart_pemmob/pages/beranda/detail_produk.dart'; //Untuk navigasi ke halaman detail produk.
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flomart_pemmob/pages/beranda/detail_produk.dart';
 
-import '../../widgets/flomart_bottom_nav.dart'; //Mengimpor bottom navigation custom.
-import '../../widgets/flomart_header.dart'; //Mengimpor header custom.
-import '../toko/toko.dart'; // Untuk navigasi ke halaman toko
+import '../../widgets/flomart_bottom_nav.dart';
+import '../../widgets/flomart_header.dart';
+import '../toko/toko.dart';
 import '../profile/profile.dart';
 
-
-//Halaman ini memakai StatelessWidget, artinya tampilan tidak menyimpan state yang berubah sendiri.
 class BerandaSesudahLogin extends StatelessWidget {
   const BerandaSesudahLogin({super.key});
 
-
-  //Kumpulan warna tema yang dipakai berulang di halaman ini. KONSTANTA WARNA
   static const Color _green = Color(0xFF13824B);
   static const Color _dark = Color(0xFF151515);
   static const Color _yellow = Color(0xFFE2BE00);
-  static const Color _lightBg = Color(0xFFF4F1F1);
   static const Color _chipGray = Color(0xFFE8E8E8);
 
-  static const List<String> _menus = [
-    // 'Beranda',
-    // 'Toko',
-    // 'Mulai Jualan',
-    // 'Blog',
-    // 'Tentang Kami',
-  ];
-
-  //Dipakai untuk chip kategori di bagian "Pilihan Benih Terbaik".
   static const List<String> _chips = [
     'Benih Sayuran',
     'Benih Buah',
@@ -35,8 +22,6 @@ class BerandaSesudahLogin extends StatelessWidget {
     'Benih Herbal',
   ];
 
-
-  // Data listview kategori produk.
   static const List<_CategoryItem> _categories = [
     _CategoryItem(
       title: 'Benih Sayuran',
@@ -64,114 +49,6 @@ class BerandaSesudahLogin extends StatelessWidget {
     ),
   ];
 
-  //Produk Rekomendasi
-  // Data produk yang ditampilkan pada section rekomendasi. (LISTVIEW)
-  static const List<_ProductItem> _recommendedProducts = [
-    _ProductItem(
-      name: 'Benih Kubis',
-      price: 'Rp10.000',
-      rating: '4.8',
-      imagePath: 'assets/img/produk/kubis.jpg',
-      tag: 'Benih Sayur, Musim Hujan, Gambut',
-      images: [
-        'assets/img/konten_beranda/tkubis1.jpg',
-        'assets/img/konten_beranda/tkubis2.jpg',
-        'assets/img/konten_beranda/tkubis3.jpg',
-      ],
-    ),
-    _ProductItem(
-      name: 'Benih Kelengkeng',
-      price: 'Rp18.000',
-      rating: '4.9',
-      imagePath: 'assets/img/produk/kelengkeng.png',
-      tag: 'Benih Buah, Musim Hujan, Gambut',
-      images: [
-        'assets/img/konten_beranda/tkelengkeng1.jpg',
-        'assets/img/konten_beranda/tkelengkeng2.jpg',
-        'assets/img/konten_beranda/tkelengkeng3.jpg',
-      ],
-    ),
-    _ProductItem(
-      name: 'Benih Sawi Hijau',
-      price: 'Rp8.000',
-      rating: '4.6',
-      imagePath: 'assets/img/produk/15.png',
-      tag: 'Benih Sayur, Musim Hujan, Pasir',
-      images: [
-        'assets/img/konten_beranda/tkubis1.jpg',
-        'assets/img/konten_beranda/tkubis2.jpg',
-        'assets/img/konten_beranda/tkubis3.jpg',
-      ],
-    ),
-    _ProductItem(
-      name: 'Benih Jagung',
-      price: 'Rp25.000',
-      rating: '4.8',
-      imagePath: 'assets/img/produk/jagung.jpg',
-      tag: 'Benih Sayur, Musim Hujan, Gambut',
-      images: [
-        'assets/img/konten_beranda/tkelengkeng1.jpg',
-        'assets/img/konten_beranda/tkelengkeng2.jpg',
-        'assets/img/konten_beranda/tkelengkeng3.jpg',
-      ],
-    ),
-  ];
-
-  //Data produk listview pada section "Pilihan Benih Terbaik". PRODUK TERBAIK
-  static const List<_ProductItem> _bestProducts = [
-    _ProductItem(
-      name: 'Benih Kubis',
-      price: 'Rp10.000',
-      rating: '4.8',
-      imagePath: 'assets/img/produk/kubis.jpg',
-      tag: 'Benih Sayur, Musim Hujan, Gambut',
-      images: [
-        'assets/img/konten_beranda/tkubis1.jpg',
-        'assets/img/konten_beranda/tkubis2.jpg',
-        'assets/img/konten_beranda/tkubis3.jpg',
-      ],
-    ),
-    _ProductItem(
-      name: 'Benih Sawi Hijau',
-      price: 'Rp8.000',
-      rating: '4.6',
-      imagePath: 'assets/img/produk/15.png',
-      tag: 'Benih Sayur, Musim Hujan, Gambut',
-      images: [
-        'assets/img/konten_beranda/tkubis1.jpg',
-        'assets/img/konten_beranda/tkubis2.jpg',
-        'assets/img/konten_beranda/tkubis3.jpg',
-      ],
-    ),
-    _ProductItem(
-      name: 'Benih Labu',
-      price: 'Rp14.000',
-      rating: '4.5',
-      imagePath: 'assets/img/produk/labu.png',
-      tag: 'Benih Sayur, Musim Hujan, Gambut',
-      images: [
-        'assets/img/konten_beranda/tkubis1.jpg',
-        'assets/img/konten_beranda/tkubis2.jpg',
-        'assets/img/konten_beranda/tkubis3.jpg',
-      ],
-    ),
-    _ProductItem(
-      name: 'Benih Tomat',
-      price: 'Rp12.000',
-      rating: '4.5',
-      imagePath: 'assets/img/produk/tomat.png',
-      tag: 'Benih Sayur, Musim Hujan, Gambut',
-      images: [
-        'assets/img/konten_beranda/tkubis1.jpg',
-        'assets/img/konten_beranda/tkubis2.jpg',
-        'assets/img/konten_beranda/tkubis3.jpg',
-      ],
-    ),
-  ];
-
-
-  //Data keunggulan layanan.
-  //Ditampilkan berjajar menggunakan Row + Expanded
   static const List<_BenefitItem> _benefits = [
     _BenefitItem(
       title: 'Benih Tepat Guna',
@@ -190,8 +67,6 @@ class BerandaSesudahLogin extends StatelessWidget {
     ),
   ];
 
-
-  // BUILD UTAMA HALAMAN
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -228,7 +103,7 @@ class BerandaSesudahLogin extends StatelessWidget {
                 'Lihat Semua',
               ),
               const SizedBox(height: 10),
-              _buildProductList(_recommendedProducts),
+              _buildFirebaseProductList(limit: 5), // Menggunakan Firebase
               const SizedBox(height: 20),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24),
@@ -252,14 +127,50 @@ class BerandaSesudahLogin extends StatelessWidget {
               const SizedBox(height: 8),
               _buildChips(),
               const SizedBox(height: 10),
-              _buildProductList(_bestProducts),
+              _buildFirebaseProductList(limit: 10, descending: true), // Menggunakan Firebase
               const SizedBox(height: 90),
             ],
           ),
         ),
       ),
-      //untuk menampilkan menu di bagian bawah layar
       bottomNavigationBar: const FlomartBottomNav(currentTab: FlomartTab.home),
+    );
+  }
+
+  Widget _buildFirebaseProductList({required int limit, bool descending = false}) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('products')
+          .orderBy('price', descending: descending)
+          .limit(limit)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return const Center(child: Text('Gagal memuat data produk.'));
+        }
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: _green));
+        }
+        
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return const Center(child: Text('Tidak ada produk.'));
+        }
+
+        return SizedBox(
+          height: 150,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            scrollDirection: Axis.horizontal,
+            itemCount: docs.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final data = docs[index].data() as Map<String, dynamic>;
+              return _ProductCardFirebase(data: data);
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -451,20 +362,6 @@ class BerandaSesudahLogin extends StatelessWidget {
     );
   }
 
-
-  //Menampilkan produk dalam bentuk card secara horizontal.
-  Widget _buildProductList(List<_ProductItem> items) {
-    return SizedBox(
-      height: 150,
-      child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
-        itemBuilder: (context, index) => _ProductCard(item: items[index]),
-      ),
-    );
-  }
 
 
   //Menampilkan keunggulan layanan.
@@ -775,32 +672,39 @@ class _PromoCard extends StatelessWidget {
 }
 
 //menampilkan seluruh productcasr
-class _ProductCard extends StatelessWidget {
-  const _ProductCard({required this.item});
+// Menampilkan seluruh product card dari Firebase
+class _ProductCardFirebase extends StatelessWidget {
+  const _ProductCardFirebase({required this.data});
 
-  final _ProductItem item;
+  final Map<String, dynamic> data;
 
   @override
   Widget build(BuildContext context) {
+    // Memberikan default value agar tidak error jika field tidak ada
+    final name = data['name'] ?? 'Unknown';
+    final price = data['price'] ?? 0;
+    final rating = data['rating']?.toString() ?? '0.0';
+    final imagePath = data['image'] ?? 'assets/img/produk/kubis.jpg';
+    final tag = data['category'] ?? 'Tanpa Kategori';
+    final desc = data['desc'] ?? 'Tidak ada deskripsi.';
+    
+    // Formatting price
+    final formattedPrice = 'Rp${price.toInt()}';
+
     return GestureDetector(
       onTap: () {
-        //Navigator push Mengarah ke DetailProdukPage. Data yang dikirim name, price, rating, imagePath, tag, shortDesc, longDesc, images
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => DetailProdukPage(
-              name: item.name,
-              price: item.price,
-              rating: item.rating,
-              imagePath: item.imagePath,
-              tag: item.tag,
-
-              shortDesc: '${item.name} merupakan benih berkualitas yang dirancang untuk menghasilkan tanaman dengan pertumbuhan optimal dan seragam.',
-
-              longDesc: '${item.name} merupakan benih berkualitas yang dirancang untuk menghasilkan tanaman dengan pertumbuhan optimal dan seragam. Benih ini memiliki tingkat perkecambahan yang tinggi serta daya adaptasi yang baik di berbagai kondisi lingkungan, sehingga cocok digunakan oleh petani pemula maupun berpengalaman.\n\n'
-                  '${item.name} diproduksi melalui proses seleksi dan pengemasan yang terkontrol guna menjaga kualitas dan kebersihan produk. Tanaman yang dihasilkan umumnya memiliki pertumbuhan yang sehat, kuat, dan mampu memberikan hasil panen yang maksimal dengan perawatan yang tepat.\n\n'
-                  '${item.name} sangat direkomendasikan untuk berbagai jenis lahan dan kondisi iklim. Cocok digunakan untuk kebutuhan rumah tangga, kebun pribadi, hingga pertanian skala kecil dan menengah. Dengan kualitas terjaga, ${item.name} siap menjadi pilihan terbaik untuk budidaya Anda.',
-              images: item.images,
+              name: name,
+              price: formattedPrice,
+              rating: rating,
+              imagePath: imagePath,
+              tag: tag,
+              shortDesc: desc,
+              longDesc: desc + '\n\nDiproduksi melalui proses seleksi dan pengemasan yang terkontrol.',
+              images: [imagePath], // Sementara gambar carousel pakai gambar utama saja
             ),
           ),
         );
@@ -815,7 +719,6 @@ class _ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            //Stack dipakai pada area gambar untuk menaruh badge rating di atas gambar
             Stack(
               children: [
                 Container(
@@ -827,7 +730,9 @@ class _ProductCard extends StatelessWidget {
                   alignment: Alignment.center,
                   child: Padding(
                     padding: const EdgeInsets.all(6),
-                    child: Image.asset(item.imagePath, fit: BoxFit.contain),
+                    child: Image.asset(imagePath, fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image, size: 40, color: Colors.grey),
+                    ),
                   ),
                 ),
                 Positioned(
@@ -848,7 +753,7 @@ class _ProductCard extends StatelessWidget {
                         const Icon(Icons.star, size: 9, color: Color(0xFFF2C94C)),
                         const SizedBox(width: 2),
                         Text(
-                          item.rating,
+                          rating,
                           style: const TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w700,
@@ -863,7 +768,7 @@ class _ProductCard extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text(
-              item.tag,
+              tag,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -874,7 +779,7 @@ class _ProductCard extends StatelessWidget {
             ),
             const SizedBox(height: 3),
             Text(
-              item.name,
+              name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -888,7 +793,7 @@ class _ProductCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    item.price,
+                    formattedPrice,
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,

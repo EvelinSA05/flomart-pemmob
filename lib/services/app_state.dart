@@ -1,6 +1,9 @@
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:io';
 class CartItem {
   final String name;
   final String price;
@@ -35,6 +38,47 @@ class AppNotification {
   });
 }
 
+class AppOrder {
+  final String orderId;
+  final String title;
+  final String image;
+  final String itemName;
+  final String qty;
+  final String price;
+  final String total;
+  String status;
+  final List<String> buttons;
+  final bool showRating;
+
+  AppOrder({
+    required this.orderId,
+    required this.title,
+    required this.image,
+    required this.itemName,
+    required this.qty,
+    required this.price,
+    required this.total,
+    this.status = 'Belum Bayar',
+    this.buttons = const ['Detail Pesanan', 'Hubungi Penjual'],
+    this.showRating = false,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'status': status,
+      'title': title,
+      'orderId': orderId,
+      'image': image,
+      'itemName': itemName,
+      'qty': qty,
+      'price': price,
+      'total': total,
+      'buttons': buttons,
+      'showRating': showRating,
+    };
+  }
+}
+
 class AppState extends ChangeNotifier {
   static final AppState _instance = AppState._internal();
   factory AppState() => _instance;
@@ -42,21 +86,44 @@ class AppState extends ChangeNotifier {
 
   final List<CartItem> _cartItems = [];
   final List<AppNotification> _notifications = [];
+  final List<AppOrder> _orders = [];
   bool _isLoggedIn = false;
 
-  int? _userId;
+  String? _userId;
   String? _userName;
   String? _userEmail;
   String? _userRole;
+  String? _userAddress;
 
   List<CartItem> get cartItems => List.unmodifiable(_cartItems);
   List<AppNotification> get notifications => List.unmodifiable(_notifications);
+  List<AppOrder> get orders => List.unmodifiable(_orders);
   bool get isLoggedIn => _isLoggedIn;
   
-  int? get userId => _userId;
+  String? get userId => _userId;
   String? get userName => _userName;
   String? get userEmail => _userEmail;
   String? get userRole => _userRole;
+  String? get userAddress => _userAddress;
+
+  void setUserAddress(String address) async {
+    _userAddress = address;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userAddress', address);
+    
+    // Simpan juga ke Firebase Firestore
+    if (_userId != null) {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(_userId).set({
+          'address': address,
+        }, SetOptions(merge: true));
+      } catch (e) {
+        print('Error saving address to Firebase: $e');
+      }
+    }
+    
+    notifyListeners();
+  }
 
   void setLoggedIn(bool value) {
     _isLoggedIn = value;
@@ -65,12 +132,64 @@ class AppState extends ChangeNotifier {
 
   Future<void> loginUser(Map<String, dynamic> userData) async {
     _isLoggedIn = true;
-    _userId = int.tryParse(userData['id_user'].toString());
+    _userId = userData['id']?.toString() ?? userData['id_user']?.toString();
     _userName = userData['nama'];
-    _userEmail = userData['email'];
+    _userEmail = userData['email'] ?? userData['kontak'];
     _userRole = userData['role'];
     
+    // Coba ambil alamat dari Firebase jika ada
+    if (_userId != null) {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('users').doc(_userId).get();
+        if (doc.exists && doc.data()!.containsKey('address')) {
+          _userAddress = doc.data()!['address'];
+        }
+      } catch (e) {
+        print('Error loading address from Firebase: $e');
+      }
+    }
+
+    // Simpan ke SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('isLoggedIn', true);
+      if (_userId != null) await prefs.setString('userId', _userId!);
+      if (_userName != null) await prefs.setString('userName', _userName!);
+      if (_userEmail != null) await prefs.setString('userEmail', _userEmail!);
+      if (_userRole != null) await prefs.setString('userRole', _userRole!);
+      if (_userAddress != null) await prefs.setString('userAddress', _userAddress!);
+      print('DEBUG: SharedPreferences berhasil disimpan!');
+    } catch (e) {
+      print('ERROR SharedPreferences simpan: $e');
+    }
+    
     await fetchCart();
+    await fetchOrders();
+    notifyListeners();
+  }
+
+  Future<void> loadLoginInfo() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+      
+      print('DEBUG: Memuat sesi login dari SharedPreferences. isLoggedIn = $_isLoggedIn');
+
+      if (_isLoggedIn) {
+        _userId = prefs.getString('userId');
+        _userName = prefs.getString('userName');
+        _userEmail = prefs.getString('userEmail');
+        _userRole = prefs.getString('userRole');
+        _userAddress = prefs.getString('userAddress');
+        
+        print('DEBUG: User ID ter-load = $_userId');
+        
+        await fetchCart();
+        await fetchOrders();
+      }
+    } catch (e) {
+      print('ERROR SharedPreferences muat: $e');
+    }
     notifyListeners();
   }
 
@@ -85,9 +204,11 @@ class AppState extends ChangeNotifier {
         if (data['status'] == 'success') {
           _cartItems.clear();
           for (var item in data['data']) {
+            // Parse the numeric price and format without decimals
+            double harga = double.tryParse(item['harga'].toString()) ?? 0;
             _cartItems.add(CartItem(
               name: item['nama_produk'],
-              price: 'Rp' + item['harga'].toString(),
+              price: 'Rp${harga.toInt()}',
               imagePath: item['gambar'],
               size: 'Normal', // Default or parse from DB if available
               quantity: int.tryParse(item['jumlah'].toString()) ?? 1,
@@ -100,14 +221,87 @@ class AppState extends ChangeNotifier {
       print('Failed to fetch cart: $e');
     }
   }
+
+  Future<void> fetchOrders() async {
+    if (_userId == null) return;
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('orders')
+          .where('id_user', isEqualTo: _userId)
+          .get();
+
+      _orders.clear();
+      // Sort in memory to avoid needing composite index in Firestore
+      final docs = snapshot.docs.toList();
+      docs.sort((a, b) {
+        final aTime = a.data()['created_at'] as Timestamp?;
+        final bTime = b.data()['created_at'] as Timestamp?;
+        if (aTime == null || bTime == null) return 0;
+        return bTime.compareTo(aTime);
+      });
+
+      for (var doc in docs) {
+        final data = doc.data();
+        
+        // Handle items
+        List<dynamic> items = data['items'] ?? [];
+        String itemName = 'Unknown Item';
+        String imagePath = 'assets/img/produk/dummy.png';
+        String qty = '1x';
+        String price = 'Rp 0';
+
+        if (items.isNotEmpty) {
+          if (items[0] is Map) {
+             itemName = items[0]['nama_produk'] ?? itemName;
+             qty = '${items[0]['qty'] ?? 1}x';
+             price = 'Rp${(items[0]['harga'] ?? 0).toInt()}';
+          } else if (items[0] is String) {
+             // In case items was stored as JSON string
+             try {
+                final decoded = json.decode(items[0]);
+                itemName = decoded['nama_produk'] ?? itemName;
+                qty = '${decoded['qty'] ?? 1}x';
+                price = 'Rp${(decoded['harga'] ?? 0).toInt()}';
+             } catch(e) {}
+          }
+        }
+
+        // Format total
+        double totalDouble = double.tryParse(data['total_harga'].toString()) ?? 0;
+        String totalFormatted = 'Rp${totalDouble.toInt()}';
+
+        _orders.add(AppOrder(
+          orderId: 'FLM${doc.id}',
+          title: itemName,
+          image: imagePath,
+          itemName: itemName,
+          qty: qty,
+          price: price,
+          total: totalFormatted,
+          status: data['status'] ?? 'Belum Bayar',
+          buttons: const ['Detail Pesanan', 'Hubungi Penjual'],
+          showRating: false,
+        ));
+      }
+      notifyListeners();
+    } catch (e) {
+      print('Failed to fetch orders from Firestore: $e');
+    }
+  }
   
-  void logout() {
+  void logout() async {
     _isLoggedIn = false;
     _userId = null;
     _userName = null;
     _userEmail = null;
     _userRole = null;
+    _userAddress = null;
     clearCart();
+    _orders.clear();
+    
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    
     notifyListeners();
   }
 
@@ -179,5 +373,90 @@ class AppState extends ChangeNotifier {
       total += price * item.quantity;
     }
     return total;
+  }
+
+  void addOrder(AppOrder order) {
+    _orders.insert(0, order);
+    notifyListeners();
+  }
+
+  Future<void> cancelOrder(String orderId) async {
+    // Optimistic UI update
+    _orders.removeWhere((order) => order.orderId == orderId);
+    notifyListeners();
+
+    // Hapus dari database (backend)
+    String rawId = orderId;
+    if (rawId.startsWith('FLM')) {
+      rawId = rawId.substring(3);
+    }
+    
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1/flomart_api/hapus_pesanan.php'),
+        body: {'id_pesanan': rawId},
+      );
+      final data = json.decode(response.body);
+      if (data['status'] != 'success') {
+        print('Gagal menghapus pesanan di database: ${data['message']}');
+      }
+    } catch (e) {
+      print('Error membatalkan pesanan ke API: $e');
+    }
+  }
+
+  Future<void> updateOrderStatus(String orderId, String newStatus) async {
+    // Optimistic UI update
+    int index = _orders.indexWhere((order) => order.orderId == orderId);
+    if (index != -1) {
+      _orders[index].status = newStatus;
+      notifyListeners();
+    }
+
+    String rawId = orderId;
+    if (rawId.startsWith('FLM')) {
+      rawId = rawId.substring(3);
+    }
+    
+    try {
+      final response = await http.post(
+        Uri.parse('http://127.0.0.1/flomart_api/update_status_pesanan.php'),
+        body: {
+          'id_pesanan': rawId,
+          'status_pesanan': newStatus,
+        },
+      );
+      final data = json.decode(response.body);
+      if (data['status'] != 'success') {
+        print('Gagal memperbarui status di database: ${data['message']}');
+      }
+    } catch (e) {
+      print('Error memperbarui status ke API: $e');
+    }
+  }
+
+  Future<bool> uploadPaymentProof(String orderId, File imageFile) async {
+    String rawId = orderId;
+    if (rawId.startsWith('FLM')) {
+      rawId = rawId.substring(3);
+    }
+
+    try {
+      // Perbarui status pesanan di Firestore (gunakan set dengan merge: true agar tidak crash jika pesanan lama tidak ada di Firestore)
+      await FirebaseFirestore.instance.collection('orders').doc(rawId).set({
+        'status': 'menunggu konfirmasi',
+      }, SetOptions(merge: true));
+
+      // Optimistic UI update for status
+      int index = _orders.indexWhere((order) => order.orderId == orderId);
+      if (index != -1) {
+        _orders[index].status = 'menunggu konfirmasi';
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      print('Error update status ke Firestore: $e');
+      return false;
+    }
   }
 }

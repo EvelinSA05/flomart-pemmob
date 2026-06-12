@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/app_state.dart';
 
 class AddressData {
   final String nama;
@@ -24,18 +25,19 @@ class AlamatSayaPage extends StatefulWidget {
 class _AlamatSayaPageState extends State<AlamatSayaPage> {
   int selectedIndex = 0;
 
-  List<AddressData> addresses = [
-    AddressData(
-      nama: 'Agung Prasetyo',
-      alamat:
-          'Sidokare Indah ai no 12\nSIDOARJO,KAB. SIDOARJO, JAWA TIMUR, ID, 61212',
-    ),
-    AddressData(
-      nama: 'Agung Prasetyo',
-      alamat:
-          'Sidokare Asri ai no 13\nSIDOARJO,KAB. SIDOARJO, JAWA TIMUR, ID, 61213',
-    ),
-  ];
+  List<AddressData> addresses = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final userAddress = AppState().userAddress;
+    if (userAddress != null && userAddress.isNotEmpty) {
+      addresses.add(AddressData(
+        nama: AppState().userName ?? 'Pengguna',
+        alamat: userAddress,
+      ));
+    }
+  }
 
   Widget _alamatInput(
   String label,
@@ -78,6 +80,68 @@ class _AlamatSayaPageState extends State<AlamatSayaPage> {
     ],
   );
 }
+
+  Widget _alamatSelectionInput(
+    BuildContext context,
+    String label,
+    String hint,
+    TextEditingController controller,
+    List<String> items,
+  ) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 42,
+          child: TextField(
+            controller: controller,
+            readOnly: true,
+            onTap: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (context) {
+                  return _SelectionBottomSheet(
+                    title: label,
+                    items: items,
+                    onSelected: (value) {
+                      controller.text = value;
+                    },
+                  );
+                },
+              );
+            },
+            style: const TextStyle(fontSize: 13),
+            decoration: InputDecoration(
+              hintText: hint,
+              hintStyle: const TextStyle(
+                color: Colors.grey,
+                fontWeight: FontWeight.bold,
+              ),
+              filled: true,
+              fillColor: const Color(0xFFD9D9D9),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(22),
+                borderSide: BorderSide.none,
+              ),
+              suffixIcon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    );
+  }
 
   void _showTambahAlamatDialog(BuildContext context) {
   final alamatController = TextEditingController();
@@ -137,9 +201,8 @@ class _AlamatSayaPageState extends State<AlamatSayaPage> {
                 const SizedBox(height: 22),
 
                 _alamatInput("Alamat Pengantaran", "Alamat Pegantaran", alamatController),
-                _alamatInput("Negara", "Negara", negaraController),
-                _alamatInput("Bagian/Provinsi", "Provinsi", provinsiController),
-                _alamatInput("Kota", "Kota", kotaController),
+                _alamatSelectionInput(context, "Bagian/Provinsi", "Pilih Provinsi", provinsiController, ["Jawa Timur", "Jawa Tengah", "Jawa Barat", "DKI Jakarta", "Banten", "DI Yogyakarta", "Bali"]),
+                _alamatSelectionInput(context, "Kota/Kabupaten", "Pilih Kota", kotaController, ["Sidoarjo", "Surabaya", "Gresik", "Malang", "Mojokerto", "Pasuruan", "Jakarta Selatan", "Jakarta Barat", "Jakarta Pusat", "Jakarta Timur", "Bandung", "Semarang", "Denpasar"]),
                 _alamatInput("Alamat Jalan", "Alamat Jalan", jalanController),
                 _alamatInput("Kode Pos", "Kode Pos", kodePosController),
 
@@ -179,12 +242,19 @@ class _AlamatSayaPageState extends State<AlamatSayaPage> {
                         height: 38,
                         child: ElevatedButton(
                           onPressed: () {
-                            print(alamatController.text);
-                            print(negaraController.text);
-                            print(provinsiController.text);
-                            print(kotaController.text);
-                            print(jalanController.text);
-                            print(kodePosController.text);
+                            if (alamatController.text.isEmpty ||
+                                provinsiController.text.isEmpty ||
+                                kotaController.text.isEmpty ||
+                                jalanController.text.isEmpty ||
+                                kodePosController.text.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Semua kolom wajib diisi!'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
+                            }
 
                             Navigator.pop(context); // tutup form
 
@@ -256,15 +326,16 @@ class _AlamatSayaPageState extends State<AlamatSayaPage> {
                                               setState(() {
                                                 addresses.add(
                                                   AddressData(
-                                                    nama: alamatController.text,
-                                                    alamat:
-                                                        '${jalanController.text}\n'
-                                                        '${kotaController.text.toUpperCase()}, '
-                                                        '${provinsiController.text.toUpperCase()}, '
-                                                        '${negaraController.text.toUpperCase()}, '
-                                                        '${kodePosController.text}',
+                                                    nama: AppState().userName ?? 'Pengguna',
+                                                    alamat: '${jalanController.text}\n'
+                                                            '${kotaController.text.toUpperCase()}, '
+                                                            '${provinsiController.text.toUpperCase()}, '
+                                                            'ID, ${kodePosController.text}',
                                                   ),
                                                 );
+                                                if (addresses.length == 1) {
+                                                  AppState().setUserAddress(addresses[0].alamat);
+                                                }
                                               });
                                             },
                                             style: ElevatedButton.styleFrom(
@@ -355,53 +426,53 @@ class _AlamatSayaPageState extends State<AlamatSayaPage> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(22),
                   ),
-                  child: Column(
-                    children: List.generate(addresses.length, (index) {
-                      final item = addresses[index];
-
-                      return Column(
-                        children: [
-                          _AddressItem(
-                            index: index,
-                            selectedIndex: selectedIndex,
-                            showDelete: index != 0,
-                            nama: item.nama,
-                            alamat: item.alamat,
-                            onTapUtama: (i) {
-                              setState(() {
-                                selectedIndex = i;
-                              });
-                            },
-                          ),
-                          if (index != addresses.length - 1)
-                            const Divider(
-                              height: 28,
-                              thickness: 1.2,
-                              color: Colors.black,
+                      child: addresses.isEmpty 
+                        ? Center(
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                            _showTambahAlamatDialog(context);
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 20),
+                            child: Text(
+                              'Masukkan alamat anda',
+                              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 14),
                             ),
-                        ],
-                      );
-                    }),
-                  ),
+                          ),
+                        ),
+                      )
+                    : Column(
+                        children: List.generate(addresses.length, (index) {
+                          final item = addresses[index];
+
+                          return Column(
+                            children: [
+                              _AddressItem(
+                                index: index,
+                                selectedIndex: selectedIndex,
+                                showDelete: index != 0,
+                                nama: item.nama,
+                                alamat: item.alamat,
+                                onTapUtama: (i) {
+                                  setState(() {
+                                    selectedIndex = i;
+                                  });
+                                  AppState().setUserAddress(addresses[i].alamat);
+                                },
+                              ),
+                              if (index != addresses.length - 1)
+                                const Divider(
+                                  height: 28,
+                                  thickness: 1.2,
+                                  color: Colors.black,
+                                ),
+                            ],
+                          );
+                        }),
+                      ),
                 ),
 
-                const SizedBox(height: 22),
-
-                const Text(
-                  'Riwayat Tempat Pengambilan',
-                  style: TextStyle(fontSize: 13, color: Colors.black),
-                ),
-                const SizedBox(height: 12),
-
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: const _AddressHistoryItem(),
-                ),
               ],
             ),
           ),
@@ -566,49 +637,111 @@ class _AlamatSayaPageState extends State<AlamatSayaPage> {
   }
 }
 
-class _AddressHistoryItem extends StatelessWidget {
-  const _AddressHistoryItem();
+class _SelectionBottomSheet extends StatefulWidget {
+  final String title;
+  final List<String> items;
+  final Function(String) onSelected;
 
-  static const Color green = Color(0xFF13824B);
+  const _SelectionBottomSheet({
+    required this.title,
+    required this.items,
+    required this.onSelected,
+  });
+
+  @override
+  State<_SelectionBottomSheet> createState() => _SelectionBottomSheetState();
+}
+
+class _SelectionBottomSheetState extends State<_SelectionBottomSheet> {
+  final TextEditingController _searchController = TextEditingController();
+  List<String> _filteredItems = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _filteredItems = widget.items;
+    _searchController.addListener(_filterItems);
+  }
+
+  void _filterItems() {
+    setState(() {
+      _filteredItems = widget.items
+          .where((item) =>
+              item.toLowerCase().contains(_searchController.text.toLowerCase()))
+          .toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Agung Prasetyo',
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Pilih ${widget.title}',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close, size: 20),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
           ),
-        ),
-        const SizedBox(height: 12),
-        const Text(
-          'Sidokare Indah ai no 12\nSIDOARJO,KAB. SIDOARJO, JAWA TIMUR, ID, 61212',
-          style: TextStyle(
-            fontSize: 11,
-            height: 1.25,
-            color: Colors.grey,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-          decoration: BoxDecoration(
-            color: green,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Text(
-            'Utama',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
+          const SizedBox(height: 10),
+          TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Cari ${widget.title}...',
+              hintStyle: const TextStyle(fontSize: 13, color: Colors.grey),
+              prefixIcon: const Icon(Icons.search, color: Colors.grey, size: 20),
+              filled: true,
+              fillColor: const Color(0xFFF9F9F9),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide(color: Colors.grey.shade300),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(15),
+                borderSide: BorderSide(color: Colors.grey.shade200),
+              ),
             ),
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          Expanded(
+            child: ListView.separated(
+              itemCount: _filteredItems.length,
+              separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFF0F0F0)),
+              itemBuilder: (context, index) {
+                return ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  title: Text(_filteredItems[index], style: const TextStyle(fontSize: 14)),
+                  trailing: const Icon(Icons.chevron_right, size: 16, color: Colors.grey),
+                  onTap: () {
+                    widget.onSelected(_filteredItems[index]);
+                    Navigator.pop(context);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
-}
+}

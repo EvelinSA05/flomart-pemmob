@@ -107,33 +107,39 @@ class ProfilePage extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Row(
-          children: [
-            GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const UbahProfilePage(),
+        title: ListenableBuilder(
+          listenable: AppState(),
+          builder: (context, child) {
+            final appState = AppState();
+            return Row(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const UbahProfilePage(),
+                      ),
+                    );
+                  },
+                  child: const CircleAvatar(
+                    radius: 20,
+                    backgroundImage: AssetImage('assets/img/system/pengguna_login.png'),
                   ),
-                );
-              },
-              child: const CircleAvatar(
-                radius: 20,
-                backgroundImage: AssetImage('assets/img/system/pengguna_login.png'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Text("Agung Prasetyo",
-                    style: TextStyle(color: Colors.black, fontSize: 13, fontWeight: FontWeight.bold)),
-                Text("Alamat Toko",
-                    style: TextStyle(color: Colors.grey, fontSize: 11)),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(appState.userName ?? 'Pengguna',
+                        style: const TextStyle(color: Colors.black, fontSize: 13, fontWeight: FontWeight.bold)),
+                    Text(appState.userEmail ?? 'Alamat Toko',
+                        style: const TextStyle(color: Colors.grey, fontSize: 11)),
+                  ],
+                )
               ],
-            )
-          ],
+            );
+          },
         ),
       ),
 
@@ -193,73 +199,100 @@ class ProfilePage extends StatelessWidget {
 
   // ================= ALAMAT =================
   Widget _cardAlamat(BuildContext context) {
-    return _card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const AlamatSayaPage(),
-                ),
-              );
-            },
-            child: _titleRow("Alamat Utama", "Atur Alamat"),
-          ),
-          const Divider(
-            thickness: 1.5, // ketebalan garis
-            color: Colors.black, // warna garis
-          ),
+    return ListenableBuilder(
+      listenable: AppState(),
+      builder: (context, child) {
+        final address = AppState().userAddress;
+        final hasAddress = address != null && address.isNotEmpty;
 
-          Row(
+        return _card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 171, 241, 174),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(Icons.home, color: green),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AlamatSayaPage(),
+                    ),
+                  );
+                },
+                child: _titleRow("Alamat Utama", "Atur Alamat"),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "Agung Prasetyo",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+              const Divider(
+                thickness: 1.5, // ketebalan garis
+                color: Colors.black, // warna garis
+              ),
+
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 171, 241, 174),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      "Sidokare Indah ai no 12\nSIDOARJO, KAB. SIDOARJO, JAWA TIMUR, ID, 61254",
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF13824B),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        "Utama",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
+                    child: const Icon(Icons.home, color: green),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: hasAddress 
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppState().userName ?? 'Pengguna',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              address,
+                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                            const SizedBox(height: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF13824B),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                "Utama",
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      : GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const AlamatSayaPage(),
+                              ),
+                            );
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                            child: Text(
+                              "Masukkan alamat anda",
+                              style: TextStyle(fontSize: 13, color: Colors.blue, fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
-                ),
+                  )
+                ],
               )
             ],
-          )
-        ],
-      ),
+          ),
+        );
+      }
     );
   }
 

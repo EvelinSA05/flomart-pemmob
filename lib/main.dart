@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'services/firebase_seeder.dart';
+import 'services/app_state.dart';
 
 import 'app_routes.dart';
 import 'pages/beranda/beranda.dart';
@@ -24,7 +28,18 @@ import 'pages/profile/pesanan_saya.dart';
 import 'pages/beranda/cart_page.dart';
 import 'pages/beranda/notifikasi.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  
+  // Seed 20 produk dummy ke Firestore jika masih kosong (Sesuai kriteria UAS)
+  await FirebaseSeeder.seedProducts();
+  
+  // Load login session
+  await AppState().loadLoginInfo();
+  
   initializeDateFormatting('id_ID', null).then((_) {
     runApp(const MyApp());
   });
@@ -41,7 +56,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
         useMaterial3: true,
       ),
-      initialRoute: homeRoute,
+      initialRoute: _getInitialRoute(),
       routes: {
         homeRoute: (_) => const HomePage(),
         shopRoute: (_) => const ShopPage(),
@@ -66,5 +81,15 @@ class MyApp extends StatelessWidget {
         notificationRoute: (_) => const NotificationPage(),
       },
     );
+  }
+
+  String _getInitialRoute() {
+    if (AppState().isLoggedIn) {
+      if (AppState().userRole == 'admin' || AppState().userRole == 'owner') {
+        return dashboardSellerRoute;
+      }
+      return homeAfterLoginRoute;
+    }
+    return homeRoute;
   }
 }

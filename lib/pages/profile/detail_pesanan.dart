@@ -1,5 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import '../../services/app_state.dart';
+import 'pesanan_saya.dart';
+
+class OrderItem {
+  final String name;
+  final String image;
+  final String size;
+  final int quantity;
+  final double price;
+
+  OrderItem({
+    required this.name,
+    required this.image,
+    required this.size,
+    required this.quantity,
+    required this.price,
+  });
+}
 
 class DetailPesananPage extends StatefulWidget {
   final String title;
@@ -11,6 +32,14 @@ class DetailPesananPage extends StatefulWidget {
   final String total;
   final String status;
   final bool showSuccessDialog;
+  // New fields for cart info
+  final List<OrderItem> orderItems;
+  final double subtotal;
+  final double ongkir;
+  final String paymentMethod;
+  final String shippingMethod;
+  final String recipientName;
+  final String recipientAddress;
 
   const DetailPesananPage({
     super.key,
@@ -23,6 +52,13 @@ class DetailPesananPage extends StatefulWidget {
     required this.total,
     required this.status,
     this.showSuccessDialog = false,
+    this.orderItems = const [],
+    this.subtotal = 0,
+    this.ongkir = 0,
+    this.paymentMethod = 'Transfer Bank BCA',
+    this.shippingMethod = '',
+    this.recipientName = '',
+    this.recipientAddress = '',
   });
 
   @override
@@ -33,6 +69,12 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
   static const Color _green = Color(0xFF13824B);
   static const Color _bg = Color(0xFFF6F3F3);
   static const Color _yellow = Color(0xFFE2BE00);
+
+  final NumberFormat _currencyFormat = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp',
+    decimalDigits: 0,
+  );
 
   @override
   void initState() {
@@ -83,6 +125,35 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                height: 45,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close dialog
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PesananSayaPage(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE2BE00),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                  child: const Text(
+                    'Lihat Pesanan',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -92,19 +163,23 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
 
   // Determine which step index the status maps to
   int get _statusIndex {
-    switch (widget.status) {
-      case 'Belum Bayar':
+    switch (widget.status.toLowerCase()) {
+      case 'belum bayar':
+      case 'menunggu pembayaran':
+      case 'menunggu':
         return 0;
-      case 'Konfirmasi':
+      case 'menunggu konfirmasi':
+      case 'konfirmasi':
+      case 'diproses':
         return 1;
-      case 'Dikemas':
+      case 'dikemas':
         return 2;
-      case 'Dikirim':
+      case 'dikirim':
         return 3;
-      case 'Selesai':
+      case 'selesai':
         return 4;
       default:
-        return 2; // Default to 'Dikemas' for success flow demo
+        return 2;
     }
   }
 
@@ -128,6 +203,10 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
                     const SizedBox(height: 12),
                     _buildVirtualAccountCard(context),
                     const SizedBox(height: 12),
+                    if (_statusIndex == 0) ...[
+                      _buildUploadBuktiCard(context),
+                      const SizedBox(height: 12),
+                    ],
                     _buildOrderSummaryCard(),
                     const SizedBox(height: 12),
                     _buildRecipientCard(),
@@ -176,6 +255,9 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
 
   // ===================== PRODUK =====================
   Widget _buildProductCard() {
+    final items = widget.orderItems;
+    final itemCount = items.isNotEmpty ? items.length : 1;
+
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,51 +281,101 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                 ),
               ),
-              Text('2 Produk', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+              Text('$itemCount Produk', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
             ],
           ),
           const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: Image.asset(
-                  widget.image,
-                  width: 58,
-                  height: 65,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(width: 58, height: 65, color: Colors.grey.shade200),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.itemName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 3),
-                    Text(widget.qty.split(' ').first, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('2 x Rp10.000', style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
-                  const SizedBox(height: 4),
-                  const Text('Rp20.000', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
-                ],
-              ),
-            ],
-          ),
+          if (items.isNotEmpty)
+            ...items.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _buildOrderItemRow(item),
+            ))
+          else
+            _buildLegacyItemRow(),
         ],
       ),
     );
   }
 
+  Widget _buildOrderItemRow(OrderItem item) {
+    final itemTotal = item.price * item.quantity;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.asset(
+            item.image,
+            width: 58,
+            height: 65,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(width: 58, height: 65, color: Colors.grey.shade200, child: const Icon(Icons.image)),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(item.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 3),
+              Text(item.size, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+            ],
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text('${item.quantity} x ${_currencyFormat.format(item.price)}', style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
+            const SizedBox(height: 4),
+            Text(_currencyFormat.format(itemTotal), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // Fallback for old-style single item (backward compatibility)
+  Widget _buildLegacyItemRow() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.asset(
+            widget.image,
+            width: 58,
+            height: 65,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(width: 58, height: 65, color: Colors.grey.shade200),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.itemName, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 3),
+              Text(widget.qty.split(' ').first, style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+            ],
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(widget.price, style: TextStyle(fontSize: 11, color: Colors.grey.shade700)),
+            const SizedBox(height: 4),
+            Text(widget.total, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+          ],
+        ),
+      ],
+    );
+  }
+
   // ===================== PENJUAL =====================
   Widget _buildSellerCard() {
+    final now = DateFormat('dd/MM/yyyy HH:mm').format(DateTime.now());
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +391,7 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
                     const SizedBox(height: 4),
                     const Text('Kaka Petani', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                     const SizedBox(height: 4),
-                    Text('Dipesan 12/2/2025 10:25', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                    Text('Dipesan $now', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                   ],
                 ),
               ),
@@ -278,7 +410,10 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
                   children: [
                     Text('Pembayaran', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                     const SizedBox(height: 4),
-                    const Text('Transfer Bank BCA', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                    Text(
+                      widget.paymentMethod.isNotEmpty ? widget.paymentMethod : 'Transfer Bank BCA',
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                    ),
                   ],
                 ),
               ),
@@ -287,7 +422,25 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
                 children: [
                   Text('Status Pembayaran', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                   const SizedBox(height: 4),
-                  const Text('Selesai', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _green)),
+                  Builder(
+                    builder: (context) {
+                      String statusLower = widget.status.toLowerCase();
+                      bool isUnpaid = statusLower == 'menunggu pembayaran' || statusLower == 'belum bayar';
+                      bool isPending = statusLower == 'menunggu konfirmasi';
+                      
+                      String displayText = isUnpaid ? 'Belum Bayar' : (isPending ? 'Menunggu Konfirmasi' : 'Selesai');
+                      Color displayColor = isUnpaid ? Colors.orange : (isPending ? Colors.blue : _green);
+
+                      return Text(
+                        displayText,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: displayColor,
+                        ),
+                      );
+                    }
+                  ),
                 ],
               ),
             ],
@@ -323,33 +476,120 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
     );
   }
 
-  // ===================== RINGKASAN =====================
-  Widget _buildOrderSummaryCard() {
+  // ===================== UPLOAD BUKTI =====================
+  Widget _buildUploadBuktiCard(BuildContext context) {
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          const Text('Instruksi Pembayaran & Upload Bukti', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+          const SizedBox(height: 12),
+          const Text(
+            'Silakan transfer ke rekening berikut:\n\n'
+            'Bank BCA: 1234567890\n'
+            'A.N: Flomart Official\n\n'
+            'Setelah transfer, silakan upload bukti pembayaran agar pesanan Anda dapat segera diproses.',
+            style: TextStyle(fontSize: 12, height: 1.5, color: Colors.black87),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 40,
+            child: ElevatedButton.icon(
+              onPressed: () => _pickAndUploadImage(context),
+              icon: const Icon(Icons.upload_file, size: 18),
+              label: const Text('Upload Bukti Transfer', style: TextStyle(fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF0BF00),
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickAndUploadImage(BuildContext context) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image == null) return; // User canceled
+
+    File imageFile = File(image.path);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        content: Row(
+          children: const [
+            CircularProgressIndicator(color: Color(0xFF14824C)),
+            SizedBox(width: 16),
+            Text('Mengunggah bukti...'),
+          ],
+        ),
+      ),
+    );
+
+    bool success = await AppState().uploadPaymentProof(widget.orderId, imageFile);
+    
+    Navigator.pop(context); // tutup dialog loading
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bukti berhasil diunggah! Menunggu konfirmasi admin.', style: TextStyle(color: Colors.white)), 
+          backgroundColor: Color(0xFF14824C)
+        ),
+      );
+      Navigator.pop(context); // kembali ke halaman sebelumnya (Pesanan Saya)
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal mengunggah bukti, silakan coba lagi.', style: TextStyle(color: Colors.white)), 
+          backgroundColor: Colors.red
+        ),
+      );
+    }
+  }
+
+  // ===================== RINGKASAN =====================
+  Widget _buildOrderSummaryCard() {
+    final itemCount = widget.orderItems.isNotEmpty ? widget.orderItems.length : 1;
+    final subtotal = widget.subtotal > 0 ? widget.subtotal : 0;
+    final ongkir = widget.ongkir;
+    const double pajak = 500;
+    final totalCalc = subtotal + ongkir + pajak;
+    // Use the passed total if subtotal is 0 (legacy), otherwise use calculated
+    final displayTotal = subtotal > 0 ? _currencyFormat.format(totalCalc) : widget.total;
+
+    return _card(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Ringkasan Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-              Text('2 Produk', style: TextStyle(fontSize: 12, color: Colors.grey)),
+              const Text('Ringkasan Pesanan', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              Text('$itemCount Produk', style: const TextStyle(fontSize: 12, color: Colors.grey)),
             ],
           ),
           const SizedBox(height: 16),
-          _summaryRow(Icons.receipt_long, 'Subtotal', 'Rp24.000'),
+          _summaryRow(Icons.receipt_long, 'Subtotal', subtotal > 0 ? _currencyFormat.format(subtotal) : widget.total),
           const SizedBox(height: 12),
-          _summaryRow(Icons.local_shipping_outlined, 'Ongkir', 'Rp13.000'),
+          _summaryRow(Icons.local_shipping_outlined, 'Ongkir', _currencyFormat.format(ongkir)),
           const SizedBox(height: 12),
-          _summaryRow(Icons.account_balance_wallet_outlined, 'Biaya Admin', 'Rp500'),
+          _summaryRow(Icons.account_balance_wallet_outlined, 'Biaya Admin', _currencyFormat.format(pajak)),
           const SizedBox(height: 14),
           const Divider(thickness: 1.2),
           const SizedBox(height: 8),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-              Text('Rp37.500', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
+              const Text('Total', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              Text(displayTotal, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800)),
             ],
           ),
         ],
@@ -370,6 +610,13 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
 
   // ===================== PENERIMA =====================
   Widget _buildRecipientCard() {
+    final recipientName = widget.recipientName.isNotEmpty
+        ? widget.recipientName
+        : (AppState().userName ?? 'Pengguna');
+    final recipientAddress = widget.recipientAddress.isNotEmpty
+        ? widget.recipientAddress
+        : 'Sidokare Indah ai no 12\nSIDOARJO,KAB. SIDOARJO, JAWA TIMUR, ID, 61212';
+
     return _card(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -380,10 +627,10 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
               children: [
                 Text('Penerima', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                 const SizedBox(height: 4),
-                const Text('Agung Prasetyo', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
+                Text(recipientName, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 6),
                 Text(
-                  'Sidokare Indah ai no 12\nSIDOARJO,KAB. SIDOARJO, JAWA TIMUR, ID, 61212',
+                  recipientAddress,
                   style: TextStyle(fontSize: 11, height: 1.4, color: Colors.grey.shade600),
                 ),
               ],

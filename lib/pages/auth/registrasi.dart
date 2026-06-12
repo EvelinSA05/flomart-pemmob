@@ -1,5 +1,5 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'login.dart'; // ✅ WAJIB ADA
 
@@ -103,40 +103,39 @@ class _regisFormState extends State<regisForm> {
     setState(() => _isLoading = true);
 
     try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1/flomart_api/register.php'),
-        body: {
-          'nama': _namaController.text,
-          'kontak': _kontakController.text,
-          'password': _passwordController.text,
-        },
-      );
+      // Cek apakah email/no hp sudah terdaftar
+      final existingUsers = await FirebaseFirestore.instance
+          .collection('users')
+          .where('kontak', isEqualTo: _kontakController.text)
+          .get();
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 'success') {
+      if (existingUsers.docs.isNotEmpty) {
+        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Registrasi Berhasil! Silakan Login.', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
-          );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => const LoginPage(),
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['message'], style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+            const SnackBar(content: Text('Email atau No HP sudah terdaftar!', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
           );
         }
-      } else if (response.statusCode == 409) {
-         final data = json.decode(response.body);
-         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['message'] ?? 'Email atau No HP sudah terdaftar', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
-         );
-      } else {
+        return;
+      }
+
+      // Simpan user baru ke Firestore
+      await FirebaseFirestore.instance.collection('users').add({
+        'nama': _namaController.text,
+        'kontak': _kontakController.text,
+        'password': _passwordController.text, // Simpan sbg plain text krn ini simulasi sederhana
+        'role': 'user', // Default role
+        'created_at': FieldValue.serverTimestamp(),
+      });
+
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gagal melakukan registrasi', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red),
+          const SnackBar(content: Text('Registrasi Berhasil! Silakan Login.', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const LoginPage(),
+          ),
         );
       }
     } catch (e) {

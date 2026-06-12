@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'detail_pesanan.dart';
+import '../../services/app_state.dart';
+import '../chat/chat_page.dart';
 
 class PesananSayaPage extends StatefulWidget {
   const PesananSayaPage({super.key});
@@ -19,62 +21,32 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
     'Selesai',
   ];
 
-  final List<Map<String, dynamic>> orders = [
-    {
-      'status': 'Belum Bayar',
-      'title': 'Bibit Ubi Ungu',
-      'orderId': '24082010170KAJ',
-      'image': 'assets/img/produk/ubiUngu.png',
-      'itemName': 'Bibit Ubi Ungu',
-      'qty': '20g 9x',
-      'price': 'Rp 10.000',
-      'total': 'Rp 90.000',
-      'buttons': ['Pembatalan', 'Hubungi Penjual'],
-      'showRating': false,
-    },
-    {
-      'status': 'Dikemas',
-      'title': 'Bibit Ubi Ungu',
-      'orderId': '24082010169KAJ',
-      'image': 'assets/img/produk/ubiUngu.png',
-      'itemName': 'Bibit Ubi Ungu',
-      'qty': '20g 1x',
-      'price': 'Rp 10.000',
-      'total': 'Rp 15.500',
-      'buttons': ['Detail Pesanan', 'Hubungi Penjual'],
-      'showRating': false,
-    },
-    {
-      'status': 'Dikirim',
-      'title': 'Bibit Wortel',
-      'orderId': '24082010168KAJ',
-      'image': 'assets/img/produk/Wortel.png',
-      'itemName': 'Bibit Kubis',
-      'qty': '20g 1x',
-      'price': 'Rp 12.000',
-      'total': 'Rp 17.500',
-      'buttons': ['Detail Pesanan', 'Hubungi Penjual'],
-      'showRating': false,
-    },
-    {
-      'status': 'Selesai',
-      'title': 'Bibit Bunga Matahari',
-      'orderId': '24082010167KAJ',
-      'image': 'assets/img/produk/bunga_matahari.gif',
-      'itemName': 'Bibit Bunga Matahari',
-      'qty': '20g 1x',
-      'price': 'Rp 90.000',
-      'total': 'Rp 90.000',
-      'buttons': ['Beli Lagi'],
-      'showRating': true,
-    },
-  ];
+  // Orders will now be fetched dynamically from Firebase via AppState
 
   @override
   Widget build(BuildContext context) {
-    final filteredOrders = selectedTab == 0
-        ? orders
-        : orders.where((item) => item['status'] == tabs[selectedTab]).toList();
+    return ListenableBuilder(
+      listenable: AppState(),
+      builder: (context, child) {
+        final allOrders = AppState().orders.map((o) => o.toMap()).toList();
+        
+        final filteredOrders = selectedTab == 0
+            ? allOrders
+            : allOrders.where((item) {
+                String status = item['status'].toString().toLowerCase();
+                String tab = tabs[selectedTab].toLowerCase();
+
+                if (tab == 'belum bayar') {
+                  return status == 'belum bayar' || status == 'menunggu pembayaran';
+                } else if (tab == 'dikemas') {
+                  return status == 'dikemas' || status == 'diproses' || status == 'menunggu konfirmasi';
+                } else if (tab == 'dikirim') {
+                  return status == 'dikirim';
+                } else if (tab == 'selesai') {
+                  return status == 'selesai';
+                }
+                return false;
+              }).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xfff6f3f3),
@@ -89,6 +61,16 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
                 itemCount: filteredOrders.length,
                 itemBuilder: (context, index) {
                   final order = filteredOrders[index];
+                  
+                  List<String> dynamicButtons = List<String>.from(order['buttons']);
+                  if (order['status'] == 'Belum Bayar' || order['status'] == 'Menunggu Pembayaran') {
+                    if (!dynamicButtons.contains('Bayar Sekarang')) {
+                      dynamicButtons.insert(0, 'Bayar Sekarang');
+                    }
+                  } else if (order['status'] == 'Menunggu Konfirmasi') {
+                    dynamicButtons.remove('Bayar Sekarang');
+                    dynamicButtons.remove('Pembatalan');
+                  }
 
                   return OrderCard(
                     title: order['title'],
@@ -99,8 +81,11 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
                     price: order['price'],
                     total: order['total'],
                     status: order['status'],
-                    buttons: List<String>.from(order['buttons']),
+                    buttons: dynamicButtons,
                     showRating: order['showRating'],
+                    onCancel: () {
+                      // Batal order handled elsewhere if needed
+                    },
                   );
                 },
               ),
@@ -108,6 +93,8 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
           ],
         ),
       ),
+    );
+      },
     );
   }
 
@@ -186,6 +173,7 @@ class OrderCard extends StatefulWidget {
   final String status;
   final List<String> buttons;
   final bool showRating;
+  final VoidCallback? onCancel;
 
   const OrderCard({
     super.key,
@@ -199,6 +187,7 @@ class OrderCard extends StatefulWidget {
     required this.status,
     required this.buttons,
     this.showRating = false,
+    this.onCancel,
   });
 
   @override
@@ -210,14 +199,32 @@ class _OrderCardState extends State<OrderCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DetailPesananPage(
+              title: widget.title,
+              orderId: widget.orderId,
+              image: widget.image,
+              itemName: widget.itemName,
+              qty: widget.qty,
+              price: widget.price,
+              total: widget.total,
+              status: widget.status,
+            ),
+          ),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Column(
         children: [
           Row(
             children: [
@@ -254,6 +261,12 @@ class _OrderCardState extends State<OrderCard> {
                 width: 38,
                 height: 45,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  width: 38,
+                  height: 45,
+                  color: Colors.grey.shade300,
+                  child: const Icon(Icons.image, size: 20, color: Colors.grey),
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -289,15 +302,18 @@ class _OrderCardState extends State<OrderCard> {
 
           const SizedBox(height: 14),
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              ...widget.buttons.map(
-                (buttonText) => Padding(
-                  padding: const EdgeInsets.only(left: 10),
-                  child: OutlinedButton(
+          Align(
+            alignment: Alignment.centerRight,
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 10,
+              runSpacing: 10,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                ...widget.buttons.map(
+                  (buttonText) => OutlinedButton(
                     onPressed: () {
-                      if (buttonText == 'Detail Pesanan') {
+                      if (buttonText == 'Detail Pesanan' || buttonText == 'Bayar Sekarang') {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -311,6 +327,38 @@ class _OrderCardState extends State<OrderCard> {
                               total: widget.total,
                               status: widget.status,
                             ),
+                          ),
+                        );
+                      } else if (buttonText == 'Hubungi Penjual') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const ChatPage()),
+                        );
+                      } else if (buttonText == 'Pembatalan') {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Batalkan Pesanan'),
+                            content: const Text('Apakah Anda yakin ingin membatalkan pesanan ini?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('Tidak', style: TextStyle(color: Colors.grey)),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  AppState().cancelOrder(widget.orderId);
+                                  if (widget.onCancel != null) {
+                                    widget.onCancel!();
+                                  }
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Pesanan berhasil dibatalkan')),
+                                  );
+                                },
+                                child: const Text('Ya, Batalkan', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
                           ),
                         );
                       }
@@ -331,11 +379,10 @@ class _OrderCardState extends State<OrderCard> {
                     ),
                   ),
                 ),
-              ),
 
-              if (widget.showRating) ...[
-                const SizedBox(width: 14),
+              if (widget.showRating)
                 Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: List.generate(5, (index) {
                     return GestureDetector(
                       onTap: () {
@@ -352,9 +399,10 @@ class _OrderCardState extends State<OrderCard> {
                   }),
                 ),
               ],
-            ],
+            ),
           ),
         ],
+      ),
       ),
     );
   }

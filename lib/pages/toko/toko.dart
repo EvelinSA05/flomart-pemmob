@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../app_routes.dart';
 import '../../models/product_model.dart';
@@ -63,84 +64,7 @@ class ShopPage extends StatefulWidget {
 }
 
 class _ShopPageState extends State<ShopPage> {
-  static const int _itemsPerPage = 3;
-  int _currentPage = 0;
-
-  final List<Product> _products = const [
-    Product(
-      name: 'Benih Selada',
-      price: 'Rp10.000',
-      rating: 4.8,
-      image: 'assets/img/produk/Wheat_Seeds.jpg',
-    ),
-    Product(
-      name: 'Benih Cabai',
-      price: 'Rp12.000',
-      rating: 4.5,
-      image: 'assets/img/produk/cabe.jpg',
-    ),
-    Product(
-      name: 'Benih Strawberry',
-      price: 'Rp15.000',
-      rating: 4.7,
-      image: 'assets/img/produk/strawberry.png',
-    ),
-    Product(
-      name: 'Benih Bunga Daisy',
-      price: 'Rp18.000',
-      rating: 4.3,
-      image: 'assets/img/produk/bunga_miracle.jpg',
-    ),
-    Product(
-      name: 'Benih Bunga Rose',
-      price: 'Rp18.000',
-      rating: 4.7,
-      image: 'assets/img/produk/bunga_kamboja.jpg',
-    ),
-    Product(
-      name: 'Benih Padi',
-      price: 'Rp25.000',
-      rating: 5.0,
-      image: 'assets/img/produk/padi.jpg',
-    ),
-    Product(
-      name: 'Benih Jagung',
-      price: 'Rp25.000',
-      rating: 4.6,
-      image: 'assets/img/produk/jagung.jpg',
-    ),
-    Product(
-      name: 'Benih Nanas',
-      price: 'Rp16.000',
-      rating: 4.7,
-      image: 'assets/img/produk/nanas_box.png',
-    ),
-    Product(
-      name: 'Benih Kubis',
-      price: 'Rp20.000',
-      rating: 4.9,
-      image: 'assets/img/produk/kiwi.jpg',
-    ),
-    Product(
-      name: 'Benih Tomat',
-      price: 'Rp15.000',
-      rating: 4.6,
-      image: 'assets/img/produk/tomat.png',
-    ),
-  ];
-
-  int get _pageCount => (_products.length / _itemsPerPage).ceil();
-
-  List<Product> get _pagedProducts {
-    final start = _currentPage * _itemsPerPage;
-    return _products.skip(start).take(_itemsPerPage).toList();
-  }
-
-  void _setPage(int page) {
-    setState(() {
-      _currentPage = page.clamp(0, _pageCount - 1);
-    });
-  }
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -164,16 +88,44 @@ class _ShopPageState extends State<ShopPage> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    const _FilterAndSearchRow(),
+                    _FilterAndSearchRow(
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value.toLowerCase();
+                        });
+                      },
+                    ),
                     const SizedBox(height: 10),
                     const _FilterPanel(),
                     const SizedBox(height: 12),
-                    _ProductGrid(products: _pagedProducts),
-                    const SizedBox(height: 18),
-                    _PaginationBar(
-                      currentPage: _currentPage,
-                      pageCount: _pageCount,
-                      onPageChanged: _setPage,
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance.collection('products').snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return const Text('Gagal memuat data produk.');
+                        }
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const CircularProgressIndicator(color: Color(0xFF178246));
+                        }
+
+                        final docs = snapshot.data?.docs ?? [];
+                        
+                        // Client-side filtering by name
+                        final filteredDocs = docs.where((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          final name = (data['name'] ?? '').toString().toLowerCase();
+                          return name.contains(_searchQuery);
+                        }).toList();
+
+                        if (filteredDocs.isEmpty) {
+                          return const Padding(
+                            padding: EdgeInsets.all(20.0),
+                            child: Text('Tidak ada produk yang cocok.'),
+                          );
+                        }
+
+                        return _ProductGridFirebase(docs: filteredDocs);
+                      },
                     ),
                     const SizedBox(height: 24),
                   ],
@@ -188,7 +140,9 @@ class _ShopPageState extends State<ShopPage> {
 }
 
 class _FilterAndSearchRow extends StatelessWidget {
-  const _FilterAndSearchRow();
+  const _FilterAndSearchRow({this.onChanged});
+
+  final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -213,6 +167,7 @@ class _FilterAndSearchRow extends StatelessWidget {
               border: Border.all(color: const Color(0xFF19804B), width: 1.4),
             ),
             child: TextField(
+              onChanged: onChanged,
               style: const TextStyle(fontSize: 12, color: Color(0xFF3D5347)),
               decoration: InputDecoration(
                 isDense: true,
@@ -345,6 +300,30 @@ class _FilterPanel extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _ProductGridFirebase extends StatelessWidget {
+  const _ProductGridFirebase({required this.docs});
+
+  final List<QueryDocumentSnapshot> docs;
+
+  @override
+  Widget build(BuildContext context) {
+    // Map Firestore documents to Product model
+    final List<Product> products = docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final priceNum = data['price'] ?? 0;
+      final ratingNum = data['rating'] ?? 0.0;
+      return Product(
+        name: data['name'] ?? 'Unknown',
+        price: 'Rp${priceNum.toInt()}',
+        rating: (ratingNum is int) ? ratingNum.toDouble() : ratingNum,
+        image: data['image'] ?? 'assets/img/produk/kubis.jpg',
+      );
+    }).toList();
+
+    return _ProductGrid(products: products);
   }
 }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'package:intl/intl.dart' hide TextDirection;
+import '../../services/app_state.dart';
 
 class DataSellerPage extends StatefulWidget {
   const DataSellerPage({super.key});
@@ -23,24 +25,39 @@ class _DataSellerPageState extends State<DataSellerPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: Colors.white,
-      appBar: _buildAppBar(),
-      drawer: _buildDrawer(),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSubHeader(),
-            const Divider(height: 1, thickness: 1, color: Colors.grey),
-            _buildCards(),
-            _buildChartHeader(),
-            _buildChart(),
-            const SizedBox(height: 40),
-          ],
-        ),
-      ),
+    return ListenableBuilder(
+      listenable: AppState(),
+      builder: (context, child) {
+        int pesananCount = AppState().orders.length;
+        double totalPenjualan = 0;
+        for (var order in AppState().orders) {
+          String raw = order.total.replaceAll('Rp', '').replaceAll('.', '').trim();
+          totalPenjualan += double.tryParse(raw) ?? 0;
+        }
+
+        final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+        String formattedPenjualan = formatter.format(totalPenjualan);
+
+        return Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: Colors.white,
+          appBar: _buildAppBar(),
+          drawer: _buildDrawer(),
+          body: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildSubHeader(),
+                const Divider(height: 1, thickness: 1, color: Colors.grey),
+                _buildCards(formattedPenjualan, '$pesananCount Pesanan'),
+                _buildChartHeader(),
+                _buildChart(),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -178,7 +195,7 @@ class _DataSellerPageState extends State<DataSellerPage> {
     );
   }
 
-  Widget _buildCards() {
+  Widget _buildCards(String penjualanValue, String pesananValue) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -186,8 +203,8 @@ class _DataSellerPageState extends State<DataSellerPage> {
           Expanded(
             child: _buildMetricCard(
               title: 'Penjualan',
-              value: 'Rp.00000000',
-              subtitle: 'dari 5 tahun yang lalu',
+              value: penjualanValue,
+              subtitle: 'Bulan ini',
               topBorderColor: const Color(0xFF14824C),
             ),
           ),
@@ -195,8 +212,8 @@ class _DataSellerPageState extends State<DataSellerPage> {
           Expanded(
             child: _buildMetricCard(
               title: 'Pesanan',
-              value: 'Rp.00000000',
-              subtitle: 'dari 5 tahun yang lalu',
+              value: pesananValue,
+              subtitle: 'Bulan ini',
               topBorderColor: Colors.transparent,
             ),
           ),

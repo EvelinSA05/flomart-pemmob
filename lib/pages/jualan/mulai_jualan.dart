@@ -9,6 +9,7 @@ import '../auth/login.dart';
 import '../auth/registrasi.dart';
 import '../info/tentang_kami.dart';
 import '../toko/toko.dart';
+import '../toko/dashboard_seller.dart';
 
 void main() {
   runApp(const MyApp());
