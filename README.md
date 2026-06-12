@@ -25,7 +25,7 @@ Sebelum memulai, pastikan Anda telah menginstal:
 - **Android SDK** (untuk Android development)
 - **Xcode** (untuk iOS development, hanya untuk macOS)
 
-## 🚀 Instalasi & Penggunaan
+## 🚀 Cara Instalasi & Penggunaan
 
 ### 1. Clone Repository
 
