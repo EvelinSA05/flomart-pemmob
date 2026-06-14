@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
 
 class TambahProdukPage extends StatefulWidget {
   const TambahProdukPage({super.key});
@@ -65,6 +67,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
         'category': categoryName,
         'image': 'assets/img/produk/15.png', // Gambar default
         'desc': deskripsi,
+        'stok': int.tryParse(_stokController.text.trim()) ?? 0,
       });
 
       if (mounted) {
@@ -74,7 +77,11 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
             backgroundColor: Colors.green,
           )
         );
-        Navigator.pop(context);
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context);
+        } else {
+          Navigator.pushReplacementNamed(context, '/produk-saya');
+        }
       }
     } catch (e) {
       print('Error saving to Firebase: $e');
@@ -95,15 +102,26 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
     }
   }
 
-  final TextEditingController _namaController = TextEditingController(text: 'Bunga Sepatu');
-  final TextEditingController _stokController = TextEditingController(text: '100');
-  final TextEditingController _unitController = TextEditingController(text: 'Buah');
-  final TextEditingController _subKategoriController = TextEditingController(text: 'Bunga Hias');
-  final TextEditingController _hargaController = TextEditingController(text: 'Rp 20.000');
-  final TextEditingController _garansiController = TextEditingController(text: '01');
-  final TextEditingController _deskripsiController = TextEditingController(
-    text: 'Bunga Sepatu adalah tanaman hias berbunga dengan kelopak besar dan warna cerah yang cocok untuk memperindah taman, halaman rumah, maupun area outdoor. Tanaman ini mudah dirawat, tumbuh baik di iklim tropis, dan membutuhkan sinar matahari langsung agar berbunga optimal. Cocok untuk pemula maupun pecinta tanaman hias.',
-  );
+  final TextEditingController _namaController = TextEditingController();
+  final TextEditingController _stokController = TextEditingController();
+  final TextEditingController _unitController = TextEditingController();
+  final TextEditingController _subKategoriController = TextEditingController();
+  final TextEditingController _hargaController = TextEditingController();
+  final TextEditingController _garansiController = TextEditingController();
+  final TextEditingController _deskripsiController = TextEditingController();
+
+  Uint8List? _imageBytes;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _imageBytes = bytes;
+      });
+    }
+  }
 
   String _selectedKategori = 'Bunga';
   String _selectedJenisTanah = 'Gambut';
@@ -172,10 +190,19 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
-        children: const [
-          Text('Produk Saya', style: TextStyle(color: Colors.grey, fontSize: 12)),
-          Icon(Icons.chevron_right, color: Colors.grey, size: 16),
-          Text('Tambah Produk', style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
+        children: [
+          GestureDetector(
+            onTap: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                Navigator.pushReplacementNamed(context, '/produk-saya');
+              }
+            },
+            child: const Text('Produk Saya', style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ),
+          const Icon(Icons.chevron_right, color: Colors.grey, size: 16),
+          const Text('Tambah Produk', style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -187,8 +214,14 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
       child: Row(
         children: [
           IconButton(
-            onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-            icon: const Icon(Icons.list, size: 28),
+            onPressed: () {
+              if (Navigator.canPop(context)) {
+                Navigator.pop(context);
+              } else {
+                Navigator.pushReplacementNamed(context, '/produk-saya');
+              }
+            },
+            icon: const Icon(Icons.arrow_back_ios, size: 22),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
@@ -262,26 +295,31 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
             height: 180,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              image: const DecorationImage(
-                image: AssetImage('assets/img/produk/bunga_sepatu.jpg'),
+              color: Colors.grey.shade200,
+              image: _imageBytes != null ? DecorationImage(
+                image: MemoryImage(_imageBytes!),
                 fit: BoxFit.cover,
-              ),
+              ) : null,
             ),
+            child: _imageBytes == null ? const Icon(Icons.image, size: 80, color: Colors.grey) : null,
           ),
         ),
         const SizedBox(height: 16),
         Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey, style: BorderStyle.none), // Custom dashed border needed
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: CustomPaint(
-              painter: DashedRectPainter(color: Colors.grey),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                child: Text('Tambah Gambar Produk', style: TextStyle(color: Colors.black)),
+          child: GestureDetector(
+            onTap: _pickImage,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey, style: BorderStyle.none), // Custom dashed border needed
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: CustomPaint(
+                painter: DashedRectPainter(color: Colors.grey),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  child: Text('Tambah Gambar Produk', style: TextStyle(color: Colors.black)),
+                ),
               ),
             ),
           ),
@@ -296,21 +334,21 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildFieldRow('Nama Produk', _buildTextField(_namaController)),
+          _buildFieldRow('Nama Produk', _buildTextField(_namaController, 'Contoh: Benih Sawi')),
           const SizedBox(height: 16),
           _buildFieldRow('Stok', Row(
             children: [
-              Expanded(flex: 2, child: _buildTextField(_stokController)),
+              Expanded(flex: 2, child: _buildTextField(_stokController, '100')),
               const SizedBox(width: 8),
-              Expanded(flex: 3, child: _buildTextField(_unitController)),
+              Expanded(flex: 3, child: _buildTextField(_unitController, 'Buah')),
             ],
           )),
           const SizedBox(height: 16),
           _buildFieldRow('Kategori', _buildDropdown(['Bunga', 'Buah', 'Sayur'], _selectedKategori, (val) => setState(() => _selectedKategori = val!))),
           const SizedBox(height: 16),
-          _buildFieldRow('Sub Kategori', _buildTextField(_subKategoriController)),
+          _buildFieldRow('Sub Kategori', _buildTextField(_subKategoriController, 'Bunga Hias')),
           const SizedBox(height: 16),
-          _buildFieldRow('Harga', _buildTextField(_hargaController)),
+          _buildFieldRow('Harga', _buildTextField(_hargaController, 'Rp 20.000')),
           const SizedBox(height: 16),
           _buildFieldRow('Jenis Tanah', _buildDropdown(['Gambut', 'Lempung', 'Pasir'], _selectedJenisTanah, (val) => setState(() => _selectedJenisTanah = val!))),
           const SizedBox(height: 16),
@@ -318,7 +356,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
           const SizedBox(height: 16),
           _buildFieldRow('Garansi', Row(
             children: [
-              Expanded(child: _buildTextField(_garansiController)),
+              Expanded(child: _buildTextField(_garansiController, '1')),
               const SizedBox(width: 12),
               const Text('Bulan', style: TextStyle(fontSize: 16)),
             ],
@@ -331,6 +369,8 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
             maxLines: 4,
             style: const TextStyle(fontSize: 10),
             decoration: InputDecoration(
+              hintText: 'Tuliskan deksripsi singkat mengenai produkmu...',
+              hintStyle: const TextStyle(color: Colors.grey),
               filled: true,
               fillColor: Colors.white.withOpacity(0.5),
               border: const OutlineInputBorder(borderSide: BorderSide(color: Colors.black)),
@@ -369,13 +409,15 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller) {
+  Widget _buildTextField(TextEditingController controller, String hintText) {
     return Container(
       height: 40,
       child: TextField(
         controller: controller,
         style: const TextStyle(fontSize: 14),
         decoration: InputDecoration(
+          hintText: hintText,
+          hintStyle: const TextStyle(color: Colors.grey, fontSize: 13),
           filled: true,
           fillColor: const Color(0xFFF5F5F5),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: const BorderSide(color: Colors.black)),

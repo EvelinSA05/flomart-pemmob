@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProdukSayaPage extends StatefulWidget {
   const ProdukSayaPage({super.key});
@@ -13,83 +14,130 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late TabController _tabController;
 
+  List<Map<String, dynamic>> _allProducts = [];
   List<Map<String, dynamic>> _myProducts = [];
   bool _isLoading = true;
+
+  final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _kategoriController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      _applyFilters();
+    });
     _fetchProducts();
   }
 
   Future<void> _fetchProducts() async {
     setState(() => _isLoading = true);
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1/flomart_api/get_produk.php'));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 'success') {
-          List dynamicList = data['data'];
-          setState(() {
-            _myProducts = dynamicList.map<Map<String, dynamic>>((item) {
-              int stok = int.parse(item['stok'].toString());
-              
-              String imageUrl = 'assets/img/produk/15.png';
-              if (item['gambar'] != null && item['gambar'].toString().isNotEmpty) {
-                 String g = item['gambar'].toString();
-                 if (g.startsWith('http')) {
-                   imageUrl = g;
-                 } else {
-                   imageUrl = 'http://127.0.0.1/flomart_api/uploads/$g';
-                 }
-              }
+      final snapshot = await FirebaseFirestore.instance.collection('products').get();
+      
+      setState(() {
+        _allProducts = snapshot.docs.map<Map<String, dynamic>>((doc) {
+          final data = doc.data();
+          
+          int stok = 25; // Default stok jika tidak ada
+          if (data.containsKey('stok')) {
+             stok = int.tryParse(data['stok'].toString()) ?? 25;
+          }
 
-              return {
-                'id_produk': item['id_produk'],
-                'name': item['nama_produk'],
-                'brand': item['nama_kategori'] ?? 'Kategori',
-                'season': 'Semua Musim',
-                'price': 'Rp' + double.parse(item['harga'].toString()).toInt().toString(),
-                'stock': stok,
-                'sales': 0,
-                'analysis': stok > 5 ? 'Produk Masih Banyak' : 'Stok Menipis',
-                'image': imageUrl,
-              };
-            }).toList();
-            _isLoading = false;
-          });
-        }
-      }
+          String imageUrl = data['image'] ?? 'assets/img/produk/15.png';
+
+          return {
+            'id_produk': data['id'] ?? doc.id,
+            'name': data['name'] ?? 'Nama Produk',
+            'brand': data['category'] ?? 'Kategori',
+            'season': 'Semua Musim',
+            'price': 'Rp${(double.tryParse(data['price'].toString()) ?? 0).toInt()}',
+            'stock': stok,
+            'sales': 0,
+            'analysis': stok == 0 ? 'Stok Habis' : (stok <= 5 ? 'Stok Menipis' : 'Produk Masih Banyak'),
+            'image': imageUrl,
+          };
+        }).toList();
+        _applyFilters();
+        _isLoading = false;
+      });
     } catch (e) {
       print('Error: $e');
       setState(() => _isLoading = false);
     }
   }
 
+  void _applyFilters() {
+    String search = _searchController.text.toLowerCase();
+    String kategori = _kategoriController.text.toLowerCase();
+    int tabIndex = _tabController.index;
+
+    setState(() {
+      _myProducts = _allProducts.where((product) {
+        bool matchSearch = product['name'].toString().toLowerCase().contains(search);
+        bool matchKategori = kategori.isEmpty || product['brand'].toString().toLowerCase().contains(kategori);
+        
+        bool matchTab = true;
+        if (tabIndex == 1) { // Habis
+          matchTab = (product['stock'] as int) == 0;
+        } else if (tabIndex == 2) { // Perlu Tindakan
+          matchTab = (product['stock'] as int) > 0 && (product['stock'] as int) <= 5;
+        }
+
+        return matchSearch && matchKategori && matchTab;
+      }).toList();
+    });
+  }
+
   Future<void> _deleteProduct(String id) async {
     try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1/flomart_api/hapus_produk.php'),
-        body: {'id_produk': id},
-      );
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 'success') {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk berhasil dihapus', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green));
-          _fetchProducts();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(data['message'], style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+      // Cari produk berdasarkan field 'id' karena document id-nya bisa berbeda
+      final snapshot = await FirebaseFirestore.instance.collection('products').where('id', isEqualTo: id).get();
+      if (snapshot.docs.isNotEmpty) {
+        for (var doc in snapshot.docs) {
+          await doc.reference.delete();
         }
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk berhasil dihapus', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green));
+        _fetchProducts();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Produk tidak ditemukan', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
       }
     } catch (e) {
       print('Error delete: $e');
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal menghapus produk', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
     }
+  }
+
+  void _confirmDeleteProduct(String id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: const Text('Apakah Anda yakin ingin menghapus produk ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Batal', style: TextStyle(color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _deleteProduct(id);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Hapus', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
+    _kategoriController.dispose();
     super.dispose();
   }
 
@@ -277,6 +325,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
             children: [
               Expanded(
                 child: TextField(
+                  controller: _searchController,
                   decoration: InputDecoration(
                     hintText: 'Cari nama produk',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
@@ -287,6 +336,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
               const SizedBox(width: 12),
               Expanded(
                 child: TextField(
+                  controller: _kategoriController,
                   decoration: InputDecoration(
                     hintText: 'Kategori',
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
@@ -298,7 +348,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
           ),
           const SizedBox(height: 12),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: _applyFilters,
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFF0BF00),
               foregroundColor: Colors.black,
@@ -433,7 +483,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
                       constraints: const BoxConstraints(),
                       onPressed: () {
                         if (p['id_produk'] != null) {
-                          _deleteProduct(p['id_produk'].toString());
+                          _confirmDeleteProduct(p['id_produk'].toString());
                         }
                       },
                     ),

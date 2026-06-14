@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/app_state.dart';
 
 class DashboardSellerPage extends StatefulWidget {
   const DashboardSellerPage({super.key});
@@ -10,11 +12,39 @@ class DashboardSellerPage extends StatefulWidget {
 class _DashboardSellerPageState extends State<DashboardSellerPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
-  final TextEditingController _namaTokoController = TextEditingController(text: 'Neola Florist');
+  late TextEditingController _namaTokoController;
   final TextEditingController _whatsappController = TextEditingController(text: '083183066357');
   final TextEditingController _deskripsiTokoController = TextEditingController(text: 'Toko jual beli tanaman dan lengkap');
   
   bool _isSaved = false;
+  int _totalProducts = 0;
+  int _totalOrders = 0;
+  bool _isLoadingStats = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _namaTokoController = TextEditingController(text: AppState().userName ?? 'Neola Florist');
+    _fetchStats();
+  }
+
+  Future<void> _fetchStats() async {
+    try {
+      final productSnapshot = await FirebaseFirestore.instance.collection('products').get();
+      final orderSnapshot = await FirebaseFirestore.instance.collection('orders').get();
+      
+      setState(() {
+        _totalProducts = productSnapshot.docs.length;
+        _totalOrders = orderSnapshot.docs.length;
+        _isLoadingStats = false;
+      });
+    } catch (e) {
+      print('Error fetching stats: $e');
+      setState(() {
+        _isLoadingStats = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -322,7 +352,7 @@ class _DashboardSellerPageState extends State<DashboardSellerPage> {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              _isSaved ? 'Neola Florist' : 'Belum Ada Toko',
+                              _isSaved ? _namaTokoController.text : (AppState().userName ?? 'Belum Ada Toko'),
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -425,7 +455,9 @@ class _DashboardSellerPageState extends State<DashboardSellerPage> {
               children: [
                 _buildStatRow('Rate Bintang dari Pembeli', '0', const Color(0xFF14824C)),
                 const Divider(height: 1, thickness: 1),
-                _buildStatRow('Produk', '0000', const Color(0xFFF0BF00)),
+                _buildStatRow('Produk', _isLoadingStats ? '...' : '$_totalProducts', const Color(0xFFF0BF00)),
+                const Divider(height: 1, thickness: 1),
+                _buildStatRow('Total Pesanan', _isLoadingStats ? '...' : '$_totalOrders', const Color(0xFF14824C)),
                 const Divider(height: 1, thickness: 1),
                 _buildStatRow('Tingkat Pembatalan/Pengembalian', '0%', const Color(0xFF912F2F)),
               ],
