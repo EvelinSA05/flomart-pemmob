@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:intl/intl.dart' hide TextDirection;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/app_state.dart';
 
 class DataSellerPage extends StatefulWidget {
@@ -23,41 +24,66 @@ class _DataSellerPageState extends State<DataSellerPage> {
   final List<double> _dataPenjualan = [0, 0, 0, 0.2, 0.3, 0.25, 0.2, 0.15, 0.3, 0.5, 0.65, 0.85];
   final List<double> _dataPengunjung = [0, 0, 0, 0.1, 0.4, 0.7, 0.3, 0.3, 0.3, 0.15, 0.65, 0.9];
 
+  double _totalPenjualan = 0;
+  int _pesananCount = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAdminData();
+  }
+
+  Future<void> _fetchAdminData() async {
+    try {
+      final orderSnapshot = await FirebaseFirestore.instance.collection('orders').get();
+      
+      double totalHarga = 0;
+      int count = orderSnapshot.docs.length;
+
+      for (var doc in orderSnapshot.docs) {
+        final data = doc.data();
+        double orderTotal = double.tryParse(data['total_harga'].toString()) ?? 0;
+        totalHarga += orderTotal;
+      }
+
+      setState(() {
+        _totalPenjualan = totalHarga;
+        _pesananCount = count;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching admin data: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return ListenableBuilder(
-      listenable: AppState(),
-      builder: (context, child) {
-        int pesananCount = AppState().orders.length;
-        double totalPenjualan = 0;
-        for (var order in AppState().orders) {
-          String raw = order.total.replaceAll('Rp', '').replaceAll('.', '').trim();
-          totalPenjualan += double.tryParse(raw) ?? 0;
-        }
+    final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    String formattedPenjualan = _isLoading ? '...' : formatter.format(_totalPenjualan);
+    String formattedPesanan = _isLoading ? '...' : '$_pesananCount Pesanan';
 
-        final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-        String formattedPenjualan = formatter.format(totalPenjualan);
-
-        return Scaffold(
-          key: _scaffoldKey,
-          backgroundColor: Colors.white,
-          appBar: _buildAppBar(),
-          drawer: _buildDrawer(),
-          body: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSubHeader(),
-                const Divider(height: 1, thickness: 1, color: Colors.grey),
-                _buildCards(formattedPenjualan, '$pesananCount Pesanan'),
-                _buildChartHeader(),
-                _buildChart(),
-                const SizedBox(height: 40),
-              ],
-            ),
-          ),
-        );
-      },
+    return Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: Colors.white,
+      appBar: _buildAppBar(),
+      drawer: _buildDrawer(),
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSubHeader(),
+            const Divider(height: 1, thickness: 1, color: Colors.grey),
+            _buildCards(formattedPenjualan, formattedPesanan),
+            _buildChartHeader(),
+            _buildChart(),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
     );
   }
 
