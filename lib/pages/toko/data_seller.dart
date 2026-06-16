@@ -39,12 +39,23 @@ class _DataSellerPageState extends State<DataSellerPage> {
       final orderSnapshot = await FirebaseFirestore.instance.collection('orders').get();
       
       double totalHarga = 0;
-      int count = orderSnapshot.docs.length;
+      int count = 0;
 
       for (var doc in orderSnapshot.docs) {
         final data = doc.data();
-        double orderTotal = double.tryParse(data['total_harga'].toString()) ?? 0;
-        totalHarga += orderTotal;
+        String status = data['status']?.toString().toLowerCase() ?? '';
+        
+        // Hanya hitung pesanan yang sedang diproses atau sudah selesai (mengabaikan pembatalan/belum bayar)
+        if (status == 'selesai' || 
+            status == 'menunggu konfirmasi' || 
+            status == 'perlu dikirim' || 
+            status == 'dikirim' || 
+            status == 'menunggu pengembalian') {
+            
+          double orderTotal = double.tryParse(data['total_harga'].toString()) ?? 0;
+          totalHarga += orderTotal;
+          count++;
+        }
       }
 
       setState(() {

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'dart:convert';
 
 class KeuanganSellerPage extends StatefulWidget {
   const KeuanganSellerPage({super.key});
@@ -11,43 +14,93 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   late TabController _tabController;
 
-  final List<Map<String, dynamic>> _belumCairOrders = [
-    {
-      'product': 'Benih Kubis',
-      'brand': 'Vida Verda',
-      'season': 'Musim Hujan',
-      'date': '25/12/2025',
-      'status': 'Dikirim',
-      'amount': 'Rp 90.000',
-      'image': 'assets/img/produk/kubis.jpg',
-    },
-  ];
+  List<Map<String, dynamic>> _belumCairOrders = [];
+  List<Map<String, dynamic>> _sudahCairOrders = [];
 
-  final List<Map<String, dynamic>> _sudahCairOrders = [
-    {
-      'product': 'Benih Ubi Ungu',
-      'brand': 'Vida Verda',
-      'season': 'Semua Musim',
-      'date': '15/12/2025',
-      'status': 'Selesai',
-      'amount': 'Rp 60.000',
-      'image': 'assets/img/produk/padi.jpg',
-    },
-    {
-      'product': 'Benih Jagung',
-      'brand': 'Vida Verda',
-      'season': 'Semua Musim',
-      'date': '10/12/2025',
-      'status': 'Selesai',
-      'amount': 'Rp 60.000',
-      'image': 'assets/img/produk/jagung.jpg',
-    },
-  ];
+  double _saldoBelumCair = 0;
+  double _saldoSudahCair = 0;
+  double _saldoPenjualan = 0;
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _fetchData();
+  }
+
+  Future<void> _fetchData() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('orders').get();
+
+      List<Map<String, dynamic>> tempBelumCair = [];
+      List<Map<String, dynamic>> tempSudahCair = [];
+      double sumBelumCair = 0;
+      double sumSudahCair = 0;
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        
+        List<dynamic> items = data['items'] ?? [];
+        String itemName = 'Unknown Item';
+        String imagePath = 'assets/img/produk/15.png';
+        
+        if (items.isNotEmpty) {
+          if (items[0] is Map) {
+             itemName = items[0]['nama_produk'] ?? itemName;
+             if (items[0]['gambar'] != null) imagePath = items[0]['gambar'];
+          } else if (items[0] is String) {
+             try {
+                final decoded = json.decode(items[0]);
+                itemName = decoded['nama_produk'] ?? itemName;
+                if (decoded['gambar'] != null) imagePath = decoded['gambar'];
+             } catch(e) {}
+          }
+        }
+
+        double totalDouble = double.tryParse(data['total_harga'].toString()) ?? 0;
+        final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+        String amountFormatted = formatter.format(totalDouble);
+
+        DateTime createdAt = DateTime.now();
+        if (data['created_at'] != null) {
+          createdAt = (data['created_at'] as Timestamp).toDate();
+        }
+        String dateStr = DateFormat('dd/MM/yyyy').format(createdAt);
+
+        String status = data['status']?.toString().toLowerCase() ?? '';
+
+        Map<String, dynamic> orderData = {
+          'product': itemName,
+          'brand': 'Flomart',
+          'season': 'Umum',
+          'date': dateStr,
+          'status': data['status'] ?? 'Belum Bayar',
+          'amount': amountFormatted,
+          'image': imagePath,
+        };
+
+        if (status == 'selesai') {
+          tempSudahCair.add(orderData);
+          sumSudahCair += totalDouble;
+        } else if (status == 'menunggu konfirmasi' || status == 'perlu dikirim' || status == 'dikirim' || status == 'menunggu pengembalian') {
+          tempBelumCair.add(orderData);
+          sumBelumCair += totalDouble;
+        }
+      }
+
+      setState(() {
+        _belumCairOrders = tempBelumCair;
+        _sudahCairOrders = tempSudahCair;
+        _saldoBelumCair = sumBelumCair;
+        _saldoSudahCair = sumSudahCair;
+        _saldoPenjualan = sumBelumCair + sumSudahCair;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error fetching data: $e');
+      setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -63,46 +116,46 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       drawer: _buildDrawer(),
-      body: CustomScrollView(
-        slivers: [
-          SliverToBoxAdapter(
-            child: _buildInformasiPenghasilan(),
-          ),
-          SliverToBoxAdapter(
-            child: _buildPencairanBank(),
-          ),
-          const SliverToBoxAdapter(
-            child: Divider(thickness: 4, color: Color(0xFFF6F6F6), height: 32),
-          ),
-          SliverToBoxAdapter(
-            child: _buildRincianHeader(),
-          ),
-          SliverPersistentHeader(
-            pinned: true,
-            delegate: _SliverAppBarDelegate(
-              TabBar(
-                controller: _tabController,
-                labelColor: Colors.black,
-                unselectedLabelColor: Colors.grey,
-                indicatorColor: const Color(0xFFF0BF00),
-                indicatorWeight: 3,
-                tabs: const [
-                  Tab(text: 'Saldo belum cair'),
-                  Tab(text: 'Saldo sudah cair'),
-                ],
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverToBoxAdapter(
+              child: _buildInformasiPenghasilan(),
+            ),
+            SliverToBoxAdapter(
+              child: _buildPencairanBank(),
+            ),
+            const SliverToBoxAdapter(
+              child: Divider(thickness: 4, color: Color(0xFFF6F6F6), height: 32),
+            ),
+            SliverToBoxAdapter(
+              child: _buildRincianHeader(),
+            ),
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SliverAppBarDelegate(
+                TabBar(
+                  controller: _tabController,
+                  labelColor: Colors.black,
+                  unselectedLabelColor: Colors.grey,
+                  indicatorColor: const Color(0xFFF0BF00),
+                  indicatorWeight: 3,
+                  tabs: const [
+                    Tab(text: 'Saldo belum cair'),
+                    Tab(text: 'Saldo sudah cair'),
+                  ],
+                ),
               ),
             ),
-          ),
-          SliverFillRemaining(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOrderList(_belumCairOrders),
-                _buildOrderList(_sudahCairOrders),
-              ],
-            ),
-          ),
-        ],
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildOrderList(_belumCairOrders),
+            _buildOrderList(_sudahCairOrders),
+          ],
+        ),
       ),
     );
   }
@@ -203,6 +256,11 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
   }
 
   Widget _buildInformasiPenghasilan() {
+    final formatter = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    String strSaldoPenjualan = _isLoading ? '...' : formatter.format(_saldoPenjualan);
+    String strSaldoBelumCair = _isLoading ? '...' : formatter.format(_saldoBelumCair);
+    String strSaldoSudahCair = _isLoading ? '...' : formatter.format(_saldoSudahCair);
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -224,7 +282,7 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
           const SizedBox(height: 12),
           const Text('Saldo Penjualan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(height: 4),
-          const Text('Rp 3.500.000', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(strSaldoPenjualan, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -235,10 +293,10 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
                     const Text('Saldo belum cair', style: TextStyle(color: Color(0xFF903520), fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 4),
                     const Text('Total', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                    const Text('Rp 90.000', style: TextStyle(color: Color(0xFF903520), fontWeight: FontWeight.bold, fontSize: 18)),
+                    Text(strSaldoBelumCair, style: const TextStyle(color: Color(0xFF903520), fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 16),
                     const Text('Bulan ini', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                    const Text('Rp 3.000.000', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(strSaldoBelumCair, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ],
                 ),
               ),
@@ -251,10 +309,10 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
                     const Text('Saldo sudah cair', style: TextStyle(color: Color(0xFF14824C), fontWeight: FontWeight.bold, fontSize: 13)),
                     const SizedBox(height: 4),
                     const Text('Total', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                    const Text('Rp 120.000', style: TextStyle(color: Color(0xFF14824C), fontWeight: FontWeight.bold, fontSize: 18)),
+                    Text(strSaldoSudahCair, style: const TextStyle(color: Color(0xFF14824C), fontWeight: FontWeight.bold, fontSize: 18)),
                     const SizedBox(height: 16),
-                    const Text('Total', style: TextStyle(color: Colors.grey, fontSize: 11)),
-                    const Text('Rp 3.000.0000', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text('Bulan ini', style: TextStyle(color: Colors.grey, fontSize: 11)),
+                    Text(strSaldoSudahCair, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   ],
                 ),
               ),
@@ -351,71 +409,73 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
   }
 
   Widget _buildOrderList(List<Map<String, dynamic>> orders) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFF14824C),
-              borderRadius: BorderRadius.circular(8),
+    return ListView.separated(
+      padding: const EdgeInsets.only(bottom: 32),
+      itemCount: orders.length + 1,
+      separatorBuilder: (context, index) {
+        if (index == 0) return const SizedBox(); // No divider immediately after header
+        return const Divider(height: 1);
+      },
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF14824C),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+              child: Row(
+                children: const [
+                  Expanded(flex: 3, child: Text('Pesanan', style: TextStyle(color: Colors.white, fontSize: 12))),
+                  Expanded(flex: 3, child: Text('Perkiraan\nwaktu\npencairan\ndana', style: TextStyle(color: Colors.white, fontSize: 12))),
+                  Expanded(flex: 2, child: Text('Status', style: TextStyle(color: Colors.white, fontSize: 12))),
+                  Expanded(flex: 2, child: Text('Jumlah Dana\nDilepaskan', style: TextStyle(color: Colors.white, fontSize: 12))),
+                ],
+              ),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-            child: Row(
-              children: const [
-                Expanded(flex: 3, child: Text('Pesanan', style: TextStyle(color: Colors.white, fontSize: 12))),
-                Expanded(flex: 3, child: Text('Perkiraan\nwaktu\npencairan\ndana', style: TextStyle(color: Colors.white, fontSize: 12))),
-                Expanded(flex: 2, child: Text('Status', style: TextStyle(color: Colors.white, fontSize: 12))),
-                Expanded(flex: 2, child: Text('Jumlah Dana\nDilepaskan', style: TextStyle(color: Colors.white, fontSize: 12))),
-              ],
-            ),
-          ),
-        ),
-        Expanded(
-          child: ListView.separated(
-            padding: EdgeInsets.zero,
-            itemCount: orders.length,
-            separatorBuilder: (context, index) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final o = orders[index];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          );
+        }
+
+        final o = orders[index - 1];
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 3,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: o['image'].toString().startsWith('http')
+                          ? Image.network(o['image'], width: 24, height: 24, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(width:24, height:24, color:Colors.grey.shade300))
+                          : Image.asset(o['image'], width: 24, height: 24, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(width:24, height:24, color:Colors.grey.shade300)),
+                    ),
+                    const SizedBox(width: 8),
                     Expanded(
-                      flex: 3,
-                      child: Row(
+                      child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: Image.asset(o['image'], width: 24, height: 24, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(width:24, height:24, color:Colors.grey.shade300)),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(o['product'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-                                Text(o['brand'], style: const TextStyle(color: Colors.grey, fontSize: 10)),
-                                Text(o['season'], style: const TextStyle(color: Color(0xFF14824C), fontSize: 10, fontWeight: FontWeight.bold)),
-                              ],
-                            ),
-                          ),
+                          Text(o['product'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                          Text(o['brand'], style: const TextStyle(color: Colors.grey, fontSize: 10)),
+                          Text(o['season'], style: const TextStyle(color: Color(0xFF14824C), fontSize: 10, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
-                    Expanded(flex: 3, child: Text(o['date'], style: const TextStyle(fontSize: 11))),
-                    Expanded(flex: 2, child: Text(o['status'], style: const TextStyle(fontSize: 11))),
-                    Expanded(flex: 2, child: Text(o['amount'], style: const TextStyle(fontSize: 11))),
                   ],
                 ),
-              );
-            },
+              ),
+              Expanded(flex: 3, child: Text(o['date'], style: const TextStyle(fontSize: 11))),
+              Expanded(flex: 2, child: Text(o['status'], style: const TextStyle(fontSize: 11))),
+              Expanded(flex: 2, child: Text(o['amount'], style: const TextStyle(fontSize: 11))),
+            ],
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 
