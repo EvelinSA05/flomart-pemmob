@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 class CartItem {
   final String name;
   final String price;
@@ -435,16 +436,20 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<bool> uploadPaymentProof(String orderId, File imageFile) async {
+  Future<bool> uploadPaymentProof(String orderId, Uint8List imageBytes) async {
     String rawId = orderId;
     if (rawId.startsWith('FLM')) {
       rawId = rawId.substring(3);
     }
 
     try {
+      // Encode image bytes ke base64 agar bisa disimpan di Firestore tanpa Firebase Storage
+      String base64Image = "data:image/jpeg;base64," + base64Encode(imageBytes);
+
       // Perbarui status pesanan di Firestore (gunakan set dengan merge: true agar tidak crash jika pesanan lama tidak ada di Firestore)
       await FirebaseFirestore.instance.collection('orders').doc(rawId).set({
         'status': 'menunggu konfirmasi',
+        'bukti_pembayaran': base64Image,
       }, SetOptions(merge: true));
 
       // Optimistic UI update for status
@@ -456,6 +461,33 @@ class AppState extends ChangeNotifier {
       return true;
     } catch (e) {
       print('Error update status ke Firestore: $e');
+      return false;
+    }
+  }
+
+  Future<bool> submitReturnRequest(String orderId, String reason, Uint8List imageBytes) async {
+    String rawId = orderId;
+    if (rawId.startsWith('FLM')) {
+      rawId = rawId.substring(3);
+    }
+
+    try {
+      String base64Image = "data:image/jpeg;base64," + base64Encode(imageBytes);
+
+      await FirebaseFirestore.instance.collection('orders').doc(rawId).set({
+        'status': 'menunggu pengembalian',
+        'alasan_pengembalian': reason,
+        'bukti_pengembalian': base64Image,
+      }, SetOptions(merge: true));
+
+      int index = _orders.indexWhere((order) => order.orderId == orderId);
+      if (index != -1) {
+        _orders[index].status = 'menunggu pengembalian';
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      print('Error ajukan pengembalian: $e');
       return false;
     }
   }

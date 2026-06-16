@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'detail_pesanan.dart';
 import '../../services/app_state.dart';
 import '../chat/chat_page.dart';
@@ -43,7 +44,7 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
                 } else if (tab == 'dikirim') {
                   return status == 'dikirim';
                 } else if (tab == 'selesai') {
-                  return status == 'selesai';
+                  return status == 'selesai' || status == 'menunggu pengembalian' || status == 'pengembalian ditolak' || status == 'pengembalian disetujui';
                 }
                 return false;
               }).toList();
@@ -67,9 +68,16 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
                     if (!dynamicButtons.contains('Bayar Sekarang')) {
                       dynamicButtons.insert(0, 'Bayar Sekarang');
                     }
-                  } else if (order['status'] == 'Menunggu Konfirmasi') {
+                  } else if (order['status']?.toString().toLowerCase() == 'menunggu konfirmasi') {
                     dynamicButtons.remove('Bayar Sekarang');
                     dynamicButtons.remove('Pembatalan');
+                  } else if (order['status']?.toString().toLowerCase() == 'selesai') {
+                    if (!dynamicButtons.contains('Ajukan Pengembalian')) {
+                      dynamicButtons.insert(0, 'Ajukan Pengembalian');
+                    }
+                  } else if (order['status']?.toString().toLowerCase() == 'menunggu pengembalian' || order['status']?.toString().toLowerCase() == 'pengembalian disetujui' || order['status']?.toString().toLowerCase() == 'pengembalian ditolak') {
+                    dynamicButtons.clear();
+                    dynamicButtons.add('Detail Pesanan');
                   }
 
                   return OrderCard(
@@ -197,6 +205,124 @@ class OrderCard extends StatefulWidget {
 class _OrderCardState extends State<OrderCard> {
   int rating = 0;
 
+  Future<void> _showReturnDialog(BuildContext context, String orderId) async {
+    final TextEditingController reasonController = TextEditingController();
+    XFile? pickedImage;
+    bool isSubmitting = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateBottomSheet) {
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 16, right: 16, top: 16,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Ajukan Pengembalian', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  const Text('Alasan Pengembalian:'),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: reasonController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Tuliskan alasan lengkap (misal: barang rusak, tidak sesuai...)',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Foto Bukti Produk:'),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () async {
+                      final picker = ImagePicker();
+                      final img = await picker.pickImage(source: ImageSource.gallery, imageQuality: 30, maxWidth: 600);
+                      if (img != null) {
+                        setStateBottomSheet(() {
+                          pickedImage = img;
+                        });
+                      }
+                    },
+                    child: Container(
+                      height: 100,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: pickedImage != null
+                          ? const Center(child: Text('Foto berhasil dipilih', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)))
+                          : const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.camera_alt, color: Colors.grey),
+                                Text('Tap untuk upload foto', style: TextStyle(color: Colors.grey)),
+                              ],
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 45,
+                    child: isSubmitting 
+                      ? const Center(child: CircularProgressIndicator(color: Color(0xFF14824C)))
+                      : ElevatedButton(
+                      onPressed: () async {
+                        if (reasonController.text.trim().isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Harap isi alasan pengembalian', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+                          return;
+                        }
+                        if (pickedImage == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Harap sertakan foto bukti', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+                          return;
+                        }
+                        
+                        setStateBottomSheet(() {
+                          isSubmitting = true;
+                        });
+                        
+                        try {
+                          final bytes = await pickedImage!.readAsBytes();
+                          bool success = await AppState().submitReturnRequest(orderId, reasonController.text.trim(), bytes);
+                          
+                          if (success) {
+                            Navigator.pop(context); // Tutup bottom sheet jika sukses
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pengajuan pengembalian berhasil dikirim.', style: TextStyle(color: Colors.white)), backgroundColor: Colors.green));
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal mengirim pengajuan.', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+                            setStateBottomSheet(() {
+                              isSubmitting = false;
+                            });
+                          }
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e', style: const TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+                          setStateBottomSheet(() {
+                            isSubmitting = false;
+                          });
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xff008f4c)),
+                      child: const Text('Kirim Pengajuan', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }
+        );
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -247,6 +373,27 @@ class _OrderCardState extends State<OrderCard> {
                   fontSize: 10,
                   color: Color(0xff008f4c),
                   fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: widget.status.toLowerCase().contains('ditolak') || widget.status.toLowerCase().contains('batal') ? Colors.red.shade100 : (widget.status.toLowerCase().contains('disetujui') || widget.status.toLowerCase() == 'selesai' ? Colors.green.shade100 : Colors.orange.shade100),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  widget.status.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    color: widget.status.toLowerCase().contains('ditolak') || widget.status.toLowerCase().contains('batal') ? Colors.red : (widget.status.toLowerCase().contains('disetujui') || widget.status.toLowerCase() == 'selesai' ? Colors.green.shade800 : Colors.orange.shade800),
+                  ),
                 ),
               ),
             ],
@@ -334,6 +481,8 @@ class _OrderCardState extends State<OrderCard> {
                           context,
                           MaterialPageRoute(builder: (_) => const ChatPage()),
                         );
+                      } else if (buttonText == 'Ajukan Pengembalian') {
+                        _showReturnDialog(context, widget.orderId);
                       } else if (buttonText == 'Pembatalan') {
                         showDialog(
                           context: context,

@@ -163,24 +163,13 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
 
   // Determine which step index the status maps to
   int get _statusIndex {
-    switch (widget.status.toLowerCase()) {
-      case 'belum bayar':
-      case 'menunggu pembayaran':
-      case 'menunggu':
-        return 0;
-      case 'menunggu konfirmasi':
-      case 'konfirmasi':
-      case 'diproses':
-        return 1;
-      case 'dikemas':
-        return 2;
-      case 'dikirim':
-        return 3;
-      case 'selesai':
-        return 4;
-      default:
-        return 2;
-    }
+    String s = widget.status.toLowerCase();
+    if (s.contains('belum bayar') || s.contains('menunggu pembayaran') || s == 'menunggu') return 0;
+    if (s.contains('menunggu konfirmasi') || s.contains('konfirmasi') || s.contains('diproses')) return 1;
+    if (s.contains('dikemas') || s.contains('perlu dikirim')) return 2;
+    if (s == 'dikirim') return 3;
+    if (s.contains('selesai') || s.contains('pengembalian') || s.contains('batal') || s.contains('tolak')) return 4;
+    return 2;
   }
 
   @override
@@ -420,16 +409,26 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Status Pembayaran', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                  Text('Status Pesanan', style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                   const SizedBox(height: 4),
                   Builder(
                     builder: (context) {
                       String statusLower = widget.status.toLowerCase();
-                      bool isUnpaid = statusLower == 'menunggu pembayaran' || statusLower == 'belum bayar';
-                      bool isPending = statusLower == 'menunggu konfirmasi';
                       
-                      String displayText = isUnpaid ? 'Belum Bayar' : (isPending ? 'Menunggu Konfirmasi' : 'Selesai');
-                      Color displayColor = isUnpaid ? Colors.orange : (isPending ? Colors.blue : _green);
+                      Color displayColor = Colors.orange;
+                      if (statusLower.contains('ditolak') || statusLower.contains('batal')) {
+                        displayColor = Colors.red;
+                      } else if (statusLower.contains('disetujui') || statusLower == 'selesai') {
+                        displayColor = const Color(0xFF14824C); // _green
+                      } else if (statusLower == 'dikirim' || statusLower == 'perlu dikirim') {
+                        displayColor = Colors.blue;
+                      }
+
+                      // Format display text (Capitalize Each Word)
+                      String displayText = widget.status.split(' ').map((word) {
+                        if (word.isEmpty) return '';
+                        return word[0].toUpperCase() + word.substring(1).toLowerCase();
+                      }).join(' ');
 
                       return Text(
                         displayText,
@@ -513,11 +512,11 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
 
   Future<void> _pickAndUploadImage(BuildContext context) async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 30, maxWidth: 600);
 
     if (image == null) return; // User canceled
 
-    File imageFile = File(image.path);
+    final bytes = await image.readAsBytes();
 
     showDialog(
       context: context,
@@ -533,7 +532,7 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
       ),
     );
 
-    bool success = await AppState().uploadPaymentProof(widget.orderId, imageFile);
+    bool success = await AppState().uploadPaymentProof(widget.orderId, bytes);
     
     Navigator.pop(context); // tutup dialog loading
 
@@ -654,8 +653,8 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
           const SizedBox(height: 25),
           Row(
             children: List.generate(steps.length, (i) {
-              final isCompleted = i < _statusIndex;
-              final isCurrent = i == _statusIndex;
+              final isCompleted = i < _statusIndex || (_statusIndex == 4 && i == 4);
+              final isCurrent = i == _statusIndex && _statusIndex != 4;
               return Expanded(
                 child: Column(
                   children: [

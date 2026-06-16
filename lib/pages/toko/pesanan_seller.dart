@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'dart:convert';
 
 class PesananSellerPage extends StatefulWidget {
   const PesananSellerPage({super.key});
@@ -32,79 +35,297 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
     'JNT Express': true,
   };
 
-  final List<Map<String, dynamic>> _orders = [
-    {
-      'product': 'Benih Kubis',
-      'brand': 'Vida Verda',
-      'season': 'Musim Hujan',
-      'qty': '1x',
-      'amount': 'Rp 12.000',
-      'courier': 'JNE Regular',
-      'status': 'Perlu Dikirim',
-      'payment': 'BNI',
-      'created': '10/12/2025',
-      'deadline': '11/12/2025',
-      'image': 'assets/img/produk/kubis.jpg',
-    },
-    {
-      'product': 'Benih Ubi Ungu',
-      'brand': 'Vida Verda',
-      'season': 'Semua Musim',
-      'qty': '2x',
-      'amount': 'Rp 16.000',
-      'courier': 'JNT Express',
-      'status': 'Belum Bayar',
-      'payment': 'COD',
-      'created': '10/12/2025',
-      'deadline': '11/12/2025',
-      'image': 'assets/img/produk/padi.jpg',
-    },
-    {
-      'product': 'Benih Kentang',
-      'brand': 'Vida Verda',
-      'season': 'Musim Hujan',
-      'qty': '2x',
-      'amount': 'Rp 20.000',
-      'courier': 'JNE Regular',
-      'status': 'Dikirim',
-      'payment': 'BRI',
-      'created': '10/12/2025',
-      'deadline': '11/12/2025',
-      'image': 'assets/img/produk/kentang.png',
-    },
-    {
-      'product': 'Benih Wortel',
-      'brand': 'Vida Verda',
-      'season': 'Musim Hujan',
-      'qty': '6x',
-      'amount': 'Rp 74.000',
-      'courier': 'JNE Regular',
-      'status': 'Selesai',
-      'payment': 'BNI',
-      'created': '07/12/2025',
-      'deadline': '08/12/2025',
-      'image': 'assets/img/produk/Wortel.png',
-    },
-    {
-      'product': 'Benih Bawang',
-      'brand': 'Vida Verda',
-      'season': 'Musim Hujan',
-      'qty': '2x',
-      'amount': 'Rp 22.000',
-      'courier': 'JNT Express',
-      'status': 'Pembatalan',
-      'payment': 'COD',
-      'created': '05/12/2025',
-      'deadline': '06/12/2025',
-      'image': 'assets/img/produk/bawaMerah.png',
-    },
-  ];
+  List<Map<String, dynamic>> _allOrders = [];
+  List<Map<String, dynamic>> _orders = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
     _mainTabController = TabController(length: 6, vsync: this);
+    _mainTabController.addListener(_applyFilters);
     _subTabController = TabController(length: 3, vsync: this);
+    _fetchOrders();
+  }
+
+  Future<void> _fetchOrders() async {
+    setState(() => _isLoading = true);
+    try {
+      final snapshot = await FirebaseFirestore.instance.collection('orders').get();
+      
+      List<Map<String, dynamic>> tempOrders = [];
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        
+        List<dynamic> items = data['items'] ?? [];
+        String itemName = 'Unknown Item';
+        String imagePath = 'assets/img/produk/15.png';
+        String qty = '1x';
+        
+        if (items.isNotEmpty) {
+          if (items[0] is Map) {
+             itemName = items[0]['nama_produk'] ?? itemName;
+             qty = '${items[0]['qty'] ?? 1}x';
+             if (items[0]['gambar'] != null) imagePath = items[0]['gambar'];
+          } else if (items[0] is String) {
+             try {
+                final decoded = json.decode(items[0]);
+                itemName = decoded['nama_produk'] ?? itemName;
+                qty = '${decoded['qty'] ?? 1}x';
+                if (decoded['gambar'] != null) imagePath = decoded['gambar'];
+             } catch(e) {}
+          }
+        }
+
+        double totalDouble = double.tryParse(data['total_harga'].toString()) ?? 0;
+        String totalFormatted = 'Rp ${totalDouble.toInt()}';
+        
+        DateTime createdAt = DateTime.now();
+        if (data['created_at'] != null) {
+          createdAt = (data['created_at'] as Timestamp).toDate();
+        }
+        
+        DateTime deadline = createdAt.add(const Duration(days: 1)); // Default deadline 1 day
+        
+        tempOrders.add({
+          'id': doc.id,
+          'product': itemName,
+          'brand': 'Pesanan', 
+          'season': 'Flomart',
+          'qty': qty,
+          'amount': totalFormatted,
+          'courier': data['jasa_kirim'] ?? 'JNE Regular',
+          'status': data['status'] ?? 'Belum Bayar',
+          'payment': data['payment_method'] ?? 'Transfer',
+          'created': DateFormat('dd/MM/yyyy').format(createdAt),
+          'deadline': DateFormat('dd/MM/yyyy').format(deadline),
+          'image': imagePath,
+          'bukti_pembayaran': data['bukti_pembayaran'],
+          'alasan_pengembalian': data['alasan_pengembalian'],
+          'bukti_pengembalian': data['bukti_pengembalian'],
+          'isSelected': false,
+        });
+      }
+      
+      setState(() {
+        _allOrders = tempOrders;
+        _isLoading = false;
+        _applyFilters();
+      });
+    } catch (e) {
+      print('Error fetching orders: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _applyFilters() {
+    int index = _mainTabController.index;
+    setState(() {
+      if (index == 0) {
+        _orders = List.from(_allOrders);
+      } else {
+        String filterStatus = '';
+        if (index == 1) filterStatus = 'Belum Bayar';
+        else if (index == 2) filterStatus = 'Perlu Dikirim';
+        else if (index == 3) filterStatus = 'Dikirim';
+        else if (index == 4) filterStatus = 'Selesai';
+        else if (index == 5) filterStatus = 'Pembatalan';
+        
+        _orders = _allOrders.where((o) {
+          String s = o['status']?.toString().toLowerCase() ?? '';
+          if (index == 1 && s == 'menunggu konfirmasi') return true;
+          if (index == 5 && (s == 'menunggu pengembalian' || s == 'pengembalian ditolak' || s == 'pengembalian disetujui')) return true;
+          return s == filterStatus.toLowerCase();
+        }).toList();
+      }
+    });
+  }
+
+  void _showOrderActionDialog(Map<String, dynamic> order) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        String nextStatus = '';
+        String actionText = '';
+        String currentStatus = order['status'].toString().toLowerCase();
+        
+        if (currentStatus == 'menunggu konfirmasi') {
+          nextStatus = 'perlu dikirim';
+          actionText = 'Konfirmasi Pembayaran';
+        } else if (currentStatus == 'perlu dikirim') {
+          nextStatus = 'dikirim';
+          actionText = 'Kirim Pesanan';
+        } else if (currentStatus == 'dikirim') {
+          nextStatus = 'selesai';
+          actionText = 'Selesaikan Pesanan';
+        } else if (currentStatus == 'menunggu pengembalian') {
+          actionText = 'Proses Pengembalian';
+        } else {
+          actionText = 'Tidak ada aksi (Status: ${order['status']})';
+        }
+
+        return AlertDialog(
+          title: const Text('Detail & Update Pesanan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('ID Pesanan: ${order['id']}'),
+              const SizedBox(height: 8),
+              if (order['bukti_pembayaran'] != null && order['bukti_pembayaran'].toString().isNotEmpty) ...[
+                const Text('Bukti Transfer:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Center(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      _showBuktiDialog(order['bukti_pembayaran']);
+                    },
+                    icon: const Icon(Icons.image),
+                    label: const Text('Lihat Bukti Bayar'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ] else ...[
+                const Text('Bukti Transfer:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 4),
+                const Text('Belum ada bukti bayar yang diupload.', style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic, fontSize: 12)),
+                const SizedBox(height: 16),
+              ],
+              if (order['alasan_pengembalian'] != null && order['alasan_pengembalian'].toString().isNotEmpty) ...[
+                const Text('Pengajuan Pengembalian:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
+                const SizedBox(height: 4),
+                Text('Alasan: ${order['alasan_pengembalian']}', style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
+                if (order['bukti_pengembalian'] != null && order['bukti_pengembalian'].toString().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _showBuktiDialog(order['bukti_pengembalian']);
+                      },
+                      icon: const Icon(Icons.broken_image),
+                      label: const Text('Lihat Bukti Pengembalian'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+              ],
+              Text('Status saat ini: ${order['status']}', style: const TextStyle(fontWeight: FontWeight.w500)),
+              if (nextStatus.isNotEmpty && currentStatus != 'menunggu pengembalian') ...[
+                const SizedBox(height: 8),
+                Text('Apakah Anda ingin mengubah status menjadi "$nextStatus"?', style: const TextStyle(color: Colors.grey, fontSize: 13)),
+              ] else if (currentStatus == 'menunggu pengembalian') ...[
+                const SizedBox(height: 8),
+                const Text('Tentukan apakah pengajuan ini akan disetujui atau ditolak.', style: TextStyle(color: Colors.grey, fontSize: 13)),
+              ]
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Tutup', style: TextStyle(color: Colors.grey)),
+            ),
+            if (currentStatus == 'menunggu pengembalian') ...[
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _updateOrderStatus(order['id'], 'pengembalian ditolak');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('Tolak', style: TextStyle(color: Colors.white)),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _updateOrderStatus(order['id'], 'pengembalian disetujui');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: const Text('Setujui', style: TextStyle(color: Colors.white)),
+              ),
+            ] else if (nextStatus.isNotEmpty) ...[
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _updateOrderStatus(order['id'], nextStatus);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF14824C),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text(actionText, style: const TextStyle(color: Colors.white)),
+              ),
+            ]
+          ],
+        );
+      },
+    );
+  }
+
+  void _showBuktiDialog(String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              InteractiveViewer(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: Colors.white,
+                      padding: const EdgeInsets.all(32.0),
+                      child: const Text('Gagal memuat gambar', style: TextStyle(color: Colors.red)),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white, size: 32),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _updateOrderStatus(String id, String newStatus) async {
+    setState(() => _isLoading = true);
+    try {
+      await FirebaseFirestore.instance.collection('orders').doc(id).update({
+        'status': newStatus.toLowerCase(),
+      });
+      await _fetchOrders(); // Refresh data
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status berhasil diubah menjadi $newStatus', style: const TextStyle(color: Colors.white)), backgroundColor: Colors.green));
+    } catch (e) {
+      print('Error update status: $e');
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal mengubah status', style: TextStyle(color: Colors.white)), backgroundColor: Colors.red));
+    }
   }
 
   @override
@@ -311,6 +532,20 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
   }
 
   Widget _buildOrderTable() {
+    if (_isLoading) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(child: CircularProgressIndicator(color: Color(0xFF14824C))),
+      );
+    }
+    
+    if (_orders.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(32.0),
+        child: Center(child: Text('Tidak ada pesanan.')),
+      );
+    }
+
     return Column(
       children: [
         const SizedBox(height: 16),
@@ -377,7 +612,9 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
-                          child: Image.asset(o['image'], width: 32, height: 32, fit: BoxFit.cover),
+                          child: o['image'].toString().startsWith('http') 
+                            ? Image.network(o['image'], width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover))
+                            : Image.asset(o['image'], width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover)),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -410,7 +647,25 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(o['status'], style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-                        const Text('Rincian', style: TextStyle(color: Color(0xFFF0BF00), fontSize: 10)),
+                        const SizedBox(height: 4),
+                        Builder(
+                          builder: (context) {
+                            String s = o['status']?.toString().toLowerCase() ?? '';
+                            String btnText = 'Lihat Detail';
+                            if (s == 'menunggu konfirmasi') btnText = 'Cek Bukti & Konfirmasi';
+                            else if (s == 'perlu dikirim') btnText = 'Kirim Pesanan';
+                            else if (s == 'dikirim') btnText = 'Selesaikan Pesanan';
+                            else if (s == 'menunggu pengembalian') btnText = 'Proses Pengembalian';
+                            
+                            return GestureDetector(
+                              onTap: () {
+                                _showOrderActionDialog(o);
+                              },
+                              child: Text(btnText, style: const TextStyle(color: Color(0xFFF0BF00), fontSize: 10, fontWeight: FontWeight.bold)),
+                            );
+                          }
+                        ),
+                        const SizedBox(height: 4),
                         Text(o['payment'], style: const TextStyle(color: Color(0xFF14824C), fontSize: 10, fontWeight: FontWeight.bold)),
                       ],
                     ),
