@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'dart:typed_data';
 import '../../services/app_state.dart';
 
 class UbahProfilePage extends StatefulWidget {
@@ -18,6 +21,8 @@ class _UbahProfilePageState extends State<UbahProfilePage> {
 
   String gender = 'Laki - Laki';
   bool sudahDisimpan = false;
+  Uint8List? _imageBytes;
+  bool _isLoading = false;
 
   static const Color bg = Color(0xFFF4F1F1);
   static const Color yellow = Color(0xFFE2BE00);
@@ -37,6 +42,18 @@ class _UbahProfilePageState extends State<UbahProfilePage> {
     teleponController.dispose();
     tanggalController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery, imageQuality: 30, maxWidth: 600);
+
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      setState(() {
+        _imageBytes = bytes;
+      });
+    }
   }
 
   @override
@@ -75,26 +92,62 @@ class _UbahProfilePageState extends State<UbahProfilePage> {
               child: Column(
                 children: [
                   ClipOval(
-                    child: Image.asset(
-                      'assets/img/system/pengguna_login.png',
-                      width: 130,
-                      height: 130,
-                      fit: BoxFit.cover,
+                    child: Builder(
+                      builder: (context) {
+                        if (_imageBytes != null) {
+                          return Image.memory(
+                            _imageBytes!,
+                            width: 130,
+                            height: 130,
+                            fit: BoxFit.cover,
+                          );
+                        } else if (AppState().userAvatar != null) {
+                          // base64 decode
+                          String b64 = AppState().userAvatar!;
+                          if (b64.startsWith('data:image')) {
+                            b64 = b64.split(',').last;
+                          }
+                          try {
+                            return Image.memory(
+                              base64Decode(b64),
+                              width: 130,
+                              height: 130,
+                              fit: BoxFit.cover,
+                            );
+                          } catch (e) {
+                            return Image.asset(
+                              'assets/img/system/pengguna_login.png',
+                              width: 130,
+                              height: 130,
+                              fit: BoxFit.cover,
+                            );
+                          }
+                        }
+                        return Image.asset(
+                          'assets/img/system/pengguna_login.png',
+                          width: 130,
+                          height: 130,
+                          fit: BoxFit.cover,
+                        );
+                      }
                     ),
                   ),
                   const SizedBox(height: 35),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 22,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFD9D9D9),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Text(
-                      'Pilih Gambar',
-                      style: TextStyle(fontSize: 16),
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 22,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD9D9D9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'Pilih Gambar',
+                        style: TextStyle(fontSize: 16),
+                      ),
                     ),
                   ),
                 ],
@@ -135,8 +188,29 @@ class _UbahProfilePageState extends State<UbahProfilePage> {
               height: 58,
               child: 
               ElevatedButton(
-                onPressed: () {
+                onPressed: _isLoading ? null : () async {
                   FocusScope.of(context).unfocus();
+
+                  setState(() {
+                    _isLoading = true;
+                  });
+
+                  String? base64Image;
+                  if (_imageBytes != null) {
+                    base64Image = "data:image/jpeg;base64," + base64Encode(_imageBytes!);
+                  }
+
+                  await AppState().updateProfile(
+                    name: namaController.text.trim(),
+                    phone: teleponController.text.trim(),
+                    dob: tanggalController.text.trim(),
+                    gender: gender,
+                    avatarBase64: base64Image,
+                  );
+
+                  setState(() {
+                    _isLoading = false;
+                  });
 
                   showDialog(
                     context: context,
@@ -233,13 +307,15 @@ class _UbahProfilePageState extends State<UbahProfilePage> {
                     borderRadius: BorderRadius.circular(30),
                   ),
                 ),
-                child: Text(
-                  sudahDisimpan ? "Ubah" : "Simpan",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                child: _isLoading 
+                  ? const CircularProgressIndicator(color: Colors.black)
+                  : Text(
+                    sudahDisimpan ? "Ubah" : "Simpan",
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
               ),
             ),
           ],

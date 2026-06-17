@@ -57,7 +57,13 @@ class _ChatPageState extends State<ChatPage> {
         children: [
           // Back arrow
           GestureDetector(
-            onTap: () => Navigator.of(context).pop(),
+            onTap: () {
+              if (Navigator.canPop(context)) {
+                Navigator.of(context).pop();
+              } else {
+                Navigator.pushReplacementNamed(context, '/beranda-login');
+              }
+            },
             child: const Icon(
               Icons.arrow_back_ios_new,
               size: 20,
@@ -68,7 +74,7 @@ class _ChatPageState extends State<ChatPage> {
           // FLOMART Logo
           Image.asset(
             'assets/img/system/LogoFlomart.png',
-            height: 70,
+            height: 24,
           ),
         ],
       ),

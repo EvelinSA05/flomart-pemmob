@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/chat_service.dart';
@@ -7,11 +8,13 @@ import '../../services/app_state.dart';
 class ChatDetailSellerPage extends StatefulWidget {
   final String chatRoomId;
   final String buyerName;
+  final String? buyerAvatar;
 
   const ChatDetailSellerPage({
     super.key,
     required this.chatRoomId,
     required this.buyerName,
+    this.buyerAvatar,
   });
 
   @override
@@ -21,6 +24,13 @@ class ChatDetailSellerPage extends StatefulWidget {
 class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
   final TextEditingController _messageController = TextEditingController();
   final ChatService _chatService = ChatService();
+  late Stream<QuerySnapshot> _messagesStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _messagesStream = _chatService.getChatMessages(widget.chatRoomId);
+  }
 
   @override
   void dispose() {
@@ -54,7 +64,7 @@ class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
           const SizedBox(height: 16),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _chatService.getChatMessages(widget.chatRoomId),
+              stream: _messagesStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator(color: Color(0xFF14824C)));
@@ -102,17 +112,18 @@ class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          } else {
+            Navigator.pushReplacementNamed(context, '/chat-list-seller');
+          }
+        },
       ),
       titleSpacing: 0,
       title: Row(
         children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: Colors.grey.shade300,
-            backgroundImage: const AssetImage('assets/img/user/user1.jpg'),
-            onBackgroundImageError: (_, __) {},
-          ),
+          _buildAvatarWidget(18),
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +153,7 @@ class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
               padding: const EdgeInsets.only(bottom: 4.0, left: 4.0),
               child: Row(
                 children: [
-                  CircleAvatar(radius: 10, backgroundImage: const AssetImage('assets/img/user/user1.jpg'), onBackgroundImageError: (_,__) {}),
+                  _buildAvatarWidget(10),
                   const SizedBox(width: 8),
                   Text(widget.buyerName, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(width: 8),
@@ -278,5 +289,20 @@ class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
         ),
       ),
     );
+  }
+
+  Widget _buildAvatarWidget(double radius) {
+    if (widget.buyerAvatar != null && widget.buyerAvatar!.startsWith('data:image')) {
+      try {
+        final b64 = widget.buyerAvatar!.split(',').last;
+        return CircleAvatar(
+          radius: radius,
+          backgroundImage: MemoryImage(base64Decode(b64)),
+        );
+      } catch (e) {
+        return CircleAvatar(radius: radius, backgroundImage: const AssetImage('assets/img/system/pengguna_login.png'));
+      }
+    }
+    return CircleAvatar(radius: radius, backgroundImage: const AssetImage('assets/img/system/pengguna_login.png'));
   }
 }

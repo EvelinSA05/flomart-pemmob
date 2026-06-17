@@ -4,11 +4,16 @@ class FirebaseSeeder {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   static Future<void> seedProducts() async {
-    final QuerySnapshot existingProducts = await _firestore.collection('products').get();
-    
-    // Jika sudah ada data, jangan di-seed lagi.
-    if (existingProducts.docs.isNotEmpty) {
-      print('Data products sudah ada di Firebase, skipping seeding.');
+    try {
+      final QuerySnapshot existingProducts = await _firestore.collection('products').get().timeout(const Duration(seconds: 5));
+      
+      // Jika sudah ada data, jangan di-seed lagi.
+      if (existingProducts.docs.isNotEmpty) {
+        print('Data products sudah ada di Firebase, skipping seeding.');
+        return;
+      }
+    } catch (e) {
+      print('FirebaseSeeder error: $e');
       return;
     }
 

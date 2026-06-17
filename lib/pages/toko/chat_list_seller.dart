@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/chat_service.dart';
@@ -14,13 +15,21 @@ class ChatListSellerPage extends StatefulWidget {
 class _ChatListSellerPageState extends State<ChatListSellerPage> {
   final ChatService _chatService = ChatService();
   String _searchQuery = '';
+  late Stream<QuerySnapshot> _chatStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _chatStream = _chatService.getSellerChatList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body: StreamBuilder<QuerySnapshot>(
-        stream: _chatService.getSellerChatList(),
+        stream: _chatStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: Color(0xFF14824C)));
@@ -104,14 +113,24 @@ class _ChatListSellerPageState extends State<ChatListSellerPage> {
                   final chatData = chatDoc.data() as Map<String, dynamic>;
                   final isNew = chatData['isNewForSeller'] ?? false;
                   final timeStr = _chatService.formatTime(chatData['lastMessageTime'] as Timestamp?);
+                  final avatarBase64 = chatData['buyerAvatar'];
+                  
+                  Widget avatarWidget;
+                  if (avatarBase64 != null && avatarBase64.startsWith('data:image')) {
+                    try {
+                      final b64 = avatarBase64.split(',').last;
+                      avatarWidget = Image.memory(base64Decode(b64), fit: BoxFit.cover, width: 56, height: 56);
+                    } catch (e) {
+                      avatarWidget = Image.asset('assets/img/system/pengguna_login.png', fit: BoxFit.cover, width: 56, height: 56);
+                    }
+                  } else {
+                    avatarWidget = Image.asset('assets/img/system/pengguna_login.png', fit: BoxFit.cover, width: 56, height: 56);
+                  }
                   
                   return ListTile(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    leading: CircleAvatar(
-                      radius: 28,
-                      backgroundColor: Colors.grey.shade300,
-                      backgroundImage: const AssetImage('assets/img/user/user1.jpg'),
-                      onBackgroundImageError: (_, __) {},
+                    leading: ClipOval(
+                      child: avatarWidget,
                     ),
                     title: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -147,6 +166,7 @@ class _ChatListSellerPageState extends State<ChatListSellerPage> {
                           builder: (context) => ChatDetailSellerPage(
                             chatRoomId: chatDoc.id,
                             buyerName: chatData['buyerName'] ?? 'Pembeli',
+                            buyerAvatar: avatarBase64,
                           ),
                         ),
                       );
@@ -169,7 +189,13 @@ PreferredSizeWidget _buildAppBar() {
       automaticallyImplyLeading: false,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios, color: Colors.black, size: 20),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () {
+          if (Navigator.canPop(context)) {
+            Navigator.pop(context);
+          } else {
+            Navigator.pushReplacementNamed(context, '/dashboard-seller');
+          }
+        },
       ),
       titleSpacing: 0,
       title: Row(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'ubah_profile.dart';
 import 'alamat_saya.dart';
 import 'ubah_password.dart';
@@ -122,9 +123,11 @@ class ProfilePage extends StatelessWidget {
                       ),
                     );
                   },
-                  child: const CircleAvatar(
+                  child: CircleAvatar(
                     radius: 20,
-                    backgroundImage: AssetImage('assets/img/system/pengguna_login.png'),
+                    backgroundImage: (appState.userAvatar != null && appState.userAvatar!.startsWith('data:image'))
+                        ? MemoryImage(base64Decode(appState.userAvatar!.split(',').last)) as ImageProvider
+                        : const AssetImage('assets/img/system/pengguna_login.png'),
                   ),
                 ),
                 const SizedBox(width: 8),

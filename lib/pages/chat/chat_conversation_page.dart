@@ -42,6 +42,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
       _chatRoomId,
       AppState().userName ?? 'Pembeli',
       false, // isSeller = false
+      buyerAvatar: AppState().userAvatar,
     );
   }
 

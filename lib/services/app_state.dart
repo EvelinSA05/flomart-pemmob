@@ -95,6 +95,7 @@ class AppState extends ChangeNotifier {
   String? _userEmail;
   String? _userRole;
   String? _userAddress;
+  String? _userAvatar;
 
   List<CartItem> get cartItems => List.unmodifiable(_cartItems);
   List<AppNotification> get notifications => List.unmodifiable(_notifications);
@@ -106,6 +107,7 @@ class AppState extends ChangeNotifier {
   String? get userEmail => _userEmail;
   String? get userRole => _userRole;
   String? get userAddress => _userAddress;
+  String? get userAvatar => _userAvatar;
 
   void setUserAddress(String address) async {
     _userAddress = address;
@@ -138,15 +140,18 @@ class AppState extends ChangeNotifier {
     _userEmail = userData['email'] ?? userData['kontak'];
     _userRole = userData['role'];
     
-    // Coba ambil alamat dari Firebase jika ada
+    // Coba ambil alamat dan avatar dari Firebase jika ada
     if (_userId != null) {
       try {
         final doc = await FirebaseFirestore.instance.collection('users').doc(_userId).get();
-        if (doc.exists && doc.data()!.containsKey('address')) {
-          _userAddress = doc.data()!['address'];
+        if (doc.exists) {
+          final data = doc.data()!;
+          if (data.containsKey('address')) _userAddress = data['address'];
+          if (data.containsKey('avatar')) _userAvatar = data['avatar'];
+          if (data.containsKey('name')) _userName = data['name'];
         }
       } catch (e) {
-        print('Error loading address from Firebase: $e');
+        print('Error loading profile from Firebase: $e');
       }
     }
 
@@ -159,6 +164,7 @@ class AppState extends ChangeNotifier {
       if (_userEmail != null) await prefs.setString('userEmail', _userEmail!);
       if (_userRole != null) await prefs.setString('userRole', _userRole!);
       if (_userAddress != null) await prefs.setString('userAddress', _userAddress!);
+      if (_userAvatar != null) await prefs.setString('userAvatar', _userAvatar!);
       print('DEBUG: SharedPreferences berhasil disimpan!');
     } catch (e) {
       print('ERROR SharedPreferences simpan: $e');
@@ -182,6 +188,7 @@ class AppState extends ChangeNotifier {
         _userEmail = prefs.getString('userEmail');
         _userRole = prefs.getString('userRole');
         _userAddress = prefs.getString('userAddress');
+        _userAvatar = prefs.getString('userAvatar');
         
         print('DEBUG: User ID ter-load = $_userId');
         
@@ -199,7 +206,7 @@ class AppState extends ChangeNotifier {
     try {
       final response = await http.get(
         Uri.parse('http://127.0.0.1/flomart_api/get_keranjang.php?id_user=$_userId'),
-      );
+      ).timeout(const Duration(seconds: 5));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['status'] == 'success') {
@@ -229,7 +236,8 @@ class AppState extends ChangeNotifier {
       final snapshot = await FirebaseFirestore.instance
           .collection('orders')
           .where('id_user', isEqualTo: _userId)
-          .get();
+          .get()
+          .timeout(const Duration(seconds: 5));
 
       _orders.clear();
       // Sort in memory to avoid needing composite index in Firestore
@@ -297,6 +305,7 @@ class AppState extends ChangeNotifier {
     _userEmail = null;
     _userRole = null;
     _userAddress = null;
+    _userAvatar = null;
     clearCart();
     _orders.clear();
     
@@ -490,5 +499,29 @@ class AppState extends ChangeNotifier {
       print('Error ajukan pengembalian: $e');
       return false;
     }
+  }
+
+  Future<void> updateProfile({String? name, String? phone, String? dob, String? gender, String? avatarBase64}) async {
+    if (name != null) _userName = name;
+    if (avatarBase64 != null) _userAvatar = avatarBase64;
+    
+    final prefs = await SharedPreferences.getInstance();
+    if (name != null) await prefs.setString('userName', name);
+    if (avatarBase64 != null) await prefs.setString('userAvatar', avatarBase64);
+
+    if (_userId != null) {
+      try {
+        await FirebaseFirestore.instance.collection('users').doc(_userId).set({
+          if (name != null) 'name': name,
+          if (phone != null) 'phone': phone,
+          if (dob != null) 'dob': dob,
+          if (gender != null) 'gender': gender,
+          if (avatarBase64 != null) 'avatar': avatarBase64,
+        }, SetOptions(merge: true));
+      } catch (e) {
+        print('Error saving profile to Firebase: $e');
+      }
+    }
+    notifyListeners();
   }
 }

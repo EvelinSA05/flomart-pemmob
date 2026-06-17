@@ -28,28 +28,34 @@ class ChatService {
   }
 
   // Kirim pesan
-  Future<void> sendMessage(String chatRoomId, String text, String senderId, String senderName, bool isSeller) async {
+  Future<void> sendMessage(String chatRoomId, String text, String senderId, String senderName, bool isSeller, {String? buyerAvatar}) async {
     final timestamp = FieldValue.serverTimestamp();
 
     final chatDoc = _firestore.collection('chats').doc(chatRoomId);
     final docSnapshot = await chatDoc.get();
 
+    final updateData = <String, dynamic>{
+      'lastMessage': text,
+      'lastMessageTime': timestamp,
+      'isNewForSeller': !isSeller,
+      'isNewForBuyer': isSeller,
+    };
+    
+    if (!isSeller) {
+      updateData['buyerName'] = senderName;
+      if (buyerAvatar != null) {
+        updateData['buyerAvatar'] = buyerAvatar;
+      }
+    }
+
     if (!docSnapshot.exists) {
-      await chatDoc.set({
-        'buyerId': chatRoomId,
-        'buyerName': isSeller ? 'Pembeli' : senderName,
-        'lastMessage': text,
-        'lastMessageTime': timestamp,
-        'isNewForSeller': !isSeller,
-        'isNewForBuyer': isSeller,
-      });
+      updateData['buyerId'] = chatRoomId;
+      if (isSeller) {
+        updateData['buyerName'] = 'Pembeli';
+      }
+      await chatDoc.set(updateData);
     } else {
-      await chatDoc.update({
-        'lastMessage': text,
-        'lastMessageTime': timestamp,
-        'isNewForSeller': !isSeller,
-        'isNewForBuyer': isSeller,
-      });
+      await chatDoc.update(updateData);
     }
 
     await chatDoc.collection('messages').add({
