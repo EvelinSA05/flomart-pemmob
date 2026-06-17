@@ -693,7 +693,7 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
                     ),
                     const SizedBox(height: 10),
                     if (isCompleted)
-                      _statusPill('Selesai', const Color(0xFFC7EBD7), _green)
+                      _statusPill('Tuntas', const Color(0xFFC7EBD7), _green)
                     else if (isCurrent)
                       _statusPill('Proses', const Color(0xFFFFF7CC), _yellow)
                     else
