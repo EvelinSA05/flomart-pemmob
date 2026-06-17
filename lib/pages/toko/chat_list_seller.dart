@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/chat_service.dart';
+import 'chat_detail_seller.dart';
+
 class ChatListSellerPage extends StatefulWidget {
   const ChatListSellerPage({super.key});
 
@@ -8,61 +12,43 @@ class ChatListSellerPage extends StatefulWidget {
 }
 
 class _ChatListSellerPageState extends State<ChatListSellerPage> {
-  final List<Map<String, dynamic>> _chats = [
-    {
-      'name': 'Marina',
-      'message': 'Halo kak, selamat datang di Neola Floris...',
-      'date': '12/04/2025',
-      'image': 'assets/img/user/user1.jpg',
-      'isNew': true,
-    },
-    {
-      'name': 'Ekolim',
-      'message': 'Sama - sama kak,',
-      'date': '11/04/2025',
-      'image': 'assets/img/user/user2.jpg',
-      'isNew': false,
-    },
-    {
-      'name': 'Siti Nurbayah',
-      'message': 'Baik kak, terimakasih sudah memesan...',
-      'date': '10/04/2025',
-      'image': 'assets/img/user/user3.jpg',
-      'isNew': false,
-    },
-    {
-      'name': 'Cintia',
-      'message': 'Baik kak bisa ditunggu paket Benih nya ya',
-      'date': '10/04/2025',
-      'image': 'assets/img/user/user4.jpg',
-      'isNew': false,
-    },
-    {
-      'name': 'Budi Harianto',
-      'message': 'Terimakasih Banyak kak',
-      'date': '09/04/2025',
-      'image': 'assets/img/user/user5.jpg',
-      'isNew': false,
-    },
-  ];
-
+  final ChatService _chatService = ChatService();
+  String _searchQuery = '';
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: _buildAppBar(),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('Semua Chat', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text('${_chats.length}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              ],
-            ),
-          ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _chatService.getSellerChatList(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: Color(0xFF14824C)));
+          }
+
+          if (snapshot.hasError) {
+            return const Center(child: Text('Terjadi kesalahan'));
+          }
+
+          final allChats = snapshot.data?.docs ?? [];
+          final filteredChats = allChats.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final name = (data['buyerName'] ?? '').toString().toLowerCase();
+            return name.contains(_searchQuery.toLowerCase());
+          }).toList();
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Semua Chat', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('${filteredChats.length}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  ],
+                ),
+              ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Container(
@@ -83,9 +69,14 @@ class _ChatListSellerPageState extends State<ChatListSellerPage> {
                     child: const Icon(Icons.search, color: Colors.white, size: 24),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
+                      onChanged: (val) {
+                        setState(() {
+                          _searchQuery = val;
+                        });
+                      },
+                      decoration: const InputDecoration(
                         hintText: 'Ketik Pencarianmu',
                         hintStyle: TextStyle(color: Colors.grey, fontSize: 14),
                         border: InputBorder.none,
@@ -97,59 +88,83 @@ class _ChatListSellerPageState extends State<ChatListSellerPage> {
             ),
           ),
           const SizedBox(height: 16),
-          Expanded(
-            child: ListView.separated(
-              itemCount: _chats.length,
-              separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFEEEEEE)),
-              itemBuilder: (context, index) {
-                final chat = _chats[index];
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: CircleAvatar(
-                    radius: 28,
-                    backgroundColor: Colors.grey.shade300,
-                    backgroundImage: AssetImage(chat['image']),
-                    onBackgroundImageError: (_, __) {},
-                  ),
-                  title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(chat['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text(
-                        chat['date'],
+          if (filteredChats.isEmpty)
+            const Expanded(
+              child: Center(
+                child: Text('Tidak ada pesan.', style: TextStyle(color: Colors.grey)),
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.separated(
+                itemCount: filteredChats.length,
+                separatorBuilder: (context, index) => const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                itemBuilder: (context, index) {
+                  final chatDoc = filteredChats[index];
+                  final chatData = chatDoc.data() as Map<String, dynamic>;
+                  final isNew = chatData['isNewForSeller'] ?? false;
+                  final timeStr = _chatService.formatTime(chatData['lastMessageTime'] as Timestamp?);
+                  
+                  return ListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    leading: CircleAvatar(
+                      radius: 28,
+                      backgroundColor: Colors.grey.shade300,
+                      backgroundImage: const AssetImage('assets/img/user/user1.jpg'),
+                      onBackgroundImageError: (_, __) {},
+                    ),
+                    title: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(chatData['buyerName'] ?? 'Pembeli', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        Text(
+                          timeStr,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isNew ? const Color(0xFF14824C) : Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Text(
+                        chatData['lastMessage'] ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: chat['isNew'] ? const Color(0xFF14824C) : Colors.grey,
+                          color: isNew ? Colors.black87 : Colors.grey,
+                          fontSize: 13,
+                          fontWeight: isNew ? FontWeight.bold : FontWeight.normal,
                         ),
                       ),
-                    ],
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: Text(
-                      chat['message'],
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.grey, fontSize: 13),
                     ),
-                  ),
-                  onTap: () {
-                    if (chat['name'] == 'Marina') {
-                      Navigator.pushNamed(context, '/chat-detail-seller');
-                    }
-                  },
-                );
-              },
+                    onTap: () {
+                      _chatService.markAsRead(chatDoc.id, true);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatDetailSellerPage(
+                            chatRoomId: chatDoc.id,
+                            buyerName: chatData['buyerName'] ?? 'Pembeli',
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
         ],
-      ),
-    );
-  }
+      );
+    },
+  ),
+);
+}
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      backgroundColor: Colors.white,
+PreferredSizeWidget _buildAppBar() {
+  return AppBar(
+    backgroundColor: Colors.white,
       elevation: 0,
       automaticallyImplyLeading: false,
       leading: IconButton(

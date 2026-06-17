@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'chat_conversation_page.dart';
+import '../../services/chat_service.dart';
+import '../../services/app_state.dart';
 
 class ChatPage extends StatefulWidget {
   const ChatPage({super.key});
@@ -12,31 +15,7 @@ class ChatPage extends StatefulWidget {
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-
-  // Sample chat data
-  final List<Map<String, String>> _chatList = [
-    {
-      'name': 'Kaka Petani',
-      'message': '👋 Halo, selamat datang di Chat Flomart!',
-      'time': '09:45pm',
-      'avatar': 'assets/img/system/pengguna_login.png',
-    },
-    {
-      'name': 'Tian Petani',
-      'message': '👋 Halo, selamat datang di Chat Flomart!',
-      'time': '09:45pm',
-      'avatar': 'assets/img/system/pengguna_login.png',
-    },
-  ];
-
-  List<Map<String, String>> get _filteredChatList {
-    if (_searchQuery.isEmpty) return _chatList;
-    return _chatList
-        .where((chat) =>
-            chat['name']!.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            chat['message']!.toLowerCase().contains(_searchQuery.toLowerCase()))
-        .toList();
-  }
+  final ChatService _chatService = ChatService();
 
   @override
   void dispose() {
@@ -112,7 +91,7 @@ class _ChatPageState extends State<ChatPage> {
             ),
           ),
           Text(
-            '${_filteredChatList.length}',
+            '1', // Karena hanya ada 1 toko
             style: GoogleFonts.poppins(
               fontSize: 16,
               fontWeight: FontWeight.w600,
@@ -188,50 +167,62 @@ class _ChatPageState extends State<ChatPage> {
 
   // ============ CHAT LIST ============
   Widget _buildChatList() {
-    final chats = _filteredChatList;
-
-    if (chats.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 60,
-              color: Colors.grey.shade300,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Tidak ada chat ditemukan',
-              style: GoogleFonts.poppins(
-                fontSize: 14,
-                color: Colors.grey.shade400,
-              ),
-            ),
-          ],
-        ),
-      );
+    final buyerId = AppState().userId;
+    if (buyerId == null) {
+      return const Center(child: Text('Silakan login terlebih dahulu.'));
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      itemCount: chats.length,
-      itemBuilder: (context, index) {
-        return _buildChatItem(chats[index]);
+    return StreamBuilder<DocumentSnapshot>(
+      stream: _chatService.getBuyerChatRoom(buyerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: Color(0xFF14824C)));
+        }
+
+        final data = snapshot.data?.data() as Map<String, dynamic>?;
+        
+        // Selalu tampilkan Flomart CS meskipun belum ada chat
+        String lastMsg = data?['lastMessage'] ?? 'Halo, ada yang bisa kami bantu?';
+        String timeStr = _chatService.formatTime(data?['lastMessageTime'] as Timestamp?);
+        bool isNew = data?['isNewForBuyer'] ?? false;
+        
+        final chatInfo = {
+          'name': 'Flomart CS',
+          'message': lastMsg,
+          'time': timeStr,
+          'avatar': 'assets/img/system/LogoFlomart.png',
+          'isNew': isNew,
+        };
+
+        if (_searchQuery.isNotEmpty && !chatInfo['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) && !chatInfo['message'].toString().toLowerCase().contains(_searchQuery.toLowerCase())) {
+           return const SizedBox.shrink();
+        }
+
+        return ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          children: [
+             _buildChatItem(chatInfo),
+          ],
+        );
       },
     );
   }
 
   // ============ CHAT ITEM ============
-  Widget _buildChatItem(Map<String, String> chat) {
+  Widget _buildChatItem(Map<String, dynamic> chat) {
+    final isNew = chat['isNew'] == true;
     return InkWell(
       onTap: () {
+        final buyerId = AppState().userId;
+        if (buyerId != null) {
+          _chatService.markAsRead(buyerId, false);
+        }
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ChatConversationPage(
-              contactName: chat['name']!,
-              contactAvatar: chat['avatar']!,
+              contactName: chat['name'],
+              contactAvatar: chat['avatar'],
             ),
           ),
         );
@@ -276,7 +267,8 @@ class _ChatPageState extends State<ChatPage> {
                     chat['message']!,
                     style: GoogleFonts.poppins(
                       fontSize: 11,
-                      color: const Color(0xFF888888),
+                      color: isNew ? const Color(0xFF222222) : const Color(0xFF888888),
+                      fontWeight: isNew ? FontWeight.bold : FontWeight.normal,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -289,7 +281,8 @@ class _ChatPageState extends State<ChatPage> {
               chat['time']!,
               style: GoogleFonts.poppins(
                 fontSize: 11,
-                color: const Color(0xFF999999),
+                color: isNew ? const Color(0xFF2E7D32) : const Color(0xFF999999),
+                fontWeight: isNew ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ],

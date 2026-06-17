@@ -71,7 +71,6 @@ class MyApp extends StatelessWidget {
         keuanganSellerRoute: (_) => const KeuanganSellerPage(),
         pengaturanSellerRoute: (_) => const PengaturanSellerPage(),
         chatListSellerRoute: (_) => const ChatListSellerPage(),
-        chatDetailSellerRoute: (_) => const ChatDetailSellerPage(),
         loginRoute: (_) => const LoginPage(),
         registerRoute: (_) => const regisPage(),
         homeAfterLoginRoute: (_) => const BerandaSesudahLogin(),

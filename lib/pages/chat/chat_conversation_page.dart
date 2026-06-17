@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/chat_service.dart';
+import '../../services/app_state.dart';
 
 class ChatConversationPage extends StatefulWidget {
   final String contactName;
@@ -18,31 +21,8 @@ class ChatConversationPage extends StatefulWidget {
 class _ChatConversationPageState extends State<ChatConversationPage> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'text': '👋 Halo, selamat datang di Chat Flomart!',
-      'isMe': false,
-      'time': '09:43',
-    },
-    {
-      'text': 'Saya Filo, asisten virtual yang siap membantu kamu 😊',
-      'isMe': false,
-      'time': '09:43',
-    },
-    {
-      'type': 'menu',
-      'title': 'Kamu ingin bantuan apa hari ini?',
-      'options': [
-        {'id': '1', 'text': 'Tanya Produk', 'icon': '🌱'},
-        {'id': '2', 'text': 'Cek Pesanan', 'icon': '📦'},
-        {'id': '3', 'text': 'Info Pengiriman', 'icon': '🚚'},
-        {'id': '4', 'text': 'Chat Langsung dengan Admin', 'icon': '💬'},
-      ],
-      'isMe': false,
-      'time': '09:43',
-    },
-  ];
+  final ChatService _chatService = ChatService();
+  String get _chatRoomId => AppState().userId ?? 'buyer_id';
 
   @override
   void dispose() {
@@ -51,58 +31,18 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
     super.dispose();
   }
 
-  void _sendMessage() {
+  void _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
-    _addMessage(text, true);
     _messageController.clear();
-  }
-
-  void _addMessage(String text, bool isMe) {
-    setState(() {
-      _messages.add({
-        'text': text,
-        'isMe': isMe,
-        'time': '09.43', // Hardcoded time for simplicity like in design
-      });
-    });
-    
-    // Scroll to bottom
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-
-    // Handle automated responses for menu options
-    if (text == '1') {
-      Future.delayed(const Duration(seconds: 1), () {
-        _addMessage('Tentu! Produk kami selalu ready stok dan segar. Anda ingin menanyakan detail produk yang mana? 😊', false);
-      });
-    } else if (text == '2') {
-      Future.delayed(const Duration(seconds: 1), () {
-        _addMessage('Boleh, silakan masukkan nomor pesanan Anda atau cek di halaman "Pesanan Saya" untuk status terbaru. Ada lagi yang bisa dibantu? 📦', false);
-      });
-    } else if (text == '3') {
-      Future.delayed(const Duration(seconds: 1), () {
-        _addMessage('Kami bekerja sama dengan berbagai jasa pengiriman terpercaya. Estimasi paket sampai adalah 1-3 hari tergantung lokasi Anda. 🚚', false);
-      });
-    } else if (text == '4') {
-      Future.delayed(const Duration(seconds: 1), () {
-        _addMessage('Siap 😊, Saya akan menghubungkan kamu dengan admin penjual.', false);
-        Future.delayed(const Duration(seconds: 1), () {
-          _addMessage('⏳ Mohon tunggu sebentar, admin akan segera membalas pesanmu.', false);
-          Future.delayed(const Duration(seconds: 1), () {
-            _addMessage('Halo 👋, Saya admin dari Kaka Petani.\nAda yang bisa saya bantu?', false);
-          });
-        });
-      });
-    }
+    await _chatService.sendMessage(
+      _chatRoomId,
+      text,
+      _chatRoomId,
+      AppState().userName ?? 'Pembeli',
+      false, // isSeller = false
+    );
   }
 
   @override
@@ -165,16 +105,44 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
   }
 
   Widget _buildChatArea() {
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
-      itemCount: _messages.length,
-      itemBuilder: (context, index) {
-        final message = _messages[index];
-        if (message['type'] == 'menu') {
-          return _buildMenuBubble(message);
+    return StreamBuilder<QuerySnapshot>(
+      stream: _chatService.getChatMessages(_chatRoomId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator(color: Color(0xFF14824C)));
         }
-        return _buildMessageBubble(message);
+
+        if (snapshot.hasError) {
+          return const Center(child: Text('Terjadi kesalahan'));
+        }
+
+        final messages = snapshot.data?.docs ?? [];
+
+        // Scroll to bottom when new messages arrive
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+          }
+        });
+
+        return ListView.builder(
+          controller: _scrollController,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+          itemCount: messages.length,
+          itemBuilder: (context, index) {
+            final msgData = messages[index].data() as Map<String, dynamic>;
+            final bool isMe = msgData['isSeller'] == false;
+            final timeStr = _chatService.formatTime(msgData['timestamp'] as Timestamp?);
+            
+            final msg = {
+              'isMe': isMe,
+              'text': msgData['text'] ?? '',
+              'time': timeStr,
+            };
+            
+            return _buildMessageBubble(msg);
+          },
+        );
       },
     );
   }
@@ -233,67 +201,7 @@ class _ChatConversationPageState extends State<ChatConversationPage> {
     );
   }
 
-  Widget _buildMenuBubble(Map<String, dynamic> message) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 4),
-          child: Row(
-            children: [
-              CircleAvatar(radius: 12, backgroundImage: AssetImage(widget.contactAvatar)),
-              const SizedBox(width: 8),
-              Text(widget.contactName, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-              const SizedBox(width: 6),
-              Text(message['time'], style: const TextStyle(fontSize: 9, color: Colors.grey)),
-            ],
-          ),
-        ),
-        Container(
-          width: MediaQuery.of(context).size.width * 0.7,
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 5, offset: const Offset(0, 2)),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(message['title'], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-              ),
-              const Divider(height: 1),
-              ... (message['options'] as List).map((opt) {
-                return InkWell(
-                  onTap: () => _addMessage(opt['id'], true),
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                        child: Row(
-                          children: [
-                            Text(opt['icon'], style: const TextStyle(fontSize: 16)),
-                            const SizedBox(width: 10),
-                            Expanded(child: Text(opt['text'], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-                            Text(opt['id'], style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 1),
-                    ],
-                  ),
-                );
-              }).toList(),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  // Removed _buildMenuBubble as it's no longer used for dynamic DB chat
 
   Widget _buildMessageInput() {
     return Container(

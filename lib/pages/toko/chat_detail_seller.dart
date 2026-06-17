@@ -1,7 +1,18 @@
 import 'package:flutter/material.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../services/chat_service.dart';
+import '../../services/app_state.dart';
+
 class ChatDetailSellerPage extends StatefulWidget {
-  const ChatDetailSellerPage({super.key});
+  final String chatRoomId;
+  final String buyerName;
+
+  const ChatDetailSellerPage({
+    super.key,
+    required this.chatRoomId,
+    required this.buyerName,
+  });
 
   @override
   State<ChatDetailSellerPage> createState() => _ChatDetailSellerPageState();
@@ -9,33 +20,7 @@ class ChatDetailSellerPage extends StatefulWidget {
 
 class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
   final TextEditingController _messageController = TextEditingController();
-
-  final List<Map<String, dynamic>> _messages = [
-    {
-      'isMe': false,
-      'text': 'Halo Kak, Apakah benih ini masih tersedia ya?',
-      'time': '09.00',
-    },
-    {
-      'isMe': false,
-      'isProduct': true,
-      'productName': 'Benih Kubis',
-      'productBrand': 'Vida Verda',
-      'productPrice': 'Rp 10.000',
-      'productImage': 'assets/img/produk/kubis.jpg',
-      'time': '09.00',
-    },
-    {
-      'isMe': true,
-      'text': 'Halo kak, Selamat datang di Neola Florist ! Ada yang bisa kami bantu?',
-      'time': '09.01',
-    },
-    {
-      'isMe': true,
-      'text': 'Masih kak, untuk benih kubis masih ada 10 pcs',
-      'time': '09.02',
-    },
-  ];
+  final ChatService _chatService = ChatService();
 
   @override
   void dispose() {
@@ -43,16 +28,17 @@ class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
     super.dispose();
   }
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isNotEmpty) {
-      setState(() {
-        _messages.add({
-          'isMe': true,
-          'text': _messageController.text.trim(),
-          'time': '09.05', // dummy time
-        });
-        _messageController.clear();
-      });
+  void _sendMessage() async {
+    final text = _messageController.text.trim();
+    if (text.isNotEmpty) {
+      _messageController.clear();
+      await _chatService.sendMessage(
+        widget.chatRoomId,
+        text,
+        AppState().userId ?? 'seller_id',
+        AppState().userName ?? 'Seller',
+        true, // isSeller = true
+      );
     }
   }
 
@@ -67,15 +53,40 @@ class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
           const Text('Today', style: TextStyle(color: Colors.grey, fontSize: 12)),
           const SizedBox(height: 16),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final msg = _messages[index];
-                if (msg['isProduct'] == true) {
-                  return _buildProductMessage(msg);
+            child: StreamBuilder<QuerySnapshot>(
+              stream: _chatService.getChatMessages(widget.chatRoomId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFF14824C)));
                 }
-                return _buildTextMessage(msg);
+
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Terjadi kesalahan'));
+                }
+
+                final messages = snapshot.data?.docs ?? [];
+                
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: messages.length,
+                  itemBuilder: (context, index) {
+                    final msgData = messages[index].data() as Map<String, dynamic>;
+                    final bool isMe = msgData['isSeller'] == true;
+                    final timeStr = _chatService.formatTime(msgData['timestamp'] as Timestamp?);
+                    
+                    final msg = {
+                      'isMe': isMe,
+                      'text': msgData['text'] ?? '',
+                      'time': timeStr,
+                      'isProduct': msgData['isProduct'] ?? false,
+                    };
+                    
+                    if (msg['isProduct'] == true) {
+                      return _buildProductMessage(msg);
+                    }
+                    return _buildTextMessage(msg);
+                  },
+                );
               },
             ),
           ),
@@ -105,9 +116,8 @@ class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
           const SizedBox(width: 12),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text('Marina', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
-              Text('online 2 menit yang lalu', style: TextStyle(color: Colors.white70, fontSize: 11)),
+            children: [
+              Text(widget.buyerName, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
             ],
           ),
         ],
@@ -134,7 +144,7 @@ class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
                 children: [
                   CircleAvatar(radius: 10, backgroundImage: const AssetImage('assets/img/user/user1.jpg'), onBackgroundImageError: (_,__) {}),
                   const SizedBox(width: 8),
-                  const Text('Marina', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  Text(widget.buyerName, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
                   const SizedBox(width: 8),
                   Text(msg['time'], style: const TextStyle(fontSize: 10, color: Colors.black)),
                 ],
