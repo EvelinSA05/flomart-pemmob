@@ -62,7 +62,17 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
         String imagePath = 'assets/img/produk/15.png';
         String qty = '1x';
         
+        List<Map<String, dynamic>> parsedItems = [];
         if (items.isNotEmpty) {
+          for (var item in items) {
+            if (item is Map) {
+              parsedItems.add(Map<String, dynamic>.from(item));
+            } else if (item is String) {
+              try {
+                parsedItems.add(Map<String, dynamic>.from(json.decode(item)));
+              } catch(e) {}
+            }
+          }
           if (items[0] is Map) {
              itemName = items[0]['nama_produk'] ?? itemName;
              qty = '${items[0]['qty'] ?? 1}x';
@@ -96,7 +106,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
           'amount': totalFormatted,
           'courier': data['jasa_kirim'] ?? 'JNE Regular',
           'status': data['status'] ?? 'Belum Bayar',
-          'payment': data['payment_method'] ?? 'Transfer',
+          'payment': data['metode_pembayaran'] ?? 'Transfer',
           'created': DateFormat('dd/MM/yyyy').format(createdAt),
           'deadline': DateFormat('dd/MM/yyyy').format(deadline),
           'image': imagePath,
@@ -104,6 +114,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
           'alasan_pengembalian': data['alasan_pengembalian'],
           'bukti_pengembalian': data['bukti_pengembalian'],
           'isSelected': false,
+          'orderItems': parsedItems,
         });
       }
       
@@ -152,7 +163,11 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
         
         if (currentStatus == 'menunggu konfirmasi') {
           nextStatus = 'perlu dikirim';
-          actionText = 'Konfirmasi Pembayaran';
+          if (order['payment'].toString().toLowerCase() == 'cod') {
+            actionText = 'Proses Pesanan COD';
+          } else {
+            actionText = 'Konfirmasi Pembayaran';
+          }
         } else if (currentStatus == 'perlu dikirim') {
           nextStatus = 'dikirim';
           actionText = 'Kirim Pesanan';
@@ -174,27 +189,34 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
             children: [
               Text('ID Pesanan: ${order['id']}'),
               const SizedBox(height: 8),
-              if (order['bukti_pembayaran'] != null && order['bukti_pembayaran'].toString().isNotEmpty) ...[
-                const Text('Bukti Transfer:', style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Center(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      _showBuktiDialog(order['bukti_pembayaran']);
-                    },
-                    icon: const Icon(Icons.image),
-                    label: const Text('Lihat Bukti Bayar'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+              if (order['payment'].toString().toLowerCase() != 'cod') ...[
+                if (order['bukti_pembayaran'] != null && order['bukti_pembayaran'].toString().isNotEmpty) ...[
+                  const Text('Bukti Transfer:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        _showBuktiDialog(order['bukti_pembayaran']);
+                      },
+                      icon: const Icon(Icons.image),
+                      label: const Text('Lihat Bukti Bayar'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                ] else ...[
+                  const Text('Bukti Transfer:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
+                  const Text('Belum ada bukti bayar yang diupload.', style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic, fontSize: 12)),
+                  const SizedBox(height: 16),
+                ],
               ] else ...[
-                const Text('Bukti Transfer:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Metode Pembayaran: COD (Cash on Delivery)', style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF14824C))),
                 const SizedBox(height: 4),
-                const Text('Belum ada bukti bayar yang diupload.', style: TextStyle(color: Colors.red, fontStyle: FontStyle.italic, fontSize: 12)),
+                const Text('Tidak perlu bukti transfer, pembayaran dilakukan saat barang sampai.', style: TextStyle(color: Colors.grey, fontSize: 12, fontStyle: FontStyle.italic)),
                 const SizedBox(height: 16),
               ],
               if (order['alasan_pengembalian'] != null && order['alasan_pengembalian'].toString().isNotEmpty) ...[
@@ -607,37 +629,121 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                     ),
                   ),
                   Expanded(
-                    flex: 3,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    flex: 5,
+                    child: Column(
                       children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: o['image'].toString().startsWith('http') 
-                            ? Image.network(o['image'], width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,_,_) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover))
-                            : Image.asset(o['image'], width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,_,_) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover)),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
+                        if (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty)
+                          ...(o['orderItems'] as List).map((item) {
+                            final String itemName = item['nama_produk'] ?? 'Unknown Item';
+                            final String qty = '${item['qty'] ?? 1}x';
+                            final String itemPrice = item['harga'] != null ? 'Rp${item['harga'].toString().replaceAll('.0', '')}' : 'Rp 0';
+                            final String imagePath = item['gambar'] ?? 'assets/img/produk/dummy.png';
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(4),
+                                          child: imagePath.startsWith('http')
+                                            ? Image.network(imagePath, width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,_,_) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover))
+                                            : Image.asset(imagePath, width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,_,_) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover)),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(itemName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                                              Text(o['brand'], style: const TextStyle(color: Colors.grey, fontSize: 9)),
+                                              Text(o['season'], style: const TextStyle(color: Color(0xFF14824C), fontSize: 9, fontWeight: FontWeight.bold)),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(qty, style: const TextStyle(fontSize: 12)),
+                                        Text(itemPrice, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList()
+                        else
+                          Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(o['product'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
-                              Text(o['brand'], style: const TextStyle(color: Colors.grey, fontSize: 9)),
-                              Text(o['season'], style: const TextStyle(color: Color(0xFF14824C), fontSize: 9, fontWeight: FontWeight.bold)),
+                              Expanded(
+                                flex: 3,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(4),
+                                      child: o['image'].toString().startsWith('http') 
+                                        ? Image.network(o['image'], width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,_,_) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover))
+                                        : Image.asset(o['image'], width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,_,_) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover)),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(o['product'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10)),
+                                          Text(o['brand'], style: const TextStyle(color: Colors.grey, fontSize: 9)),
+                                          Text(o['season'], style: const TextStyle(color: Color(0xFF14824C), fontSize: 9, fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(o['qty'], style: const TextStyle(fontSize: 12)),
+                                    Text(o['amount'], style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    flex: 2,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(o['qty'], style: const TextStyle(fontSize: 12)),
-                        Text(o['amount'], style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 12)),
+                        // Overall total row if multiple items
+                        if (o['orderItems'] != null && (o['orderItems'] as List).length > 1)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4.0),
+                            child: Row(
+                              children: [
+                                Expanded(flex: 3, child: Container()),
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Total Pesanan:', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                                      Text(o['amount'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: Color(0xFF14824C))),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -654,7 +760,11 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                             String s = o['status']?.toString().toLowerCase() ?? '';
                             String btnText = 'Lihat Detail';
                             if (s == 'menunggu konfirmasi') {
-                              btnText = 'Cek Bukti & Konfirmasi';
+                              if (o['payment'].toString().toLowerCase() == 'cod') {
+                                btnText = 'Proses Pesanan COD';
+                              } else {
+                                btnText = 'Cek Bukti & Konfirmasi';
+                              }
                             } else if (s == 'perlu dikirim') btnText = 'Kirim Pesanan';
                             else if (s == 'dikirim') btnText = 'Selesaikan Pesanan';
                             else if (s == 'menunggu pengembalian') btnText = 'Proses Pengembalian';
