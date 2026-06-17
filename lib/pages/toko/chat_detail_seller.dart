@@ -206,7 +206,7 @@ class _ChatDetailSellerPageState extends State<ChatDetailSellerPage> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
-                  child: Image.asset(msg['productImage'], width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(width:40, height:40, color:Colors.grey.shade300)),
+                  child: Image.asset(msg['productImage'], width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_,_,_) => Container(width:40, height:40, color:Colors.grey.shade300)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(

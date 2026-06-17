@@ -170,7 +170,7 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
           Image.asset(
             'assets/img/system/LogoFlomart.png',
             height: 24,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'FLOMART',
               style: TextStyle(color: Color(0xFF14824C), fontWeight: FontWeight.bold),
             ),
@@ -452,8 +452,8 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
                     ClipRRect(
                       borderRadius: BorderRadius.circular(4),
                       child: o['image'].toString().startsWith('http')
-                          ? Image.network(o['image'], width: 24, height: 24, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(width:24, height:24, color:Colors.grey.shade300))
-                          : Image.asset(o['image'], width: 24, height: 24, fit: BoxFit.cover, errorBuilder: (_,__,___) => Container(width:24, height:24, color:Colors.grey.shade300)),
+                          ? Image.network(o['image'], width: 24, height: 24, fit: BoxFit.cover, errorBuilder: (_,_,_) => Container(width:24, height:24, color:Colors.grey.shade300))
+                          : Image.asset(o['image'], width: 24, height: 24, fit: BoxFit.cover, errorBuilder: (_,_,_) => Container(width:24, height:24, color:Colors.grey.shade300)),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -556,7 +556,7 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
         _showSuccessDialog();
       },
       contentPadding: EdgeInsets.zero,
-      leading: Image.asset(imagePath, width: 40, height: 40, errorBuilder: (_,__,___) => Container(width:40, height:40, color:Colors.grey.shade300, alignment:Alignment.center, child:Text(bankName, style:const TextStyle(fontSize: 10)))),
+      leading: Image.asset(imagePath, width: 40, height: 40, errorBuilder: (_,_,_) => Container(width:40, height:40, color:Colors.grey.shade300, alignment:Alignment.center, child:Text(bankName, style:const TextStyle(fontSize: 10)))),
       title: Text(holder, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
       subtitle: Text(details, style: const TextStyle(fontSize: 11, color: Colors.grey)),
       trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),

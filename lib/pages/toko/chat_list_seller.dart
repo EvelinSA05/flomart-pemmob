@@ -203,7 +203,7 @@ PreferredSizeWidget _buildAppBar() {
           Image.asset(
             'assets/img/system/LogoFlomart.png',
             height: 24,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'FLOMART',
               style: TextStyle(color: Color(0xFF14824C), fontWeight: FontWeight.bold),
             ),

@@ -119,7 +119,7 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
           Image.asset(
             'assets/img/system/LogoFlomart.png',
             height: 24,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'FLOMART',
               style: TextStyle(color: Color(0xFF14824C), fontWeight: FontWeight.bold),
             ),
@@ -508,7 +508,7 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    ..._jamAsisten.entries.map((e) => _buildJamItem(e.key, e.value['isOpen'], e.value['start'], e.value['end'])).toList(),
+                    ..._jamAsisten.entries.map((e) => _buildJamItem(e.key, e.value['isOpen'], e.value['start'], e.value['end'])),
                     const SizedBox(height: 16),
                     if (_isEditJamAsisten)
                       Row(
@@ -594,7 +594,7 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
                   Switch(
                     value: isEnabled,
                     onChanged: onChanged,
-                    activeColor: Colors.white,
+                    activeThumbColor: Colors.white,
                     activeTrackColor: const Color(0xFF14824C),
                     inactiveThumbColor: Colors.white,
                     inactiveTrackColor: Colors.grey,

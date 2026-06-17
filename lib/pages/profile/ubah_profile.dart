@@ -197,7 +197,7 @@ class _UbahProfilePageState extends State<UbahProfilePage> {
 
                   String? base64Image;
                   if (_imageBytes != null) {
-                    base64Image = "data:image/jpeg;base64," + base64Encode(_imageBytes!);
+                    base64Image = "data:image/jpeg;base64,${base64Encode(_imageBytes!)}";
                   }
 
                   await AppState().updateProfile(

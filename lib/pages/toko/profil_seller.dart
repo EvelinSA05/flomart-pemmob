@@ -100,7 +100,7 @@ class _ProfilSellerPageState extends State<ProfilSellerPage>
             child: Image.asset(
               'assets/img/system/logoFlomart.png',
               height: 24,
-              errorBuilder: (_, __, ___) => const Text(
+              errorBuilder: (_, _, _) => const Text(
                 'FLOMART',
                 style: TextStyle(
                   color: Color(0xFF14824C),
@@ -483,7 +483,7 @@ class _ProductCard extends StatelessWidget {
                           child: Image.asset(
                             product.image,
                             fit: BoxFit.cover, // Changed to cover for uniform grid items
-                            errorBuilder: (_, __, ___) => Container(
+                            errorBuilder: (_, _, _) => Container(
                               color: const Color(0xFFEAE7E0),
                               child: const Icon(Icons.image, color: Colors.grey),
                             ),
@@ -558,7 +558,7 @@ class _ProductCard extends StatelessWidget {
                         'assets/img/system/logoKeranjangPutih.png',
                         width: 12,
                         height: 12,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.shopping_cart, size: 12, color: Colors.white),
+                        errorBuilder: (_, _, _) => const Icon(Icons.shopping_cart, size: 12, color: Colors.white),
                       ),
                     ),
                   ),

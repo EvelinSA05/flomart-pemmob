@@ -121,7 +121,7 @@ class _DetailProdukPageState extends State<DetailProdukPage> {
             'assets/img/system/logoFlomart.png',
             height: 24,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'FLOMART',
               style: TextStyle(
                 color: Color(0xFF14824C),
@@ -228,7 +228,7 @@ class _DetailProdukPageState extends State<DetailProdukPage> {
                             ? 'assets/img/system/pengguna_login.png'
                             : 'assets/img/system/logoProfile.png',
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
+                        errorBuilder: (_, _, _) => const Icon(
                           Icons.person_outline,
                           color: Color(0xFFBEBEBE),
                           size: 18,
@@ -263,7 +263,7 @@ class _DetailProdukPageState extends State<DetailProdukPage> {
             width: 21,
             height: 21,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Icon(
+            errorBuilder: (_, _, _) => Icon(
               fallbackIcon,
               color: const Color(0xFF14824C),
               size: 20,

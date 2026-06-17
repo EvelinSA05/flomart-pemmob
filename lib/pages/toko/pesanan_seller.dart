@@ -18,7 +18,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
   bool _isCodEnabled = true;
   bool _isEditJamOperasional = false;
   bool _isAllSelected = false;
-  Map<String, Map<String, dynamic>> _jamOperasional = {
+  final Map<String, Map<String, dynamic>> _jamOperasional = {
     'Senin': {'isOpen': true, 'start': '13:00', 'end': '20:00'},
     'Selasa': {'isOpen': true, 'start': '13:00', 'end': '20:00'},
     'Rabu': {'isOpen': true, 'start': '13:00', 'end': '20:00'},
@@ -28,7 +28,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
     'Minggu': {'isOpen': false, 'start': '00:00', 'end': '00:00'},
     'Libur Nasional': {'isOpen': false, 'start': '00:00', 'end': '00:00'},
   };
-  Map<String, bool> _courierStates = {
+  final Map<String, bool> _courierStates = {
     'Antareja Regular': true,
     'ID Express': true,
     'JNE Regular': true,
@@ -125,8 +125,9 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
         _orders = List.from(_allOrders);
       } else {
         String filterStatus = '';
-        if (index == 1) filterStatus = 'Belum Bayar';
-        else if (index == 2) filterStatus = 'Perlu Dikirim';
+        if (index == 1) {
+          filterStatus = 'Belum Bayar';
+        } else if (index == 2) filterStatus = 'Perlu Dikirim';
         else if (index == 3) filterStatus = 'Dikirim';
         else if (index == 4) filterStatus = 'Selesai';
         else if (index == 5) filterStatus = 'Pembatalan';
@@ -290,7 +291,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                   child: Image.network(
                     imageUrl,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       color: Colors.white,
                       padding: const EdgeInsets.all(32.0),
                       child: const Text('Gagal memuat gambar', style: TextStyle(color: Colors.red)),
@@ -380,7 +381,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
           Image.asset(
             'assets/img/system/LogoFlomart.png',
             height: 24,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'FLOMART',
               style: TextStyle(color: Color(0xFF14824C), fontWeight: FontWeight.bold),
             ),
@@ -613,8 +614,8 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: o['image'].toString().startsWith('http') 
-                            ? Image.network(o['image'], width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover))
-                            : Image.asset(o['image'], width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover)),
+                            ? Image.network(o['image'], width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,_,_) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover))
+                            : Image.asset(o['image'], width: 32, height: 32, fit: BoxFit.cover, errorBuilder: (_,_,_) => Image.asset('assets/img/produk/15.png', width: 32, height: 32, fit: BoxFit.cover)),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -652,8 +653,9 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                           builder: (context) {
                             String s = o['status']?.toString().toLowerCase() ?? '';
                             String btnText = 'Lihat Detail';
-                            if (s == 'menunggu konfirmasi') btnText = 'Cek Bukti & Konfirmasi';
-                            else if (s == 'perlu dikirim') btnText = 'Kirim Pesanan';
+                            if (s == 'menunggu konfirmasi') {
+                              btnText = 'Cek Bukti & Konfirmasi';
+                            } else if (s == 'perlu dikirim') btnText = 'Kirim Pesanan';
                             else if (s == 'dikirim') btnText = 'Selesaikan Pesanan';
                             else if (s == 'menunggu pengembalian') btnText = 'Proses Pengembalian';
                             
@@ -823,7 +825,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                 style: TextStyle(color: Colors.grey, fontSize: 13, height: 1.4),
               ),
             const SizedBox(height: 24),
-            ..._jamOperasional.keys.map((day) => _buildJamOperasionalRow(day)).toList(),
+            ..._jamOperasional.keys.map((day) => _buildJamOperasionalRow(day)),
             if (_isEditJamOperasional) ...[
               const SizedBox(height: 24),
               Row(
@@ -1000,7 +1002,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                 _courierStates[name] = val;
               });
             },
-            activeColor: Colors.white,
+            activeThumbColor: Colors.white,
             activeTrackColor: const Color(0xFF14824C),
             inactiveThumbColor: Colors.white,
             inactiveTrackColor: Colors.grey,

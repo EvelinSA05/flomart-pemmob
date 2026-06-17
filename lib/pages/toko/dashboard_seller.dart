@@ -156,7 +156,7 @@ class _DashboardSellerPageState extends State<DashboardSellerPage> {
           Image.asset(
             'assets/img/system/LogoFlomart.png',
             height: 24,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'FLOMART',
               style: TextStyle(
                 color: Color(0xFF14824C),
@@ -316,7 +316,7 @@ class _DashboardSellerPageState extends State<DashboardSellerPage> {
 
   Widget _buildBannerAndProfile() {
     return Center(
-      child: Container(
+      child: SizedBox(
         width: MediaQuery.of(context).size.width * 0.9,
         height: 200,
         child: Stack(
@@ -338,7 +338,7 @@ class _DashboardSellerPageState extends State<DashboardSellerPage> {
                       width: double.infinity,
                       height: 150,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(color: Colors.green.shade100),
+                      errorBuilder: (_, _, _) => Container(color: Colors.green.shade100),
                     ),
                     Container(
                       color: Colors.black.withOpacity(0.3),
@@ -359,9 +359,9 @@ class _DashboardSellerPageState extends State<DashboardSellerPage> {
                                 color: Colors.white,
                               ),
                             ),
-                            Text(
-                              _isSaved ? 'Aktif 12 Menit yang lalu' : 'Tidak Aktif',
-                              style: const TextStyle(
+                            const Text(
+                              'Aktif',
+                              style: TextStyle(
                                 fontSize: 12,
                                 color: Color(0xFFF0BF00),
                                 fontWeight: FontWeight.bold,
@@ -403,7 +403,7 @@ class _DashboardSellerPageState extends State<DashboardSellerPage> {
                         width: 100,
                         height: 100,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 48, color: Color(0xFFEEEEEE)),
+                        errorBuilder: (_, _, _) => const Icon(Icons.person, size: 48, color: Color(0xFFEEEEEE)),
                       ),
                     ),
                     Positioned(
@@ -607,7 +607,7 @@ class _DashboardSellerPageState extends State<DashboardSellerPage> {
           width: 100,
           height: 100,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.add, size: 32, color: Colors.grey)),
+          errorBuilder: (_, _, _) => const Center(child: Icon(Icons.add, size: 32, color: Colors.grey)),
         ),
       ),
     );

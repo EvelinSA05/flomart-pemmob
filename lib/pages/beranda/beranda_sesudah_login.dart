@@ -5,7 +5,6 @@ import 'package:flomart_pemmob/pages/beranda/detail_produk.dart';
 import '../../widgets/flomart_bottom_nav.dart';
 import '../../widgets/flomart_header.dart';
 import '../toko/toko.dart';
-import '../profile/profile.dart';
 
 class BerandaSesudahLogin extends StatelessWidget {
   const BerandaSesudahLogin({super.key});
@@ -163,7 +162,7 @@ class BerandaSesudahLogin extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             scrollDirection: Axis.horizontal,
             itemCount: docs.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            separatorBuilder: (_, _) => const SizedBox(width: 10),
             itemBuilder: (context, index) {
               final data = docs[index].data() as Map<String, dynamic>;
               return _ProductCardFirebase(data: data);
@@ -323,7 +322,7 @@ class BerandaSesudahLogin extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
             scrollDirection: Axis.horizontal,
             itemCount: _categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: spacing),
+            separatorBuilder: (_, _) => const SizedBox(width: spacing),
             itemBuilder: (context, index) {
               return SizedBox(
                 width: itemWidth,

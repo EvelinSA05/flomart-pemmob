@@ -86,7 +86,13 @@ class FlomartBottomNav extends StatelessWidget {
   String _routeFor(FlomartTab tab) {
     switch (tab) {
       case FlomartTab.home:
-        return AppState().isLoggedIn ? homeAfterLoginRoute : homeRoute;
+        if (AppState().isLoggedIn) {
+          if (AppState().userRole == 'admin' || AppState().userRole == 'owner') {
+            return dashboardSellerRoute;
+          }
+          return homeAfterLoginRoute;
+        }
+        return homeRoute;
       case FlomartTab.shop:
         return shopRoute;
       case FlomartTab.sell:

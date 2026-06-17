@@ -77,7 +77,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _detailImages.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
                   itemBuilder: (context, index) {
                     return ClipRRect(
                       borderRadius: BorderRadius.circular(14),
@@ -112,7 +112,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${widget.product.rating.toStringAsFixed(1)}',
+                    widget.product.rating.toStringAsFixed(1),
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,

@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -179,7 +177,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
           Image.asset(
             'assets/img/system/LogoFlomart.png',
             height: 24,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'FLOMART',
               style: TextStyle(color: Color(0xFF14824C), fontWeight: FontWeight.bold),
             ),
@@ -444,7 +442,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
                           child: p['image'].startsWith('http') 
-                            ? Image.network(p['image'], width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', width: 40, height: 40, fit: BoxFit.cover))
+                            ? Image.network(p['image'], width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_,_,_) => Image.asset('assets/img/produk/15.png', width: 40, height: 40, fit: BoxFit.cover))
                             : Image.asset(p['image'], width: 40, height: 40, fit: BoxFit.cover),
                         ),
                         const SizedBox(width: 8),

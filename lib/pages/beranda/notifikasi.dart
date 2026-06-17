@@ -84,7 +84,7 @@ class NotificationPage extends StatelessWidget {
                       width: 28,
                       height: 28,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) {
+                      errorBuilder: (_, _, _) {
                         return const Icon(Icons.arrow_back, size: 28);
                       },
                     ),
@@ -159,7 +159,7 @@ class NotificationPage extends StatelessWidget {
                                               width: 60,
                                               height: 60,
                                               fit: BoxFit.contain,
-                                              errorBuilder: (_, __, ___) {
+                                              errorBuilder: (_, _, _) {
                                                 return Container(
                                                   width: 60,
                                                   height: 60,

@@ -105,7 +105,7 @@ class BlogDetailPage extends StatelessWidget {
                         image,
                         width: double.infinity,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) {
+                        errorBuilder: (_, _, _) {
                           return Container(
                             height: 300,
                             color: const Color(0xFFEAE7E0),
@@ -268,7 +268,7 @@ class BlogDetailPage extends StatelessWidget {
               backButtonAsset,
               width: 22,
               height: 22,
-              errorBuilder: (_, __, ___) {
+              errorBuilder: (_, _, _) {
                 return const Icon(Icons.arrow_back_ios_new_rounded);
               },
             ),
@@ -277,7 +277,7 @@ class BlogDetailPage extends StatelessWidget {
           Image.asset(
             headerLogoAsset,
             height: 26,
-            errorBuilder: (_, __, ___) {
+            errorBuilder: (_, _, _) {
               return const Text(
                 'FLOMART',
                 style: TextStyle(

@@ -240,7 +240,7 @@ class FlomartHeader extends StatelessWidget implements PreferredSizeWidget {
       width: width,
       height: height,
       fit: fit,
-      errorBuilder: (_, __, ___) {
+      errorBuilder: (_, _, _) {
         return SizedBox(
           width: width,
           height: height,

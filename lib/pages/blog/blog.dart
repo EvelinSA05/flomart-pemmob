@@ -486,7 +486,7 @@ class _BlogPageState extends State<BlogPage> {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: BlogPage._chips.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final bool active = index == selectedIndex;
 
@@ -638,7 +638,7 @@ class _BlogPageState extends State<BlogPage> {
       width: width,
       height: height,
       fit: fit,
-      errorBuilder: (_, __, ___) {
+      errorBuilder: (_, _, _) {
         return SizedBox(
           width: width,
           height: height,
@@ -757,7 +757,7 @@ class _BottomAssetNavItem extends StatelessWidget {
             width: 28,
             height: 28,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) {
+            errorBuilder: (_, _, _) {
               return Icon(
                 fallbackIcon,
                 size: 27,

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'package:intl/intl.dart' hide TextDirection;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../services/app_state.dart';
 
 class DataSellerPage extends StatefulWidget {
   const DataSellerPage({super.key});
@@ -108,7 +106,7 @@ class _DataSellerPageState extends State<DataSellerPage> {
           Image.asset(
             'assets/img/system/LogoFlomart.png',
             height: 24,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'FLOMART',
               style: TextStyle(color: Color(0xFF14824C), fontWeight: FontWeight.bold),
             ),

@@ -3,8 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
 class CartItem {
   final String name;
   final String price;
@@ -137,6 +135,9 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> loginUser(Map<String, dynamic> userData) async {
+    _cartItems.clear();
+    _orders.clear();
+    _notifications.clear();
     _isLoggedIn = true;
     _userId = userData['id']?.toString() ?? userData['id_user']?.toString();
     _userName = userData['nama'];
@@ -207,29 +208,42 @@ class AppState extends ChangeNotifier {
   Future<void> fetchCart() async {
     if (_userId == null) return;
     try {
-      final response = await http.get(
-        Uri.parse('http://127.0.0.1/flomart_api/get_keranjang.php?id_user=$_userId'),
-      ).timeout(const Duration(seconds: 5));
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        if (data['status'] == 'success') {
-          _cartItems.clear();
-          for (var item in data['data']) {
-            // Parse the numeric price and format without decimals
-            double harga = double.tryParse(item['harga'].toString()) ?? 0;
-            _cartItems.add(CartItem(
-              name: item['nama_produk'],
-              price: 'Rp${harga.toInt()}',
-              imagePath: item['gambar'],
-              size: 'Normal', // Default or parse from DB if available
-              quantity: int.tryParse(item['jumlah'].toString()) ?? 1,
-            ));
-          }
-          notifyListeners();
+      final snapshot = await FirebaseFirestore.instance.collection('carts').doc(_userId).get().timeout(const Duration(seconds: 5));
+      _cartItems.clear();
+      if (snapshot.exists) {
+        final data = snapshot.data()!;
+        final items = data['items'] as List<dynamic>? ?? [];
+        for (var item in items) {
+          _cartItems.add(CartItem(
+            name: item['name'] ?? '',
+            price: item['price'] ?? 'Rp0',
+            imagePath: item['imagePath'] ?? '',
+            size: item['size'] ?? 'Normal',
+            quantity: item['quantity'] ?? 1,
+          ));
         }
       }
+      notifyListeners();
     } catch (e) {
-      print('Failed to fetch cart: $e');
+      print('Failed to fetch cart from Firestore: $e');
+    }
+  }
+
+  Future<void> _saveCartToFirestore() async {
+    if (_userId == null) return;
+    try {
+      final items = _cartItems.map((item) => {
+        'name': item.name,
+        'price': item.price,
+        'imagePath': item.imagePath,
+        'size': item.size,
+        'quantity': item.quantity,
+      }).toList();
+      await FirebaseFirestore.instance.collection('carts').doc(_userId).set({
+        'items': items,
+      });
+    } catch (e) {
+      print('Failed to save cart to Firestore: $e');
     }
   }
 
@@ -315,6 +329,7 @@ class AppState extends ChangeNotifier {
     _userAvatar = null;
     clearCart();
     _orders.clear();
+    _notifications.clear();
     
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -323,25 +338,6 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> addToCart(CartItem item) async {
-    if (_userId != null) {
-      try {
-        final response = await http.post(
-          Uri.parse('http://127.0.0.1/flomart_api/tambah_keranjang.php'),
-          body: {
-            'id_user': _userId.toString(),
-            'nama_produk': item.name,
-            'jumlah': item.quantity.toString(),
-          },
-        );
-        final data = json.decode(response.body);
-        if (data['status'] != 'success') {
-          print('Failed to add to DB: ${data['message']}');
-        }
-      } catch (e) {
-        print('Error adding to DB: $e');
-      }
-    }
-
     // Check if item already exists in cart
     int index = _cartItems.indexWhere((i) => i.name == item.name && i.size == item.size);
     if (index != -1) {
@@ -349,6 +345,8 @@ class AppState extends ChangeNotifier {
     } else {
       _cartItems.add(item);
     }
+    
+    await _saveCartToFirestore();
     
     // Add notification
     addNotification(AppNotification(
@@ -367,17 +365,20 @@ class AppState extends ChangeNotifier {
 
   void clearCart() {
     _cartItems.clear();
+    _saveCartToFirestore();
     notifyListeners();
   }
 
   void removeFromCart(int index) {
     _cartItems.removeAt(index);
+    _saveCartToFirestore();
     notifyListeners();
   }
 
   void updateQuantity(int index, int newQty) {
     if (newQty > 0) {
       _cartItems[index].quantity = newQty;
+      _saveCartToFirestore();
       notifyListeners();
     }
   }
@@ -460,7 +461,7 @@ class AppState extends ChangeNotifier {
 
     try {
       // Encode image bytes ke base64 agar bisa disimpan di Firestore tanpa Firebase Storage
-      String base64Image = "data:image/jpeg;base64," + base64Encode(imageBytes);
+      String base64Image = "data:image/jpeg;base64,${base64Encode(imageBytes)}";
 
       // Perbarui status pesanan di Firestore (gunakan set dengan merge: true agar tidak crash jika pesanan lama tidak ada di Firestore)
       await FirebaseFirestore.instance.collection('orders').doc(rawId).set({
@@ -488,7 +489,7 @@ class AppState extends ChangeNotifier {
     }
 
     try {
-      String base64Image = "data:image/jpeg;base64," + base64Encode(imageBytes);
+      String base64Image = "data:image/jpeg;base64,${base64Encode(imageBytes)}";
 
       await FirebaseFirestore.instance.collection('orders').doc(rawId).set({
         'status': 'menunggu pengembalian',
@@ -519,11 +520,11 @@ class AppState extends ChangeNotifier {
     if (_userId != null) {
       try {
         await FirebaseFirestore.instance.collection('users').doc(_userId).set({
-          if (name != null) 'name': name,
-          if (phone != null) 'phone': phone,
-          if (dob != null) 'dob': dob,
-          if (gender != null) 'gender': gender,
-          if (avatarBase64 != null) 'avatar': avatarBase64,
+          'name': ?name,
+          'phone': ?phone,
+          'dob': ?dob,
+          'gender': ?gender,
+          'avatar': ?avatarBase64,
         }, SetOptions(merge: true));
       } catch (e) {
         print('Error saving profile to Firebase: $e');

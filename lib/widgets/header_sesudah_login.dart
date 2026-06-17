@@ -196,7 +196,7 @@ class FlomartHeaderLoggedIn extends StatelessWidget implements PreferredSizeWidg
       width: width,
       height: height,
       fit: fit,
-      errorBuilder: (_, __, ___) {
+      errorBuilder: (_, _, _) {
         return SizedBox(
           width: width,
           height: height,

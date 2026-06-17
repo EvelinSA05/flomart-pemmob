@@ -11,7 +11,6 @@ import 'detail_produk.dart';
 import '../jualan/mulai_jualan.dart';
 import '../info/tentang_kami.dart';
 import '../../services/app_state.dart';
-import '../beranda/cart_page.dart';
 import '../auth/login.dart';
 
 void main() {
@@ -236,7 +235,6 @@ class _FilterPanel extends StatefulWidget {
     this.onKondisiChanged,
     this.onPriceChanged,
     this.onRatingChanged,
-    super.key,
   });
 
   final ValueChanged<Set<String>>? onJenisBenihChanged;

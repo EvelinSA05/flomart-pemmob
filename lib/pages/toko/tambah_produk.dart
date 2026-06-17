@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:typed_data';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -52,8 +50,9 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
     double priceValue = double.tryParse(harga) ?? 0.0;
 
     String categoryName = 'Benih Sayuran';
-    if (_selectedKategori == 'Bunga') categoryName = 'Benih Bunga';
-    else if (_selectedKategori == 'Buah') categoryName = 'Benih Buah';
+    if (_selectedKategori == 'Bunga') {
+      categoryName = 'Benih Bunga';
+    } else if (_selectedKategori == 'Buah') categoryName = 'Benih Buah';
     else if (_selectedKategori == 'Sayur') categoryName = 'Benih Sayuran';
 
     try {
@@ -171,7 +170,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
           Image.asset(
             'assets/img/system/LogoFlomart.png',
             height: 24,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'FLOMART',
               style: TextStyle(color: Color(0xFF14824C), fontWeight: FontWeight.bold),
             ),
@@ -410,7 +409,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
   }
 
   Widget _buildTextField(TextEditingController controller, String hintText) {
-    return Container(
+    return SizedBox(
       height: 40,
       child: TextField(
         controller: controller,

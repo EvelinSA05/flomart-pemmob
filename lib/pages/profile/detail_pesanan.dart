@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../../services/app_state.dart';
 import 'pesanan_saya.dart';
@@ -235,7 +234,7 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
             'assets/img/system/logoFlomart.png',
             height: 22,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Text(
+            errorBuilder: (_, _, _) => const Text(
               'FLOMART',
               style: TextStyle(
                 color: Color(0xFF14824C),
@@ -305,7 +304,7 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
             width: 58,
             height: 65,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(width: 58, height: 65, color: Colors.grey.shade200, child: const Icon(Icons.image)),
+            errorBuilder: (_, _, _) => Container(width: 58, height: 65, color: Colors.grey.shade200, child: const Icon(Icons.image)),
           ),
         ),
         const SizedBox(width: 12),
@@ -343,7 +342,7 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
             width: 58,
             height: 65,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => Container(width: 58, height: 65, color: Colors.grey.shade200),
+            errorBuilder: (_, _, _) => Container(width: 58, height: 65, color: Colors.grey.shade200),
           ),
         ),
         const SizedBox(width: 12),

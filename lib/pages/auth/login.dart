@@ -4,6 +4,7 @@ import 'registrasi.dart';
 import '../beranda/beranda_sesudah_login.dart';
 import '../../services/app_state.dart';
 import '../toko/dashboard_seller.dart';
+import '../../app_routes.dart';
 
 
 void main() {
@@ -140,19 +141,9 @@ class _LoginFormState extends State<LoginForm> {
           
           String role = loginData['role'] as String;
           if (role == 'admin' || role == 'owner') {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const DashboardSellerPage(),
-              ),
-            );
+            Navigator.pushReplacementNamed(context, dashboardSellerRoute);
           } else {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const BerandaSesudahLogin(),
-              ),
-            );
+            Navigator.pushReplacementNamed(context, homeAfterLoginRoute);
           }
         }
       } else {

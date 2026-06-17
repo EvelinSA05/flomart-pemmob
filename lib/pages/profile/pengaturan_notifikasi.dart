@@ -216,7 +216,7 @@ class _PengaturanNotifikasiPageState extends State<PengaturanNotifikasiPage> {
             child: Switch(
               value: value,
               onChanged: onChanged,
-              activeColor: Colors.white,
+              activeThumbColor: Colors.white,
               activeTrackColor: green,
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: Colors.grey,

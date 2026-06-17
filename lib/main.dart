@@ -19,7 +19,6 @@ import 'pages/toko/data_seller.dart';
 import 'pages/toko/keuangan_seller.dart';
 import 'pages/toko/pengaturan_seller.dart';
 import 'pages/toko/chat_list_seller.dart';
-import 'pages/toko/chat_detail_seller.dart';
 import 'pages/auth/login.dart';
 import 'pages/auth/registrasi.dart';
 import 'pages/beranda/beranda_sesudah_login.dart';

@@ -33,7 +33,7 @@ class _HomePageState extends State<HomePage> {
           List<_ProductItem> loadedProducts = dynamicList.map((item) {
             return _ProductItem(
               name: item['nama_produk'],
-              price: 'Rp' + double.parse(item['harga']).toInt().toString(),
+              price: 'Rp${double.parse(item['harga']).toInt()}',
               rating: '4.8',
               imagePath: 'assets/img/produk/15.png', // Fallback
               tag: (item['nama_kategori'] ?? '') + ', Musim Hujan',
@@ -370,7 +370,7 @@ class _HomePageState extends State<HomePage> {
             padding: const EdgeInsets.symmetric(horizontal: horizontalPadding),
             scrollDirection: Axis.horizontal,
             itemCount: _categories.length,
-            separatorBuilder: (_, __) => const SizedBox(width: spacing),
+            separatorBuilder: (_, _) => const SizedBox(width: spacing),
             itemBuilder: (context, index) {
               return SizedBox(
                 width: itemWidth,
@@ -427,7 +427,7 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (context, index) => _ProductCard(item: items[index]),
       ),
     );
