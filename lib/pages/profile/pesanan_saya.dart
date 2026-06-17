@@ -100,6 +100,7 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
                     buttons: dynamicButtons,
                     showRating: order['showRating'],
                     paymentMethod: order['paymentMethod'] ?? 'Transfer Bank BCA',
+                    orderItemsData: List<Map<String, dynamic>>.from(order['orderItemsData'] ?? []),
                     onCancel: () {
                       // Batal order handled elsewhere if needed
                     },
@@ -191,6 +192,7 @@ class OrderCard extends StatefulWidget {
   final List<String> buttons;
   final bool showRating;
   final String paymentMethod;
+  final List<Map<String, dynamic>> orderItemsData;
   final VoidCallback? onCancel;
 
   const OrderCard({
@@ -206,6 +208,7 @@ class OrderCard extends StatefulWidget {
     required this.buttons,
     this.showRating = false,
     this.paymentMethod = 'Transfer Bank BCA',
+    this.orderItemsData = const [],
     this.onCancel,
   });
 
@@ -351,6 +354,19 @@ class _OrderCardState extends State<OrderCard> {
               total: widget.total,
               status: widget.status,
               paymentMethod: widget.paymentMethod,
+              orderItems: widget.orderItemsData.map((item) {
+                double itemPrice = 0;
+                if (item['harga'] != null) {
+                  itemPrice = double.tryParse(item['harga'].toString()) ?? 0;
+                }
+                return OrderItem(
+                  name: item['nama_produk'] ?? widget.itemName,
+                  image: item['gambar'] ?? widget.image,
+                  size: item['size'] ?? '',
+                  quantity: int.tryParse(item['qty'].toString()) ?? 1,
+                  price: itemPrice,
+                );
+              }).toList(),
             ),
           ),
         );
@@ -412,35 +428,76 @@ class _OrderCardState extends State<OrderCard> {
           ),
           const Divider(height: 12),
 
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Image.asset(
-                widget.image,
-                width: 38,
-                height: 45,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  width: 38,
-                  height: 45,
-                  color: Colors.grey.shade300,
-                  child: const Icon(Icons.image, size: 20, color: Colors.grey),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
+          if (widget.orderItemsData.isNotEmpty)
+            ...widget.orderItemsData.map((item) {
+              final String itemName = item['nama_produk'] ?? 'Unknown Item';
+              final String qty = '${item['qty'] ?? 1}x';
+              final String price = item['harga'] != null ? 'Rp${item['harga'].toString().replaceAll('.0', '')}' : 'Rp 0';
+              final String imagePath = item['gambar'] ?? 'assets/img/produk/dummy.png';
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.itemName, style: const TextStyle(fontSize: 12)),
-                    const SizedBox(height: 4),
-                    Text(widget.qty, style: const TextStyle(fontSize: 11)),
+                    Image.asset(
+                      imagePath,
+                      width: 38,
+                      height: 45,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        width: 38,
+                        height: 45,
+                        color: Colors.grey.shade300,
+                        child: const Icon(Icons.image, size: 20, color: Colors.grey),
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(itemName, style: const TextStyle(fontSize: 12)),
+                          const SizedBox(height: 4),
+                          Text(qty, style: const TextStyle(fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                    Text(price, style: const TextStyle(fontSize: 10)),
                   ],
                 ),
-              ),
-              Text(widget.price, style: const TextStyle(fontSize: 10)),
-            ],
-          ),
+              );
+            }).toList()
+          else
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Image.asset(
+                  widget.image,
+                  width: 38,
+                  height: 45,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    width: 38,
+                    height: 45,
+                    color: Colors.grey.shade300,
+                    child: const Icon(Icons.image, size: 20, color: Colors.grey),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(widget.itemName, style: const TextStyle(fontSize: 12)),
+                      const SizedBox(height: 4),
+                      Text(widget.qty, style: const TextStyle(fontSize: 11)),
+                    ],
+                  ),
+                ),
+                Text(widget.price, style: const TextStyle(fontSize: 10)),
+              ],
+            ),
 
           const SizedBox(height: 18),
           const Divider(),
@@ -486,6 +543,19 @@ class _OrderCardState extends State<OrderCard> {
                               total: widget.total,
                               status: widget.status,
                               paymentMethod: widget.paymentMethod,
+                              orderItems: widget.orderItemsData.map((item) {
+                                double itemPrice = 0;
+                                if (item['harga'] != null) {
+                                  itemPrice = double.tryParse(item['harga'].toString()) ?? 0;
+                                }
+                                return OrderItem(
+                                  name: item['nama_produk'] ?? widget.itemName,
+                                  image: item['gambar'] ?? widget.image,
+                                  size: item['size'] ?? '',
+                                  quantity: int.tryParse(item['qty'].toString()) ?? 1,
+                                  price: itemPrice,
+                                );
+                              }).toList(),
                             ),
                           ),
                         );

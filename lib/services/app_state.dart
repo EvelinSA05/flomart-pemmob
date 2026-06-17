@@ -49,6 +49,7 @@ class AppOrder {
   final List<String> buttons;
   final bool showRating;
   final String paymentMethod;
+  final List<Map<String, dynamic>> orderItemsData;
 
   AppOrder({
     required this.orderId,
@@ -62,6 +63,7 @@ class AppOrder {
     this.buttons = const ['Detail Pesanan', 'Hubungi Penjual'],
     this.showRating = false,
     this.paymentMethod = 'Transfer Bank BCA',
+    this.orderItemsData = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -77,6 +79,7 @@ class AppOrder {
       'buttons': buttons,
       'showRating': showRating,
       'paymentMethod': paymentMethod,
+      'orderItemsData': orderItemsData,
     };
   }
 }
@@ -271,12 +274,22 @@ class AppState extends ChangeNotifier {
         
         // Handle items
         List<dynamic> items = data['items'] ?? [];
+        List<Map<String, dynamic>> parsedItemsData = [];
         String itemName = 'Unknown Item';
         String imagePath = 'assets/img/produk/dummy.png';
         String qty = '1x';
         String price = 'Rp 0';
 
         if (items.isNotEmpty) {
+          for (var item in items) {
+            if (item is Map) {
+              parsedItemsData.add(Map<String, dynamic>.from(item));
+            } else if (item is String) {
+              try {
+                parsedItemsData.add(Map<String, dynamic>.from(json.decode(item)));
+              } catch(e) {}
+            }
+          }
           if (items[0] is Map) {
              itemName = items[0]['nama_produk'] ?? itemName;
              qty = '${items[0]['qty'] ?? 1}x';
@@ -311,6 +324,7 @@ class AppState extends ChangeNotifier {
           buttons: const ['Detail Pesanan', 'Hubungi Penjual'],
           showRating: false,
           paymentMethod: paymentMethod,
+          orderItemsData: parsedItemsData,
         ));
       }
       notifyListeners();
