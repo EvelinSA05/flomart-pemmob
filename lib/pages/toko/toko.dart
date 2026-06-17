@@ -65,6 +65,12 @@ class ShopPage extends StatefulWidget {
 
 class _ShopPageState extends State<ShopPage> {
   String _searchQuery = '';
+  final Set<String> _selectedJenisBenih = {};
+  final Set<String> _selectedJenisTanah = {};
+  final Set<String> _selectedKondisi = {};
+  double? _minPrice;
+  double? _maxPrice;
+  double? _minRating;
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +102,19 @@ class _ShopPageState extends State<ShopPage> {
                       },
                     ),
                     const SizedBox(height: 10),
-                    const _FilterPanel(),
+                    _FilterPanel(
+                      onJenisBenihChanged: (s) => setState(() => _selectedJenisBenih
+                        ..clear()
+                        ..addAll(s)),
+                      onJenisTanahChanged: (s) => setState(() => _selectedJenisTanah
+                        ..clear()
+                        ..addAll(s)),
+                      onKondisiChanged: (s) => setState(() => _selectedKondisi
+                        ..clear()
+                        ..addAll(s)),
+                      onPriceChanged: (min, max) => setState(() { _minPrice = min; _maxPrice = max; }),
+                      onRatingChanged: (r) => setState(() => _minRating = r),
+                    ),
                     const SizedBox(height: 12),
                     StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance.collection('products').snapshots(),
@@ -110,11 +128,33 @@ class _ShopPageState extends State<ShopPage> {
 
                         final docs = snapshot.data?.docs ?? [];
                         
-                        // Client-side filtering by name
+                        // Client-side filtering by name and selected filters
                         final filteredDocs = docs.where((doc) {
                           final data = doc.data() as Map<String, dynamic>;
                           final name = (data['name'] ?? '').toString().toLowerCase();
-                          return name.contains(_searchQuery);
+                          if (!name.contains(_searchQuery)) return false;
+
+                          // Jenis Benih
+                          final jenis = (data['category'] ?? '').toString();
+                          if (_selectedJenisBenih.isNotEmpty && !_selectedJenisBenih.contains(jenis)) return false;
+
+                          // Jenis Tanah and Kondisi (these fields may be absent in product doc)
+                          final jenisTanah = (data['jenis_tanah'] ?? '').toString();
+                          if (_selectedJenisTanah.isNotEmpty && !_selectedJenisTanah.contains(jenisTanah)) return false;
+
+                          final kondisi = (data['kondisi'] ?? '').toString();
+                          if (_selectedKondisi.isNotEmpty && !_selectedKondisi.contains(kondisi)) return false;
+
+                          // Price filter: data['price'] expected numeric
+                          final priceNum = (data['price'] is num) ? (data['price'] as num).toDouble() : double.tryParse(data['price']?.toString() ?? '') ?? 0.0;
+                          if (_minPrice != null && priceNum < _minPrice!) return false;
+                          if (_maxPrice != null && priceNum > _maxPrice!) return false;
+
+                          // Rating filter
+                          final rating = (data['rating'] is num) ? (data['rating'] as num).toDouble() : double.tryParse(data['rating']?.toString() ?? '') ?? 0.0;
+                          if (_minRating != null && rating < _minRating!) return false;
+
+                          return true;
                         }).toList();
 
                         if (filteredDocs.isEmpty) {
@@ -189,8 +229,37 @@ class _FilterAndSearchRow extends StatelessWidget {
   }
 }
 
-class _FilterPanel extends StatelessWidget {
-  const _FilterPanel();
+class _FilterPanel extends StatefulWidget {
+  const _FilterPanel({
+    this.onJenisBenihChanged,
+    this.onJenisTanahChanged,
+    this.onKondisiChanged,
+    this.onPriceChanged,
+    this.onRatingChanged,
+    super.key,
+  });
+
+  final ValueChanged<Set<String>>? onJenisBenihChanged;
+  final ValueChanged<Set<String>>? onJenisTanahChanged;
+  final ValueChanged<Set<String>>? onKondisiChanged;
+  final void Function(double? min, double? max)? onPriceChanged;
+  final ValueChanged<double?>? onRatingChanged;
+
+  @override
+  State<_FilterPanel> createState() => _FilterPanelState();
+}
+
+class _FilterPanelState extends State<_FilterPanel> {
+  final TextEditingController _minController = TextEditingController();
+  final TextEditingController _maxController = TextEditingController();
+  double? _selectedRating;
+
+  @override
+  void dispose() {
+    _minController.dispose();
+    _maxController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +286,7 @@ class _FilterPanel extends StatelessWidget {
                     'Benih Herbal',
                     'Benih Tanaman Hias',
                   ],
+                  onSelectionChanged: widget.onJenisBenihChanged,
                 ),
               ),
               const SizedBox(width: 10),
@@ -231,6 +301,7 @@ class _FilterPanel extends StatelessWidget {
                     'Pasir',
                     'Humus',
                   ],
+                  onSelectionChanged: widget.onJenisTanahChanged,
                 ),
               ),
               const SizedBox(width: 10),
@@ -243,6 +314,7 @@ class _FilterPanel extends StatelessWidget {
                     'Dataran Rendah',
                     'Dataran Tinggi',
                   ],
+                  onSelectionChanged: widget.onKondisiChanged,
                 ),
               ),
             ],
@@ -264,9 +336,9 @@ class _FilterPanel extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    const _PriceField(hint: 'Harga Awal'),
+                    _PriceField(controller: _minController, hint: 'Harga Awal'),
                     const SizedBox(height: 6),
-                    const _PriceField(hint: 'Harga Akhir'),
+                    _PriceField(controller: _maxController, hint: 'Harga Akhir'),
                     const SizedBox(height: 8),
                     SizedBox(
                       width: 92,
@@ -279,7 +351,15 @@ class _FilterPanel extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: () {
+                          double? min;
+                          double? max;
+                          final minText = _minController.text.replaceAll(RegExp(r'[^0-9]'), '');
+                          final maxText = _maxController.text.replaceAll(RegExp(r'[^0-9]'), '');
+                          if (minText.isNotEmpty) min = double.tryParse(minText);
+                          if (maxText.isNotEmpty) max = double.tryParse(maxText);
+                          widget.onPriceChanged?.call(min, max);
+                        },
                         child: const Text(
                           'Terapkan',
                           style: TextStyle(
@@ -293,7 +373,10 @@ class _FilterPanel extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(child: _RatingColumn()),
+              Expanded(child: _RatingColumn(onChanged: (r) {
+                setState(() => _selectedRating = r);
+                widget.onRatingChanged?.call(r);
+              })),
               const Spacer(),
             ],
           ),
@@ -544,10 +627,11 @@ class _PaginationBar extends StatelessWidget {
 }
 
 class _FilterColumn extends StatefulWidget {
-  const _FilterColumn({required this.title, required this.items});
+  const _FilterColumn({required this.title, required this.items, this.onSelectionChanged});
 
   final String title;
   final List<String> items;
+  final ValueChanged<Set<String>>? onSelectionChanged;
 
   @override
   State<_FilterColumn> createState() => _FilterColumnState();
@@ -583,6 +667,7 @@ class _FilterColumnState extends State<_FilterColumn> {
                     } else {
                       _selectedItems.add(item);
                     }
+                    widget.onSelectionChanged?.call(_selectedItems);
                   });
                 },
                 child: Row(
@@ -629,9 +714,10 @@ class _FilterColumnState extends State<_FilterColumn> {
 }
 
 class _PriceField extends StatelessWidget {
-  const _PriceField({required this.hint});
+  const _PriceField({required this.hint, this.controller});
 
   final String hint;
+  final TextEditingController? controller;
 
   @override
   Widget build(BuildContext context) {
@@ -639,6 +725,7 @@ class _PriceField extends StatelessWidget {
       width: 92,
       height: 30,
       child: TextField(
+        controller: controller,
         style: const TextStyle(fontSize: 10, color: Color(0xFF3D5347)),
         decoration: InputDecoration(
           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -665,8 +752,17 @@ class _PriceField extends StatelessWidget {
   }
 }
 
-class _RatingColumn extends StatelessWidget {
-  const _RatingColumn();
+class _RatingColumn extends StatefulWidget {
+  const _RatingColumn({this.onChanged});
+
+  final ValueChanged<double?>? onChanged;
+
+  @override
+  State<_RatingColumn> createState() => _RatingColumnState();
+}
+
+class _RatingColumnState extends State<_RatingColumn> {
+  double? _selected;
 
   @override
   Widget build(BuildContext context) {
@@ -685,29 +781,38 @@ class _RatingColumn extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         ...ratings.map(
-          (rating) => Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                ...List.generate(
-                  5,
-                  (index) => Padding(
-                    padding: const EdgeInsets.only(right: 2),
-                    child: Icon(
-                      Icons.star_rounded,
-                      size: 10,
-                      color: index < rating.floor()
-                          ? const Color(0xFFF0BF00)
-                          : const Color(0xFFD9D6CF),
+          (rating) => GestureDetector(
+            onTap: () {
+              setState(() {
+                _selected = _selected == rating ? null : rating;
+              });
+              widget.onChanged?.call(_selected);
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  ...List.generate(
+                    5,
+                    (index) => Padding(
+                      padding: const EdgeInsets.only(right: 2),
+                      child: Icon(
+                        Icons.star_rounded,
+                        size: 10,
+                        color: index < rating.floor() ? const Color(0xFFF0BF00) : const Color(0xFFD9D6CF),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  rating.toStringAsFixed(1),
-                  style: const TextStyle(fontSize: 9, color: Color(0xFF5E7265)),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  Text(
+                    rating.toStringAsFixed(1),
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: _selected == rating ? const Color(0xFF14824C) : const Color(0xFF5E7265),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

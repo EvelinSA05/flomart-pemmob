@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "245664334907",
-    "project_id": "flomart-eas-31a05",
-    "storage_bucket": "flomart-eas-31a05.firebasestorage.app"
+    "project_number": "885630439645",
+    "project_id": "flomart-eas-cdf44",
+    "storage_bucket": "flomart-eas-cdf44.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:245664334907:android:029dcdb1963de75bb5081e",
+        "mobilesdk_app_id": "1:885630439645:android:374749d916806fbe214b34",
         "android_client_info": {
           "package_name": "com.example.flomart_pemmob"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBv1iXXLpkVqaTN7oCitrF2tPoyjiAMvhw"
+          "current_key": "AIzaSyDXWMf1EHRR7YX2j-dLYROzIdZgBiAzf2E"
         }
       ],
       "services": {
