@@ -210,14 +210,21 @@ class _DashboardSellerPageState extends State<DashboardSellerPage> {
           _buildDrawerItem(Icons.inventory_2_rounded, 'Pesanan & Pengiriman', onTap: () {
             Navigator.pushReplacementNamed(context, '/pesanan-seller');
           }),
-          _buildDrawerItem(Icons.bar_chart_rounded, 'Data', onTap: () {
-            Navigator.pushReplacementNamed(context, '/data-seller');
-          }),
-          _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan', onTap: () {
-            Navigator.pushReplacementNamed(context, '/keuangan-seller');
-          }),
+          if (AppState().userRole != 'admin') ...[
+            _buildDrawerItem(Icons.bar_chart_rounded, 'Data', onTap: () {
+              Navigator.pushReplacementNamed(context, '/data-seller');
+            }),
+            _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan', onTap: () {
+              Navigator.pushReplacementNamed(context, '/keuangan-seller');
+            }),
+          ],
           _buildDrawerItem(Icons.settings, 'Pengaturan', onTap: () {
             Navigator.pushReplacementNamed(context, '/pengaturan-seller');
+          }),
+          const Divider(),
+          _buildDrawerItem(Icons.logout, 'Keluar', onTap: () {
+            AppState().logout();
+            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
           }),
         ],
       ),

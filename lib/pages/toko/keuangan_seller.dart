@@ -1,3 +1,4 @@
+import '../../services/app_state.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -218,14 +219,20 @@ class _KeuanganSellerPageState extends State<KeuanganSellerPage> with SingleTick
           _buildDrawerItem(Icons.inventory_2_rounded, 'Pesanan & Pengiriman', onTap: () {
             Navigator.pushReplacementNamed(context, '/pesanan-seller');
           }),
-          _buildDrawerItem(Icons.bar_chart_rounded, 'Data', onTap: () {
-            Navigator.pushReplacementNamed(context, '/data-seller');
-          }),
-          _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan', isSelected: true),
+          if (AppState().userRole != 'admin') ...[
+            _buildDrawerItem(Icons.bar_chart_rounded, 'Data', onTap: () {
+              Navigator.pushReplacementNamed(context, '/data-seller');
+            }),
+            _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan', isSelected: true),
+          ],
           _buildDrawerItem(Icons.settings, 'Pengaturan', onTap: () {
             Navigator.pushReplacementNamed(context, '/pengaturan-seller');
           }),
-        ],
+          const Divider(),
+          _buildDrawerItem(Icons.logout, 'Keluar', onTap: () {
+            AppState().logout();
+            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          })],
       ),
     );
   }
@@ -624,3 +631,5 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     return false;
   }
 }
+
+

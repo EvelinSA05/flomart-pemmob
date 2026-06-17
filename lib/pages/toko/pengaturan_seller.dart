@@ -1,3 +1,4 @@
+import '../../services/app_state.dart';
 import 'package:flutter/material.dart';
 
 class PengaturanSellerPage extends StatefulWidget {
@@ -167,14 +168,20 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
           _buildDrawerItem(Icons.inventory_2_rounded, 'Pesanan & Pengiriman', onTap: () {
             Navigator.pushReplacementNamed(context, '/pesanan-seller');
           }),
-          _buildDrawerItem(Icons.bar_chart_rounded, 'Data', onTap: () {
-            Navigator.pushReplacementNamed(context, '/data-seller');
-          }),
-          _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan', onTap: () {
-            Navigator.pushReplacementNamed(context, '/keuangan-seller');
-          }),
+          if (AppState().userRole != 'admin') ...[
+            _buildDrawerItem(Icons.bar_chart_rounded, 'Data', onTap: () {
+              Navigator.pushReplacementNamed(context, '/data-seller');
+            }),
+            _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan', onTap: () {
+              Navigator.pushReplacementNamed(context, '/keuangan-seller');
+            }),
+          ],
           _buildDrawerItem(Icons.settings, 'Pengaturan', isSelected: true),
-        ],
+          const Divider(),
+          _buildDrawerItem(Icons.logout, 'Keluar', onTap: () {
+            AppState().logout();
+            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          })],
       ),
     );
   }
@@ -243,18 +250,19 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
             ),
           ),
           const SizedBox(width: 8),
-          ElevatedButton.icon(
-            onPressed: () => _openForm(isEdit: false),
-            icon: const Icon(Icons.add, size: 16),
-            label: const Text('Tambah Alamat', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF0BF00),
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              elevation: 0,
+          if (AppState().userRole != 'owner')
+            ElevatedButton.icon(
+              onPressed: () => _openForm(isEdit: false),
+              icon: const Icon(Icons.add, size: 16),
+              label: const Text('Tambah Alamat', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF0BF00),
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                elevation: 0,
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -289,9 +297,9 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
                   Expanded(
                     child: Column(
                       children: [
-                        _buildAddressRow('Nama', _address!['nama']!, actionText: 'Ubah', actionColor: Colors.blue, onActionTap: () => _openForm(isEdit: true)),
+                        _buildAddressRow('Nama', _address!['nama']!, actionText: AppState().userRole == 'owner' ? null : 'Ubah', actionColor: Colors.blue, onActionTap: () => _openForm(isEdit: true)),
                         const SizedBox(height: 16),
-                        _buildAddressRow('Kamu/Toko', _address!['tipe']!, actionText: 'Hapus', actionColor: Colors.red, onActionTap: _deleteAddress),
+                        _buildAddressRow('Kamu/Toko', _address!['tipe']!, actionText: AppState().userRole == 'owner' ? null : 'Hapus', actionColor: Colors.red, onActionTap: _deleteAddress),
                         const SizedBox(height: 16),
                         _buildAddressRow('No. Telepon', _address!['telepon']!),
                         const SizedBox(height: 16),
@@ -543,7 +551,7 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
                           ),
                         ],
                       )
-                    else
+                    else if (AppState().userRole != 'owner')
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -591,14 +599,15 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text('Pesan', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                  Switch(
-                    value: isEnabled,
-                    onChanged: onChanged,
-                    activeThumbColor: Colors.white,
-                    activeTrackColor: const Color(0xFF14824C),
-                    inactiveThumbColor: Colors.white,
-                    inactiveTrackColor: Colors.grey,
-                  ),
+                  if (AppState().userRole != 'owner')
+                    Switch(
+                      value: isEnabled,
+                      onChanged: onChanged,
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: const Color(0xFF14824C),
+                      inactiveThumbColor: Colors.white,
+                      inactiveTrackColor: Colors.grey,
+                    ),
                 ],
               ),
               const SizedBox(height: 8),
@@ -618,7 +627,8 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text('Ubah', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 11)),
+                    if (AppState().userRole != 'owner')
+                      const Text('Ubah', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 11)),
                   ],
                 ),
               ),
@@ -683,3 +693,5 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
     );
   }
 }
+
+

@@ -1,3 +1,5 @@
+import '../profile/detail_pesanan.dart';
+import '../../services/app_state.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -532,16 +534,24 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
             Navigator.pushReplacementNamed(context, '/produk-saya');
           }),
           _buildDrawerItem(Icons.inventory_2_rounded, 'Pesanan & Pengiriman', isSelected: true),
-          _buildDrawerItem(Icons.bar_chart_rounded, 'Data', onTap: () {
-            Navigator.pushReplacementNamed(context, '/data-seller');
-          }),
-          _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan', onTap: () {
-            Navigator.pushReplacementNamed(context, '/keuangan-seller');
-          }),
+          if (AppState().userRole != 'admin') ...[
+            if (AppState().userRole != 'admin') ...[
+            _buildDrawerItem(Icons.bar_chart_rounded, 'Data', onTap: () {
+              Navigator.pushReplacementNamed(context, '/data-seller');
+            }),
+            _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan', onTap: () {
+              Navigator.pushReplacementNamed(context, '/keuangan-seller');
+            }),
+          ],
+          ],
           _buildDrawerItem(Icons.settings, 'Pengaturan', onTap: () {
             Navigator.pushReplacementNamed(context, '/pengaturan-seller');
           }),
-        ],
+          const Divider(),
+          _buildDrawerItem(Icons.logout, 'Keluar', onTap: () {
+            AppState().logout();
+            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          })],
       ),
     );
   }
@@ -786,13 +796,94 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                             else if (s == 'dikirim') btnText = 'Selesaikan Pesanan';
                             else if (s == 'menunggu pengembalian') btnText = 'Proses Pengembalian';
                             
-                            return GestureDetector(
-                              onTap: () {
-                                _showOrderActionDialog(o);
-                              },
-                              child: Text(btnText, style: const TextStyle(color: Color(0xFFF0BF00), fontSize: 10, fontWeight: FontWeight.bold)),
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (AppState().userRole != 'owner')
+                                  SizedBox(
+                                    height: 24,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        if (s == 'menunggu konfirmasi' || s == 'perlu dikirim' || s == 'dikirim' || s == 'menunggu pengembalian') {
+                                          _showOrderActionDialog(o);
+                                        } else {
+                                          if (s == 'selesai' || s == 'pembatalan' || s.contains('ditolak') || s.contains('disetujui')) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(builder: (context) => DetailPesananPage(
+                                                title: 'Detail Pesanan',
+                                                orderId: o['id'] ?? '',
+                                                image: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['image'] : 'assets/img/produk/15.png',
+                                                itemName: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['name'] : 'Item',
+                                                qty: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['qty'].toString() : '1',
+                                                price: o['amount'] ?? '',
+                                                total: o['amount'] ?? '',
+                                                status: o['status'] ?? '',
+                                                showSuccessDialog: false,
+                                                orderItems: ((o['orderItems'] ?? []) as List).map((i) => OrderItem(
+                                                  name: i['name'] ?? '',
+                                                  image: i['image'] ?? 'assets/img/produk/15.png',
+                                                  size: i['size'] ?? 'Reguler',
+                                                  quantity: int.tryParse(i['qty'].toString()) ?? 1,
+                                                  price: double.tryParse(i['price'].toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0,
+                                                )).toList(),
+                                                subtotal: double.tryParse((o['amount'] ?? '').toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0,
+                                                ongkir: 0.0,
+                                                paymentMethod: o['payment'] ?? '',
+                                                shippingMethod: o['courier'] ?? 'Reguler',
+                                                recipientName: 'Pembeli',
+                                              )),
+                                            );
+                                          }
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        elevation: 0,
+                                        padding: EdgeInsets.zero,
+                                      ),
+                                      child: Text(btnText, style: const TextStyle(fontSize: 10, color: Color(0xFFF0BF00), fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+                                if (AppState().userRole == 'owner')
+                                  SizedBox(
+                                    height: 24,
+                                    child: TextButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(builder: (context) => DetailPesananPage(
+                                            title: 'Detail Pesanan',
+                                            orderId: o['id'] ?? '',
+                                            image: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['image'] : 'assets/img/produk/15.png',
+                                            itemName: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['name'] : 'Item',
+                                            qty: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['qty'].toString() : '1',
+                                            price: o['amount'] ?? '',
+                                            total: o['amount'] ?? '',
+                                            status: o['status'] ?? '',
+                                            showSuccessDialog: false,
+                                            orderItems: ((o['orderItems'] ?? []) as List).map((i) => OrderItem(
+                                              name: i['name'] ?? '',
+                                              image: i['image'] ?? 'assets/img/produk/15.png',
+                                              size: i['size'] ?? 'Reguler',
+                                              quantity: int.tryParse(i['qty'].toString()) ?? 1,
+                                              price: double.tryParse(i['price'].toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0,
+                                            )).toList(),
+                                            subtotal: double.tryParse((o['amount'] ?? '').toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0,
+                                            ongkir: 0.0,
+                                            paymentMethod: o['payment'] ?? '',
+                                            shippingMethod: o['courier'] ?? 'Reguler',
+                                            recipientName: 'Pembeli',
+                                          )),
+                                        );
+                                      },
+                                      style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                                      child: const Text('Lihat Detail', style: TextStyle(fontSize: 10, color: Color(0xFFF0BF00), fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+                              ],
                             );
-                          }
+                          },
                         ),
                         const SizedBox(height: 4),
                         Text(o['payment'], style: const TextStyle(color: Color(0xFF14824C), fontSize: 10, fontWeight: FontWeight.bold)),
@@ -1269,3 +1360,9 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
     );
   }
 }
+
+
+
+
+
+

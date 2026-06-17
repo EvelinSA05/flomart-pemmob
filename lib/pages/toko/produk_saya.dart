@@ -1,3 +1,4 @@
+import '../../services/app_state.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -223,16 +224,24 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
           _buildDrawerItem(Icons.inventory_2_rounded, 'Pesanan & Pengiriman', onTap: () {
             Navigator.pushReplacementNamed(context, '/pesanan-seller');
           }),
-          _buildDrawerItem(Icons.bar_chart_rounded, 'Data', onTap: () {
-            Navigator.pushReplacementNamed(context, '/data-seller');
-          }),
-          _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan', onTap: () {
-            Navigator.pushReplacementNamed(context, '/keuangan-seller');
-          }),
+          if (AppState().userRole != 'admin') ...[
+            if (AppState().userRole != 'admin') ...[
+            _buildDrawerItem(Icons.bar_chart_rounded, 'Data', onTap: () {
+              Navigator.pushReplacementNamed(context, '/data-seller');
+            }),
+            _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan', onTap: () {
+              Navigator.pushReplacementNamed(context, '/keuangan-seller');
+            }),
+          ],
+          ],
           _buildDrawerItem(Icons.settings, 'Pengaturan', onTap: () {
             Navigator.pushReplacementNamed(context, '/pengaturan-seller');
           }),
-        ],
+          const Divider(),
+          _buildDrawerItem(Icons.logout, 'Keluar', onTap: () {
+            AppState().logout();
+            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          })],
       ),
     );
   }
@@ -280,19 +289,20 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
               const Text('Produk Saya', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
-          ElevatedButton.icon(
-            onPressed: () async {
-              await Navigator.pushNamed(context, '/tambah-produk');
-              _fetchProducts();
-            },
-            icon: const Icon(Icons.add, size: 18),
-            label: const Text('Tambah Produk'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF0BF00),
-              foregroundColor: Colors.black,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          if (AppState().userRole != 'owner')
+            ElevatedButton.icon(
+              onPressed: () async {
+                await Navigator.pushNamed(context, '/tambah-produk');
+                _fetchProducts();
+              },
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Tambah Produk'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF0BF00),
+                foregroundColor: Colors.black,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -473,19 +483,20 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
                       ),
                     ),
                   ),
-                  SizedBox(
-                    width: 32,
-                    child: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: () {
-                        if (p['id_produk'] != null) {
-                          _confirmDeleteProduct(p['id_produk'].toString());
-                        }
-                      },
+                  if (AppState().userRole != 'owner')
+                    SizedBox(
+                      width: 32,
+                      child: IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          if (p['id_produk'] != null) {
+                            _confirmDeleteProduct(p['id_produk'].toString());
+                          }
+                        },
+                      ),
                     ),
-                  ),
                 ],
               ),
             );
@@ -505,3 +516,6 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
     return Colors.green;
   }
 }
+
+
+

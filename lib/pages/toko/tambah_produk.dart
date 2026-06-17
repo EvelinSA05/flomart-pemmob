@@ -1,3 +1,4 @@
+import '../../services/app_state.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -252,10 +253,16 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
           }),
           _buildDrawerItem(Icons.grid_view_rounded, 'Produk', isSelected: true),
           _buildDrawerItem(Icons.inventory_2_rounded, 'Pesanan & Pengiriman'),
-          _buildDrawerItem(Icons.bar_chart_rounded, 'Data'),
-          _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan'),
+          if (AppState().userRole != 'admin') ...[
+            _buildDrawerItem(Icons.bar_chart_rounded, 'Data'),
+            _buildDrawerItem(Icons.account_balance_wallet_rounded, 'Keuangan'),
+          ],
           _buildDrawerItem(Icons.settings, 'Pengaturan'),
-        ],
+          const Divider(),
+          _buildDrawerItem(Icons.logout, 'Keluar', onTap: () {
+            AppState().logout();
+            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+          })],
       ),
     );
   }
@@ -480,3 +487,5 @@ class DashedRectPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
+
+
