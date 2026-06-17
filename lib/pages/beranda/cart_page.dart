@@ -361,6 +361,10 @@ class _CartPageState extends State<CartPage> {
                   return;
                 }
 
+                final orderStatus = _selectedPayment == 'COD'
+                    ? 'Menunggu Konfirmasi'
+                    : 'Menunggu Pembayaran';
+
                 setState(() => _isLoading = true);
 
                 try {
@@ -371,6 +375,7 @@ class _CartPageState extends State<CartPage> {
                       'qty': item.quantity,
                       'harga': price,
                       'subtotal': price * item.quantity,
+                      'gambar': item.imagePath,
                     };
                   }).toList();
 
@@ -384,7 +389,7 @@ class _CartPageState extends State<CartPage> {
                     'catatan': _catatanController.text,
                     'nama_penerima': appState.userName ?? '',
                     'items': itemsJson,
-                    'status': 'Menunggu Pembayaran',
+                    'status': orderStatus,
                     'created_at': FieldValue.serverTimestamp(),
                   });
 
@@ -410,7 +415,7 @@ class _CartPageState extends State<CartPage> {
                       title: 'Selesaikan Pembayaranmu',
                       description: 'Hai ${appState.userName} pesananmu sebesar ${_currencyFormat.format(total)} belum dibayar. Segera selesaikan pembayaranmu.',
                       imagePath: firstItem.imagePath,
-                      status: 'Belum Bayar',
+                      status: orderStatus,
                       orderId: 'FLM${data['id_pesanan']}',
                       total: _currencyFormat.format(total),
                     ));
@@ -424,9 +429,10 @@ class _CartPageState extends State<CartPage> {
                       qty: '${firstItem.size} ${firstItem.quantity}x',
                       price: firstItem.price,
                       total: _currencyFormat.format(total),
-                      status: 'Belum Bayar',
-                      buttons: const ['Pembatalan', 'Hubungi Penjual'],
+                      status: orderStatus,
+                      buttons: const ['Detail Pesanan', 'Hubungi Penjual'],
                       showRating: false,
+                      paymentMethod: _selectedPayment,
                     ));
 
                     // Clear local cart
@@ -444,7 +450,7 @@ class _CartPageState extends State<CartPage> {
                           qty: '${firstItem.size} ${firstItem.quantity}x',
                           price: firstItem.price,
                           total: _currencyFormat.format(total),
-                          status: 'Menunggu Pembayaran',
+                          status: orderStatus,
                           showSuccessDialog: true,
                           orderItems: orderItems,
                           subtotal: subtotal,

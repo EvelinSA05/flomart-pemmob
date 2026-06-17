@@ -50,6 +50,7 @@ class AppOrder {
   String status;
   final List<String> buttons;
   final bool showRating;
+  final String paymentMethod;
 
   AppOrder({
     required this.orderId,
@@ -62,6 +63,7 @@ class AppOrder {
     this.status = 'Belum Bayar',
     this.buttons = const ['Detail Pesanan', 'Hubungi Penjual'],
     this.showRating = false,
+    this.paymentMethod = 'Transfer Bank BCA',
   });
 
   Map<String, dynamic> toMap() {
@@ -76,6 +78,7 @@ class AppOrder {
       'total': total,
       'buttons': buttons,
       'showRating': showRating,
+      'paymentMethod': paymentMethod,
     };
   }
 }
@@ -264,6 +267,7 @@ class AppState extends ChangeNotifier {
              itemName = items[0]['nama_produk'] ?? itemName;
              qty = '${items[0]['qty'] ?? 1}x';
              price = 'Rp${(items[0]['harga'] ?? 0).toInt()}';
+             imagePath = items[0]['gambar'] ?? imagePath;
           } else if (items[0] is String) {
              // In case items was stored as JSON string
              try {
@@ -271,6 +275,7 @@ class AppState extends ChangeNotifier {
                 itemName = decoded['nama_produk'] ?? itemName;
                 qty = '${decoded['qty'] ?? 1}x';
                 price = 'Rp${(decoded['harga'] ?? 0).toInt()}';
+                imagePath = decoded['gambar'] ?? imagePath;
              } catch(e) {}
           }
         }
@@ -279,6 +284,7 @@ class AppState extends ChangeNotifier {
         double totalDouble = double.tryParse(data['total_harga'].toString()) ?? 0;
         String totalFormatted = 'Rp${totalDouble.toInt()}';
 
+        final paymentMethod = data['metode_pembayaran'] ?? 'Transfer Bank BCA';
         _orders.add(AppOrder(
           orderId: 'FLM${doc.id}',
           title: itemName,
@@ -290,6 +296,7 @@ class AppState extends ChangeNotifier {
           status: data['status'] ?? 'Belum Bayar',
           buttons: const ['Detail Pesanan', 'Hubungi Penjual'],
           showRating: false,
+          paymentMethod: paymentMethod,
         ));
       }
       notifyListeners();

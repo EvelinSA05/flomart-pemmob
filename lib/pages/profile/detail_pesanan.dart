@@ -161,7 +161,6 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
     );
   }
 
-  // Determine which step index the status maps to
   int get _statusIndex {
     String s = widget.status.toLowerCase();
     if (s.contains('belum bayar') || s.contains('menunggu pembayaran') || s == 'menunggu') return 0;
@@ -170,6 +169,12 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
     if (s == 'dikirim') return 3;
     if (s.contains('selesai') || s.contains('pengembalian') || s.contains('batal') || s.contains('tolak')) return 4;
     return 2;
+  }
+
+  // Determine if payment method is bank transfer (not COD)
+  bool get _isBankTransfer {
+    final paymentMethod = widget.paymentMethod.toLowerCase();
+    return !paymentMethod.contains('cod') && !paymentMethod.contains('tunai');
   }
 
   @override
@@ -190,9 +195,11 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
                     const SizedBox(height: 12),
                     _buildSellerCard(),
                     const SizedBox(height: 12),
-                    _buildVirtualAccountCard(context),
-                    const SizedBox(height: 12),
-                    if (_statusIndex == 0) ...[
+                    if (_isBankTransfer) ...[
+                      _buildVirtualAccountCard(context),
+                      const SizedBox(height: 12),
+                    ],
+                    if (_statusIndex == 0 && _isBankTransfer) ...[
                       _buildUploadBuktiCard(context),
                       const SizedBox(height: 12),
                     ],
@@ -477,6 +484,45 @@ class _DetailPesananPageState extends State<DetailPesananPage> {
 
   // ===================== UPLOAD BUKTI =====================
   Widget _buildUploadBuktiCard(BuildContext context) {
+    final isCOD = !_isBankTransfer;
+    
+    if (isCOD) {
+      return _card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Pembayaran Cash On Delivery (COD)', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 12),
+            const Text(
+              'Pesanan Anda akan dikirim sesuai jadwal yang ditentukan. Anda dapat membayar langsung saat barang diterima dari kurir pengiriman.',
+              style: TextStyle(fontSize: 12, height: 1.5, color: Colors.black87),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF0F8FF),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF14824C), width: 1),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: Color(0xFF14824C), size: 20),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Pastikan Anda siap dengan uang tunai saat pengiriman tiba.',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF14824C), height: 1.4),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return _card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

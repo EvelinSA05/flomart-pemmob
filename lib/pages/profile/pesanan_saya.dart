@@ -22,6 +22,13 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
     'Selesai',
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    // Refresh orders from Firestore when page opens
+    AppState().fetchOrders();
+  }
+
   // Orders will now be fetched dynamically from Firebase via AppState
 
   @override
@@ -63,21 +70,22 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
                 itemBuilder: (context, index) {
                   final order = filteredOrders[index];
                   
-                  List<String> dynamicButtons = List<String>.from(order['buttons']);
-                  if (order['status'] == 'Belum Bayar' || order['status'] == 'Menunggu Pembayaran') {
-                    if (!dynamicButtons.contains('Bayar Sekarang')) {
-                      dynamicButtons.insert(0, 'Bayar Sekarang');
-                    }
-                  } else if (order['status']?.toString().toLowerCase() == 'menunggu konfirmasi') {
-                    dynamicButtons.remove('Bayar Sekarang');
-                    dynamicButtons.remove('Pembatalan');
-                  } else if (order['status']?.toString().toLowerCase() == 'selesai') {
-                    if (!dynamicButtons.contains('Ajukan Pengembalian')) {
-                      dynamicButtons.insert(0, 'Ajukan Pengembalian');
-                    }
-                  } else if (order['status']?.toString().toLowerCase() == 'menunggu pengembalian' || order['status']?.toString().toLowerCase() == 'pengembalian disetujui' || order['status']?.toString().toLowerCase() == 'pengembalian ditolak') {
-                    dynamicButtons.clear();
-                    dynamicButtons.add('Detail Pesanan');
+                  final paymentMethod = (order['paymentMethod'] ?? 'Transfer Bank BCA').toString();
+                  final isCOD = paymentMethod.toLowerCase().contains('cod');
+                  final rawStatus = (order['status'] ?? '').toString();
+                  final status = (isCOD && (rawStatus.toLowerCase() == 'belum bayar' || rawStatus.toLowerCase() == 'menunggu pembayaran'))
+                      ? 'Menunggu Konfirmasi'
+                      : rawStatus;
+
+                  final List<String> dynamicButtons = [];
+                  if (isCOD) {
+                    dynamicButtons.addAll(['Detail Pesanan', 'Hubungi Penjual']);
+                  } else if (status.toLowerCase() == 'belum bayar' || status.toLowerCase() == 'menunggu pembayaran') {
+                    dynamicButtons.addAll(['Upload Bukti Pembayaran', 'Pembatalan', 'Hubungi Penjual']);
+                  } else if (status.toLowerCase() == 'menunggu konfirmasi') {
+                    dynamicButtons.addAll(['Detail Pesanan', 'Hubungi Penjual']);
+                  } else {
+                    dynamicButtons.addAll(List<String>.from(order['buttons'] ?? ['Detail Pesanan', 'Hubungi Penjual']));
                   }
 
                   return OrderCard(
@@ -88,9 +96,10 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
                     qty: order['qty'],
                     price: order['price'],
                     total: order['total'],
-                    status: order['status'],
+                    status: status,
                     buttons: dynamicButtons,
                     showRating: order['showRating'],
+                    paymentMethod: order['paymentMethod'] ?? 'Transfer Bank BCA',
                     onCancel: () {
                       // Batal order handled elsewhere if needed
                     },
@@ -181,6 +190,7 @@ class OrderCard extends StatefulWidget {
   final String status;
   final List<String> buttons;
   final bool showRating;
+  final String paymentMethod;
   final VoidCallback? onCancel;
 
   const OrderCard({
@@ -195,6 +205,7 @@ class OrderCard extends StatefulWidget {
     required this.status,
     required this.buttons,
     this.showRating = false,
+    this.paymentMethod = 'Transfer Bank BCA',
     this.onCancel,
   });
 
@@ -339,6 +350,7 @@ class _OrderCardState extends State<OrderCard> {
               price: widget.price,
               total: widget.total,
               status: widget.status,
+              paymentMethod: widget.paymentMethod,
             ),
           ),
         );
@@ -473,6 +485,7 @@ class _OrderCardState extends State<OrderCard> {
                               price: widget.price,
                               total: widget.total,
                               status: widget.status,
+                              paymentMethod: widget.paymentMethod,
                             ),
                           ),
                         );
