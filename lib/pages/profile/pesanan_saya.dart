@@ -47,7 +47,7 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
                 if (tab == 'belum bayar') {
                   return status == 'belum bayar' || status == 'menunggu pembayaran';
                 } else if (tab == 'dikemas') {
-                  return status == 'dikemas' || status == 'diproses' || status == 'menunggu konfirmasi';
+                  return status == 'dikemas' || status == 'diproses' || status == 'menunggu konfirmasi' || status == 'perlu dikirim';
                 } else if (tab == 'dikirim') {
                   return status == 'dikirim';
                 } else if (tab == 'selesai') {
@@ -96,6 +96,8 @@ class _PesananSayaPageState extends State<PesananSayaPage> {
                     qty: order['qty'],
                     price: order['price'],
                     total: order['total'],
+                    subtotal: order['subtotal'] ?? 0.0,
+                    ongkir: order['ongkir'] ?? 0.0,
                     status: status,
                     buttons: dynamicButtons,
                     showRating: order['showRating'],
@@ -188,6 +190,8 @@ class OrderCard extends StatefulWidget {
   final String qty;
   final String price;
   final String total;
+  final double subtotal;
+  final double ongkir;
   final String status;
   final List<String> buttons;
   final bool showRating;
@@ -204,6 +208,8 @@ class OrderCard extends StatefulWidget {
     required this.qty,
     required this.price,
     required this.total,
+    this.subtotal = 0,
+    this.ongkir = 0,
     required this.status,
     required this.buttons,
     this.showRating = false,
@@ -352,6 +358,8 @@ class _OrderCardState extends State<OrderCard> {
               qty: widget.qty,
               price: widget.price,
               total: widget.total,
+              subtotal: widget.subtotal,
+              ongkir: widget.ongkir,
               status: widget.status,
               paymentMethod: widget.paymentMethod,
               orderItems: widget.orderItemsData.map((item) {
@@ -541,6 +549,8 @@ class _OrderCardState extends State<OrderCard> {
                               qty: widget.qty,
                               price: widget.price,
                               total: widget.total,
+                              subtotal: widget.subtotal,
+                              ongkir: widget.ongkir,
                               status: widget.status,
                               paymentMethod: widget.paymentMethod,
                               orderItems: widget.orderItemsData.map((item) {

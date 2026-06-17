@@ -45,6 +45,8 @@ class AppOrder {
   final String qty;
   final String price;
   final String total;
+  final double subtotal;
+  final double ongkir;
   String status;
   final List<String> buttons;
   final bool showRating;
@@ -59,6 +61,8 @@ class AppOrder {
     required this.qty,
     required this.price,
     required this.total,
+    this.subtotal = 0,
+    this.ongkir = 0,
     this.status = 'Belum Bayar',
     this.buttons = const ['Detail Pesanan', 'Hubungi Penjual'],
     this.showRating = false,
@@ -76,6 +80,8 @@ class AppOrder {
       'qty': qty,
       'price': price,
       'total': total,
+      'subtotal': subtotal,
+      'ongkir': ongkir,
       'buttons': buttons,
       'showRating': showRating,
       'paymentMethod': paymentMethod,
@@ -307,9 +313,11 @@ class AppState extends ChangeNotifier {
           }
         }
 
-        // Format total
         double totalDouble = double.tryParse(data['total_harga'].toString()) ?? 0;
         String totalFormatted = 'Rp${totalDouble.toInt()}';
+        
+        double subtotalDouble = double.tryParse(data['subtotal']?.toString() ?? '0') ?? 0;
+        double ongkirDouble = double.tryParse(data['ongkir']?.toString() ?? '0') ?? 0;
 
         final paymentMethod = data['metode_pembayaran'] ?? 'Transfer Bank BCA';
         _orders.add(AppOrder(
@@ -320,6 +328,8 @@ class AppState extends ChangeNotifier {
           qty: qty,
           price: price,
           total: totalFormatted,
+          subtotal: subtotalDouble,
+          ongkir: ongkirDouble,
           status: data['status'] ?? 'Belum Bayar',
           buttons: const ['Detail Pesanan', 'Hubungi Penjual'],
           showRating: false,
