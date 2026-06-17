@@ -115,8 +115,12 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
           'bukti_pengembalian': data['bukti_pengembalian'],
           'isSelected': false,
           'orderItems': parsedItems,
+          '_rawDate': createdAt, // Keep raw date for sorting
         });
       }
+      
+      // Sort locally by descending date so newest orders are at top
+      tempOrders.sort((a, b) => (b['_rawDate'] as DateTime).compareTo(a['_rawDate'] as DateTime));
       
       setState(() {
         _allOrders = tempOrders;
@@ -145,7 +149,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
         
         _orders = _allOrders.where((o) {
           String s = o['status']?.toString().toLowerCase() ?? '';
-          if (index == 1 && s == 'menunggu konfirmasi') return true;
+          if (index == 2 && s == 'menunggu konfirmasi') return true;
           if (index == 5 && (s == 'menunggu pengembalian' || s == 'pengembalian ditolak' || s == 'pengembalian disetujui')) return true;
           return s == filterStatus.toLowerCase();
         }).toList();
@@ -162,7 +166,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
         String currentStatus = order['status'].toString().toLowerCase();
         
         if (currentStatus == 'menunggu konfirmasi') {
-          nextStatus = 'perlu dikirim';
+          nextStatus = 'dikirim';
           if (order['payment'].toString().toLowerCase() == 'cod') {
             actionText = 'Proses Pesanan COD';
           } else {
@@ -342,6 +346,19 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
       await FirebaseFirestore.instance.collection('orders').doc(id).update({
         'status': newStatus.toLowerCase(),
       });
+      
+      int targetIndex = _mainTabController.index;
+      String statusLower = newStatus.toLowerCase();
+      if (statusLower == 'belum bayar') targetIndex = 1;
+      else if (statusLower == 'perlu dikirim') targetIndex = 2;
+      else if (statusLower == 'dikirim') targetIndex = 3;
+      else if (statusLower == 'selesai') targetIndex = 4;
+      else if (statusLower.contains('pengembalian')) targetIndex = 5;
+
+      if (_mainTabController.index != targetIndex) {
+        _mainTabController.animateTo(targetIndex);
+      }
+
       await _fetchOrders(); // Refresh data
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status berhasil diubah menjadi $newStatus', style: const TextStyle(color: Colors.white)), backgroundColor: Colors.green));
     } catch (e) {
@@ -724,8 +741,8 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                               ),
                             ],
                           ),
-                        // Overall total row if multiple items
-                        if (o['orderItems'] != null && (o['orderItems'] as List).length > 1)
+                        // Overall total row
+                        if (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 4.0),
                             child: Row(
