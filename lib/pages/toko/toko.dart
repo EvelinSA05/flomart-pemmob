@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/app_state.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../app_routes.dart';
@@ -71,6 +72,9 @@ class _ShopPageState extends State<ShopPage> {
   double? _maxPrice;
   double? _minRating;
 
+  int _currentPage = 0;
+  static const int _itemsPerPage = 6;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,22 +101,33 @@ class _ShopPageState extends State<ShopPage> {
                       onChanged: (value) {
                         setState(() {
                           _searchQuery = value.toLowerCase();
+                          _currentPage = 0;
                         });
                       },
                     ),
                     const SizedBox(height: 10),
                     _FilterPanel(
-                      onJenisBenihChanged: (s) => setState(() => _selectedJenisBenih
-                        ..clear()
-                        ..addAll(s)),
-                      onJenisTanahChanged: (s) => setState(() => _selectedJenisTanah
-                        ..clear()
-                        ..addAll(s)),
-                      onKondisiChanged: (s) => setState(() => _selectedKondisi
-                        ..clear()
-                        ..addAll(s)),
-                      onPriceChanged: (min, max) => setState(() { _minPrice = min; _maxPrice = max; }),
-                      onRatingChanged: (r) => setState(() => _minRating = r),
+                      onJenisBenihChanged: (s) => setState(() {
+                        _selectedJenisBenih..clear()..addAll(s);
+                        _currentPage = 0;
+                      }),
+                      onJenisTanahChanged: (s) => setState(() {
+                        _selectedJenisTanah..clear()..addAll(s);
+                        _currentPage = 0;
+                      }),
+                      onKondisiChanged: (s) => setState(() {
+                        _selectedKondisi..clear()..addAll(s);
+                        _currentPage = 0;
+                      }),
+                      onPriceChanged: (min, max) => setState(() { 
+                        _minPrice = min; 
+                        _maxPrice = max; 
+                        _currentPage = 0;
+                      }),
+                      onRatingChanged: (r) => setState(() {
+                        _minRating = r;
+                        _currentPage = 0;
+                      }),
                     ),
                     const SizedBox(height: 12),
                     StreamBuilder<QuerySnapshot>(
@@ -163,7 +178,36 @@ class _ShopPageState extends State<ShopPage> {
                           );
                         }
 
-                        return _ProductGridFirebase(docs: filteredDocs);
+                        int pageCount = (filteredDocs.length / _itemsPerPage).ceil();
+                        // Adjust current page if needed
+                        if (_currentPage >= pageCount) {
+                          _currentPage = pageCount - 1;
+                        }
+                        if (_currentPage < 0) _currentPage = 0;
+
+                        final startIndex = _currentPage * _itemsPerPage;
+                        final endIndex = (startIndex + _itemsPerPage < filteredDocs.length) 
+                            ? startIndex + _itemsPerPage 
+                            : filteredDocs.length;
+                        
+                        final paginatedDocs = filteredDocs.sublist(startIndex, endIndex);
+
+                        return Column(
+                          children: [
+                            _ProductGridFirebase(docs: paginatedDocs),
+                            const SizedBox(height: 16),
+                            if (pageCount > 1)
+                              _PaginationBar(
+                                currentPage: _currentPage,
+                                pageCount: pageCount,
+                                onPageChanged: (index) {
+                                  setState(() {
+                                    _currentPage = index;
+                                  });
+                                },
+                              ),
+                          ],
+                        );
                       },
                     ),
                     const SizedBox(height: 24),
@@ -471,8 +515,7 @@ class _ProductCard extends StatelessWidget {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            product.image,
+                          child: buildProductImage(product.image,
                             fit: BoxFit.contain,
                           ),
                         ),
@@ -857,3 +900,4 @@ class _PagePill extends StatelessWidget {
     );
   }
 }
+

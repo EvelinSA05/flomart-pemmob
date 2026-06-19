@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -557,3 +559,16 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 }
+
+
+Widget buildProductImage(String imagePath, {BoxFit fit = BoxFit.cover, double? width, double? height}) {
+  if (imagePath.startsWith('http')) {
+    return Image.network(imagePath, fit: fit, width: width, height: height, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', fit: fit, width: width, height: height));
+  } else if (imagePath.startsWith('data:image')) {
+    return Image.memory(base64Decode(imagePath.split(',').last), fit: fit, width: width, height: height, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', fit: fit, width: width, height: height));
+  } else {
+    return Image.asset(imagePath, fit: fit, width: width, height: height, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', fit: fit, width: width, height: height));
+  }
+}
+
+
