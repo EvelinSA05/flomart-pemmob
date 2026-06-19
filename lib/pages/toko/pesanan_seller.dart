@@ -304,7 +304,9 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
     );
   }
 
-  void _showBuktiDialog(String imageUrl) {
+  void _showBuktiDialog(dynamic rawUrl) {
+    String imageUrl = rawUrl?.toString() ?? '';
+    if (imageUrl.isEmpty) return;
     showDialog(
       context: context,
       builder: (context) {
@@ -316,14 +318,9 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
               InteractiveViewer(
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    imageUrl,
+                  child: buildProductImage(imageUrl,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.all(32.0),
-                      child: const Text('Gagal memuat gambar', style: TextStyle(color: Colors.red)),
-                    ),
+                    
                   ),
                 ),
               ),
@@ -813,19 +810,19 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                                               MaterialPageRoute(builder: (context) => DetailPesananPage(
                                                 title: 'Detail Pesanan',
                                                 orderId: o['id'] ?? '',
-                                                image: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['image'] : 'assets/img/produk/15.png',
-                                                itemName: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['name'] : 'Item',
-                                                qty: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['qty'].toString() : '1',
+                                                image: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? (o['orderItems'][0]['gambar'] ?? o['orderItems'][0]['image'] ?? 'assets/img/produk/15.png') : 'assets/img/produk/15.png',
+                                                itemName: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? (o['orderItems'][0]['nama_produk'] ?? o['orderItems'][0]['name'] ?? 'Item') : 'Item',
+                                                qty: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? (o['orderItems'][0]['qty']?.toString() ?? '1') : '1',
                                                 price: o['amount'] ?? '',
                                                 total: o['amount'] ?? '',
                                                 status: o['status'] ?? '',
                                                 showSuccessDialog: false,
                                                 orderItems: ((o['orderItems'] ?? []) as List).map((i) => OrderItem(
-                                                  name: i['name'] ?? '',
-                                                  image: i['image'] ?? 'assets/img/produk/15.png',
+                                                  name: i['nama_produk'] ?? i['name'] ?? '',
+                                                  image: i['gambar'] ?? i['image'] ?? 'assets/img/produk/15.png',
                                                   size: i['size'] ?? 'Reguler',
-                                                  quantity: int.tryParse(i['qty'].toString()) ?? 1,
-                                                  price: double.tryParse(i['price'].toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0,
+                                                  quantity: int.tryParse(i['qty']?.toString() ?? '1') ?? 1,
+                                                  price: double.tryParse((i['harga'] ?? i['price'])?.toString().replaceAll(RegExp(r'[^0-9]'), '') ?? '0') ?? 0.0,
                                                 )).toList(),
                                                 subtotal: double.tryParse((o['amount'] ?? '').toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0,
                                                 ongkir: 0.0,
@@ -855,19 +852,19 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
                                           MaterialPageRoute(builder: (context) => DetailPesananPage(
                                             title: 'Detail Pesanan',
                                             orderId: o['id'] ?? '',
-                                            image: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['image'] : 'assets/img/produk/15.png',
-                                            itemName: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['name'] : 'Item',
-                                            qty: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? o['orderItems'][0]['qty'].toString() : '1',
+                                            image: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? (o['orderItems'][0]['gambar'] ?? o['orderItems'][0]['image'] ?? 'assets/img/produk/15.png') : 'assets/img/produk/15.png',
+                                            itemName: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? (o['orderItems'][0]['nama_produk'] ?? o['orderItems'][0]['name'] ?? 'Item') : 'Item',
+                                            qty: (o['orderItems'] != null && (o['orderItems'] as List).isNotEmpty) ? (o['orderItems'][0]['qty']?.toString() ?? '1') : '1',
                                             price: o['amount'] ?? '',
                                             total: o['amount'] ?? '',
                                             status: o['status'] ?? '',
                                             showSuccessDialog: false,
                                             orderItems: ((o['orderItems'] ?? []) as List).map((i) => OrderItem(
-                                              name: i['name'] ?? '',
-                                              image: i['image'] ?? 'assets/img/produk/15.png',
+                                              name: i['nama_produk'] ?? i['name'] ?? '',
+                                              image: i['gambar'] ?? i['image'] ?? 'assets/img/produk/15.png',
                                               size: i['size'] ?? 'Reguler',
-                                              quantity: int.tryParse(i['qty'].toString()) ?? 1,
-                                              price: double.tryParse(i['price'].toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0,
+                                              quantity: int.tryParse(i['qty']?.toString() ?? '1') ?? 1,
+                                              price: double.tryParse((i['harga'] ?? i['price'])?.toString().replaceAll(RegExp(r'[^0-9]'), '') ?? '0') ?? 0.0,
                                             )).toList(),
                                             subtotal: double.tryParse((o['amount'] ?? '').toString().replaceAll(RegExp(r'[^0-9]'), '')) ?? 0.0,
                                             ongkir: 0.0,
@@ -1360,6 +1357,9 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
     );
   }
 }
+
+
+
 
 
 
