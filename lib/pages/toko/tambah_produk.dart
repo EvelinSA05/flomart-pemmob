@@ -26,11 +26,23 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
       _hargaController.text = widget.productData!['price']?.toString() ?? '';
       _deskripsiController.text = widget.productData!['desc'] ?? '';
       _stokController.text = widget.productData!['stok']?.toString() ?? '';
+      _unitController.text = widget.productData!['satuan_stok'] ?? 'Buah';
+      _subKategoriController.text = widget.productData!['sub_kategori'] ?? '';
+      _garansiController.text = widget.productData!['garansi']?.toString() ?? '';
+      _ratingController.text = widget.productData!['rating']?.toString() ?? '0.0';
+      
+      String tanah = widget.productData!['jenis_tanah'] ?? 'Gambut';
+      if (['Aluvial', 'Andosol', 'Gambut', 'Latosol', 'Pasir', 'Humus'].contains(tanah)) _selectedJenisTanah = tanah;
+      
+      String iklim = widget.productData!['iklim_ideal'] ?? 'Musim Hujan';
+      if (['Musim Hujan', 'Musim Panas', 'Dataran Rendah', 'Dataran Tinggi'].contains(iklim)) _selectedIklim = iklim;
       
       String cat = widget.productData!['category'] ?? '';
-      if (cat.contains('Bunga')) _selectedKategori = 'Bunga';
+      if (cat.contains('Bunga') || cat.contains('Tanaman Hias')) _selectedKategori = 'Tanaman Hias';
       else if (cat.contains('Buah')) _selectedKategori = 'Buah';
       else if (cat.contains('Sayur') || cat.contains('Sayuran')) _selectedKategori = 'Sayur';
+      else if (cat.contains('Pangan')) _selectedKategori = 'Pangan';
+      else if (cat.contains('Herbal')) _selectedKategori = 'Herbal';
     }
   }
 
@@ -68,11 +80,13 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
     String harga = hargaRaw.replaceAll(RegExp(r'[^0-9]'), '');
     double priceValue = double.tryParse(harga) ?? 0.0;
 
-    String categoryName = 'Benih Sayuran';
-    if (_selectedKategori == 'Bunga') {
-      categoryName = 'Benih Bunga';
+    String categoryName = 'Benih Sayur';
+    if (_selectedKategori == 'Tanaman Hias') {
+      categoryName = 'Benih Tanaman Hias';
     } else if (_selectedKategori == 'Buah') categoryName = 'Benih Buah';
-    else if (_selectedKategori == 'Sayur') categoryName = 'Benih Sayuran';
+    else if (_selectedKategori == 'Sayur') categoryName = 'Benih Sayur';
+    else if (_selectedKategori == 'Pangan') categoryName = 'Benih Pangan';
+    else if (_selectedKategori == 'Herbal') categoryName = 'Benih Herbal';
 
     try {
       String message = '';
@@ -88,6 +102,12 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
           'category': categoryName,
           'desc': deskripsi,
           'stok': int.tryParse(_stokController.text.trim()) ?? 0,
+          'satuan_stok': _unitController.text.trim(),
+          'sub_kategori': _subKategoriController.text.trim(),
+          'jenis_tanah': _selectedJenisTanah,
+          'iklim_ideal': _selectedIklim,
+          'garansi': _garansiController.text.trim(),
+          'rating': double.tryParse(_ratingController.text.trim()) ?? 0.0,
         };
         if (base64Image != null) updateData['image'] = base64Image;
         
@@ -99,11 +119,16 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
           'id': docRef.id,
           'name': nama,
           'price': priceValue,
-          'rating': 0.0,
+          'rating': double.tryParse(_ratingController.text.trim()) ?? 0.0,
           'category': categoryName,
           'image': base64Image ?? 'assets/img/produk/15.png',
           'desc': deskripsi,
           'stok': int.tryParse(_stokController.text.trim()) ?? 0,
+          'satuan_stok': _unitController.text.trim(),
+          'sub_kategori': _subKategoriController.text.trim(),
+          'jenis_tanah': _selectedJenisTanah,
+          'iklim_ideal': _selectedIklim,
+          'garansi': _garansiController.text.trim(),
         });
         message = 'Produk berhasil ditambahkan ke Firebase!';
       }
@@ -146,6 +171,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
   final TextEditingController _subKategoriController = TextEditingController();
   final TextEditingController _hargaController = TextEditingController();
   final TextEditingController _garansiController = TextEditingController();
+  final TextEditingController _ratingController = TextEditingController();
   final TextEditingController _deskripsiController = TextEditingController();
 
   Uint8List? _imageBytes;
@@ -161,7 +187,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
     }
   }
 
-  String _selectedKategori = 'Bunga';
+  String _selectedKategori = 'Sayur';
   String _selectedJenisTanah = 'Gambut';
   String _selectedIklim = 'Musim Hujan';
 
@@ -173,6 +199,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
     _subKategoriController.dispose();
     _hargaController.dispose();
     _garansiController.dispose();
+    _ratingController.dispose();
     _deskripsiController.dispose();
     super.dispose();
   }
@@ -406,21 +433,29 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
             ],
           )),
           const SizedBox(height: 16),
-          _buildFieldRow('Kategori', _buildDropdown(['Bunga', 'Buah', 'Sayur'], _selectedKategori, (val) => setState(() => _selectedKategori = val!))),
+          _buildFieldRow('Kategori', _buildDropdown(['Sayur', 'Buah', 'Pangan', 'Herbal', 'Tanaman Hias'], _selectedKategori, (val) => setState(() => _selectedKategori = val!))),
           const SizedBox(height: 16),
           _buildFieldRow('Sub Kategori', _buildTextField(_subKategoriController, 'Bunga Hias')),
           const SizedBox(height: 16),
           _buildFieldRow('Harga', _buildTextField(_hargaController, 'Rp 20.000')),
           const SizedBox(height: 16),
-          _buildFieldRow('Jenis Tanah', _buildDropdown(['Gambut', 'Lempung', 'Pasir'], _selectedJenisTanah, (val) => setState(() => _selectedJenisTanah = val!))),
+          _buildFieldRow('Jenis Tanah', _buildDropdown(['Aluvial', 'Andosol', 'Gambut', 'Latosol', 'Pasir', 'Humus'], _selectedJenisTanah, (val) => setState(() => _selectedJenisTanah = val!))),
           const SizedBox(height: 16),
-          _buildFieldRow('Iklim Ideal', _buildDropdown(['Musim Hujan', 'Kemarau', 'Semua Musim'], _selectedIklim, (val) => setState(() => _selectedIklim = val!))),
+          _buildFieldRow('Iklim Ideal', _buildDropdown(['Musim Hujan', 'Musim Panas', 'Dataran Rendah', 'Dataran Tinggi'], _selectedIklim, (val) => setState(() => _selectedIklim = val!))),
           const SizedBox(height: 16),
           _buildFieldRow('Garansi', Row(
             children: [
               Expanded(child: _buildTextField(_garansiController, '1')),
               const SizedBox(width: 12),
               const Text('Bulan', style: TextStyle(fontSize: 16)),
+            ],
+          )),
+          const SizedBox(height: 16),
+          _buildFieldRow('Rating', Row(
+            children: [
+              Expanded(child: _buildTextField(_ratingController, 'Misal: 4.8')),
+              const SizedBox(width: 12),
+              const Icon(Icons.star, color: Colors.amber, size: 20),
             ],
           )),
           const SizedBox(height: 16),
@@ -543,6 +578,10 @@ class DashedRectPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
+
+
+
+
 
 
 
