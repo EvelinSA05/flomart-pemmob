@@ -1,6 +1,8 @@
 import '../../services/app_state.dart';
 import 'package:flutter/material.dart';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class PengaturanSellerPage extends StatefulWidget {
   const PengaturanSellerPage({super.key});
 
@@ -13,6 +15,7 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
   
   bool _isFormMode = false;
   bool _isSubTabAsisten = false;
+  bool _isLoading = false;
 
   bool _isAutoReplyStandardEnabled = false;
   bool _isAutoReplyOfflineEnabled = false;
@@ -29,17 +32,52 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
     'Libur Nasional': {'isOpen': false, 'start': '00:00', 'end': '00:00'},
   };
 
-  Map<String, String>? _address = {
-    'nama': 'Agung Prasetya',
-    'tipe': 'Toko',
-    'telepon': '083183066357',
-    'alamat': 'Perumahan IKIP G.203,\nSurabaya, Jawa Timur',
-  };
+  Map<String, String>? _address = null;
 
   final _namaController = TextEditingController();
   final _tipeController = TextEditingController();
   final _teleponController = TextEditingController();
   final _alamatController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStoreData();
+  }
+
+  Future<void> _fetchStoreData() async {
+    String? userId = AppState().userId;
+    if (userId == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        setState(() {
+          _address = {
+            'nama': data['store_name'] ?? data['name'] ?? AppState().userName ?? 'Admin Flomart',
+            'tipe': data['store_type'] ?? 'Toko',
+            'telepon': data['store_phone'] ?? AppState().userEmail ?? 'Belum diatur',
+            'alamat': data['address'] ?? AppState().userAddress ?? 'Belum ada alamat',
+          };
+        });
+      } else {
+        setState(() {
+          _address = {
+            'nama': AppState().userName ?? 'Admin Flomart',
+            'tipe': 'Toko',
+            'telepon': AppState().userEmail ?? 'Belum diatur',
+            'alamat': AppState().userAddress ?? 'Belum ada alamat',
+          };
+        });
+      }
+    } catch (e) {
+      print('Error fetching store data: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -67,23 +105,63 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
     });
   }
 
-  void _saveForm() {
-    setState(() {
-      _address = {
-        'nama': _namaController.text,
-        'tipe': _tipeController.text,
-        'telepon': _teleponController.text,
-        'alamat': _alamatController.text,
-      };
-      _isFormMode = false;
-    });
-    _showSuccessDialog();
+  Future<void> _saveForm() async {
+    String? userId = AppState().userId;
+    if (userId == null) return;
+    
+    setState(() => _isLoading = true);
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'store_name': _namaController.text,
+        'store_type': _tipeController.text,
+        'store_phone': _teleponController.text,
+        'address': _alamatController.text,
+      }, SetOptions(merge: true));
+
+      if (mounted) {
+        setState(() {
+          _address = {
+            'nama': _namaController.text,
+            'tipe': _tipeController.text,
+            'telepon': _teleponController.text,
+            'alamat': _alamatController.text,
+          };
+          _isFormMode = false;
+        });
+        _showSuccessDialog();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
-  void _deleteAddress() {
-    setState(() {
-      _address = null;
-    });
+  Future<void> _deleteAddress() async {
+    String? userId = AppState().userId;
+    if (userId == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(userId).set({
+        'store_name': FieldValue.delete(),
+        'store_type': FieldValue.delete(),
+        'store_phone': FieldValue.delete(),
+        'address': FieldValue.delete(),
+      }, SetOptions(merge: true));
+      
+      if (mounted) {
+        setState(() {
+          _address = null;
+        });
+      }
+    } catch (e) {
+      print('Error deleting address: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -99,11 +177,13 @@ class _PengaturanSellerPageState extends State<PengaturanSellerPage> {
           _buildSubHeader(),
           const Divider(height: 1, thickness: 1, color: Colors.grey),
           Expanded(
-            child: SingleChildScrollView(
-              child: _isSubTabAsisten 
-                ? _buildAsistenChatView()
-                : _isFormMode ? _buildForm() : _buildAddressView(),
-            ),
+            child: _isLoading 
+              ? const Center(child: CircularProgressIndicator(color: Color(0xFF14824C)))
+              : SingleChildScrollView(
+                  child: _isSubTabAsisten 
+                    ? _buildAsistenChatView()
+                    : _isFormMode ? _buildForm() : _buildAddressView(),
+                ),
           ),
         ],
       ),
