@@ -28,8 +28,10 @@ class AppNotification {
   final String status;
   final String orderId;
   final String total;
+  final bool isRead;
 
   AppNotification({
+    this.isRead = false,
     required this.title,
     required this.description,
     required this.imagePath,
@@ -99,6 +101,7 @@ class AppState extends ChangeNotifier {
 
   final List<CartItem> _cartItems = [];
   final List<AppNotification> _notifications = [];
+  int get unreadNotificationCount => _notifications.where((n) => !n.isRead).length;
   StreamSubscription<QuerySnapshot>? _notificationSubscription;
   final List<AppOrder> _orders = [];
   bool _isLoggedIn = false;
@@ -403,6 +406,7 @@ class AppState extends ChangeNotifier {
         'status': notification.status,
         'orderId': notification.orderId,
         'total': notification.total,
+        'isRead': false,
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
@@ -430,10 +434,26 @@ class AppState extends ChangeNotifier {
           status: data['status'] ?? 'Notifikasi',
           orderId: data['orderId'] ?? '-',
           total: data['total'] ?? '-',
+          isRead: data['isRead'] ?? true, // Default to true for old notifications
         ));
       }
       notifyListeners();
     });
+  }
+
+  Future<void> markAllNotificationsAsRead() async {
+    if (_userId == null) return;
+    try {
+      final batch = FirebaseFirestore.instance.batch();
+      final docs = await FirebaseFirestore.instance.collection('users').doc(_userId).collection('notifications').where('isRead', isEqualTo: false).get();
+      if (docs.docs.isEmpty) return;
+      for (var doc in docs.docs) {
+        batch.update(doc.reference, {'isRead': true});
+      }
+      await batch.commit();
+    } catch(e) {
+      print('Error marking notifications as read: $e');
+    }
   }
 
   void clearCart() {
@@ -657,6 +677,7 @@ Widget buildProductImage(String imagePath, {BoxFit fit = BoxFit.cover, double? w
     return Image.asset(imagePath, fit: fit, width: width, height: height, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', fit: fit, width: width, height: height));
   }
 }
+
 
 
 

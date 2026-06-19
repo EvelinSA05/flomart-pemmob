@@ -2,13 +2,26 @@ import 'package:flutter/material.dart';
 import '../../services/app_state.dart';
 
 
-class NotificationPage extends StatelessWidget {
+class NotificationPage extends StatefulWidget {
   final List<Map<String, dynamic>> pesananSaya;
 
   const NotificationPage({
     super.key,
     this.pesananSaya = const [],
   });
+
+  @override
+  State<NotificationPage> createState() => _NotificationPageState();
+}
+
+class _NotificationPageState extends State<NotificationPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppState().markAllNotificationsAsRead();
+    });
+  }
 
   String _getString(Map<String, dynamic> data, List<String> keys) {
     for (final key in keys) {

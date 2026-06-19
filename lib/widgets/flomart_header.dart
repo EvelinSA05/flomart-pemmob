@@ -166,11 +166,11 @@ class FlomartHeader extends StatelessWidget implements PreferredSizeWidget {
       },
 
       splashRadius: 20,
-      icon: path == headerShopAsset
+      icon: (path == headerShopAsset || path == headerNotificationAsset)
           ? ListenableBuilder(
               listenable: AppState(),
               builder: (context, child) {
-                final count = AppState().cartItems.length;
+                final count = path == headerShopAsset ? AppState().cartItems.length : AppState().unreadNotificationCount;
                 return Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -263,3 +263,4 @@ class FlomartHeader extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 }
+
