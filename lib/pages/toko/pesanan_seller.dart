@@ -115,6 +115,7 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
           'bukti_pembayaran': data['bukti_pembayaran'],
           'alasan_pengembalian': data['alasan_pengembalian'],
           'bukti_pengembalian': data['bukti_pengembalian'],
+          'userId': data['id_user'] ?? data['userId'] ?? data['user_id'] ?? '',
           'isSelected': false,
           'orderItems': parsedItems,
           '_rawDate': createdAt, // Keep raw date for sorting
@@ -345,7 +346,59 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
       await FirebaseFirestore.instance.collection('orders').doc(id).update({
         'status': newStatus.toLowerCase(),
       });
-      
+
+      // Kirim notifikasi ke pelanggan
+      final orderData = _allOrders.firstWhere((o) => o['id'] == id, orElse: () => {});
+      print('DEBUG NOTIF: orderData isEmpty=${orderData.isEmpty}, userId=${orderData.isNotEmpty ? orderData['userId'] : 'N/A'}');
+      if (orderData.isNotEmpty && orderData['userId'] != null && orderData['userId'].toString().isNotEmpty) {
+        String customerId = orderData['userId'].toString();
+        String productName = orderData['product'] ?? 'pesananmu';
+        String notifDesc = '';
+        String notifTitle = '';
+        String s = newStatus.toLowerCase();
+
+        if (s == 'menunggu konfirmasi') {
+          notifTitle = 'Pesanan Sedang Dikemas';
+          notifDesc = '$productName sedang dikemas oleh penjual. Mohon tunggu ya!';
+        } else if (s == 'perlu dikirim') {
+          notifTitle = 'Pembayaran Dikonfirmasi';
+          notifDesc = 'Pembayaranmu untuk $productName sudah kami terima. Pesanan sedang disiapkan!';
+        } else if (s == 'dikirim') {
+          notifTitle = 'Pesanan Dikirim';
+          notifDesc = '$productName sudah dalam perjalanan. Tunggu kurir sampai ya!';
+        } else if (s == 'selesai') {
+          notifTitle = 'Pesanan Selesai';
+          notifDesc = 'Pesanan $productName sudah selesai. Terima kasih sudah berbelanja!';
+        } else if (s.contains('ditolak')) {
+          notifTitle = 'Pengembalian Ditolak';
+          notifDesc = 'Maaf, pengajuan pengembalian $productName tidak dapat kami proses.';
+        } else if (s.contains('disetujui')) {
+          notifTitle = 'Pengembalian Disetujui';
+          notifDesc = 'Pengajuan pengembalian $productName disetujui. Dana akan segera kami proses.';
+        }
+
+        print('DEBUG NOTIF: customerId=$customerId, title=$notifTitle');
+
+        if (notifTitle.isNotEmpty) {
+          try {
+          await FirebaseFirestore.instance.collection('users').doc(customerId).collection('notifications').add({
+            'title': notifTitle,
+            'description': notifDesc,
+            'imagePath': orderData['image'] ?? '',
+            'status': newStatus,
+            'orderId': id,
+            'total': orderData['amount'] ?? '',
+            'timestamp': FieldValue.serverTimestamp(),
+          });
+          print('DEBUG NOTIF: Berhasil kirim ke users/$customerId/notifications');
+          } catch (e) {
+            print('DEBUG NOTIF ERROR: $e');
+          }
+        }
+      } else {
+        print('DEBUG NOTIF: SKIP - orderData kosong atau userId kosong');
+      }
+
       int targetIndex = _mainTabController.index;
       String statusLower = newStatus.toLowerCase();
       if (statusLower == 'belum bayar') targetIndex = 1;
@@ -1357,6 +1410,9 @@ class _PesananSellerPageState extends State<PesananSellerPage> with TickerProvid
     );
   }
 }
+
+
+
 
 
 

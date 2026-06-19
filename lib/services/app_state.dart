@@ -1,10 +1,10 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 class CartItem {
   final String name;
   final String price;
@@ -99,6 +99,7 @@ class AppState extends ChangeNotifier {
 
   final List<CartItem> _cartItems = [];
   final List<AppNotification> _notifications = [];
+  StreamSubscription<QuerySnapshot>? _notificationSubscription;
   final List<AppOrder> _orders = [];
   bool _isLoggedIn = false;
 
@@ -148,6 +149,7 @@ class AppState extends ChangeNotifier {
   Future<void> loginUser(Map<String, dynamic> userData) async {
     _cartItems.clear();
     _orders.clear();
+    _notificationSubscription?.cancel();
     _notifications.clear();
     _isLoggedIn = true;
     _userId = userData['id']?.toString() ?? userData['id_user']?.toString();
@@ -187,6 +189,7 @@ class AppState extends ChangeNotifier {
     
     await fetchCart();
     await fetchOrders();
+    _listenToNotifications();
     notifyListeners();
   }
 
@@ -209,6 +212,7 @@ class AppState extends ChangeNotifier {
         
         await fetchCart();
         await fetchOrders();
+        _listenToNotifications();
       }
     } catch (e) {
       print('ERROR SharedPreferences muat: $e');
@@ -355,6 +359,7 @@ class AppState extends ChangeNotifier {
     _userAvatar = null;
     clearCart();
     _orders.clear();
+    _notificationSubscription?.cancel();
     _notifications.clear();
     
     final prefs = await SharedPreferences.getInstance();
@@ -384,9 +389,51 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addNotification(AppNotification notification) {
-    _notifications.insert(0, notification);
-    notifyListeners();
+  Future<void> addNotification(AppNotification notification) async {
+    if (_userId == null) return;
+    try {
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId)
+          .collection('notifications')
+          .add({
+        'title': notification.title,
+        'description': notification.description,
+        'imagePath': notification.imagePath,
+        'status': notification.status,
+        'orderId': notification.orderId,
+        'total': notification.total,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error saving notification: $e');
+    }
+  }
+
+  void _listenToNotifications() {
+    if (_userId == null) return;
+    _notificationSubscription?.cancel();
+    _notificationSubscription = FirebaseFirestore.instance
+        .collection('users')
+        .doc(_userId)
+        .collection('notifications')
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .listen((snapshot) {
+    _notifications.clear();
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        _notifications.add(AppNotification(
+          title: data['title'] ?? '',
+          description: data['description'] ?? '',
+          imagePath: data['imagePath'] ?? '',
+          status: data['status'] ?? 'Notifikasi',
+          orderId: data['orderId'] ?? '-',
+          total: data['total'] ?? '-',
+        ));
+      }
+      notifyListeners();
+    });
   }
 
   void clearCart() {
@@ -477,6 +524,26 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       print('Error memperbarui status ke API: $e');
     }
+
+    // Notifikasi untuk aktivitas pelanggan
+    String notifTitle = '';
+    String notifDesc = '';
+    if (newStatus.toLowerCase() == 'selesai') {
+      notifTitle = 'Pesanan Selesai';
+      notifDesc = 'Pesanan $orderId telah dikonfirmasi selesai. Terima kasih!';
+    } else if (newStatus.toLowerCase() == 'dibatalkan') {
+      notifTitle = 'Pesanan Dibatalkan';
+      notifDesc = 'Pesanan $orderId telah dibatalkan.';
+    }
+    if (notifTitle.isNotEmpty) {
+      addNotification(AppNotification(
+        title: notifTitle,
+        description: notifDesc,
+        imagePath: '',
+        status: newStatus,
+        orderId: orderId,
+      ));
+    }
   }
 
   Future<bool> uploadPaymentProof(String orderId, Uint8List imageBytes) async {
@@ -501,6 +568,16 @@ class AppState extends ChangeNotifier {
         _orders[index].status = 'menunggu konfirmasi';
         notifyListeners();
       }
+
+      // Kirim notifikasi
+      addNotification(AppNotification(
+        title: 'Bukti Pembayaran Terkirim',
+        description: 'Bukti pembayaranmu sudah dikirim. Menunggu konfirmasi dari penjual.',
+        imagePath: '',
+        status: 'menunggu konfirmasi',
+        orderId: orderId,
+      ));
+
       return true;
     } catch (e) {
       print('Error update status ke Firestore: $e');
@@ -528,6 +605,16 @@ class AppState extends ChangeNotifier {
         _orders[index].status = 'menunggu pengembalian';
         notifyListeners();
       }
+
+      // Kirim notifikasi
+      addNotification(AppNotification(
+        title: 'Pengajuan Pengembalian',
+        description: 'Pengajuan pengembalian untuk pesanan $orderId telah dikirim. Menunggu konfirmasi penjual.',
+        imagePath: '',
+        status: 'menunggu pengembalian',
+        orderId: orderId,
+      ));
+
       return true;
     } catch (e) {
       print('Error ajukan pengembalian: $e');
@@ -570,5 +657,9 @@ Widget buildProductImage(String imagePath, {BoxFit fit = BoxFit.cover, double? w
     return Image.asset(imagePath, fit: fit, width: width, height: height, errorBuilder: (_,__,___) => Image.asset('assets/img/produk/15.png', fit: fit, width: width, height: height));
   }
 }
+
+
+
+
 
 
