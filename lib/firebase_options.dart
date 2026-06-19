@@ -41,13 +41,13 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: "AIzaSyDotip55TSnodHbTTkERDJx1z0SGPZpgm4",
-    authDomain: "flomart-eas-31a05.firebaseapp.com",
-    projectId: "flomart-eas-31a05",
-    storageBucket: "flomart-eas-31a05.firebasestorage.app",
-    messagingSenderId: "245664334907",
-    appId: "1:245664334907:web:7cb218198261233db5081e",
-    measurementId: "G-S29WYH9WPL",
+    apiKey: 'AIzaSyBm4mcGjsP09_Rxja-xf6YkygPO6rFgTfQ',
+    appId: '1:885630439645:web:9f25f8a6c6644aea214b34',
+    messagingSenderId: '885630439645',
+    projectId: 'flomart-eas-cdf44',
+    authDomain: 'flomart-eas-cdf44.firebaseapp.com',
+    storageBucket: 'flomart-eas-cdf44.firebasestorage.app',
+    measurementId: 'G-Z6M7TZW655',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
