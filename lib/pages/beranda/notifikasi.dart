@@ -160,29 +160,23 @@ class _NotificationPageState extends State<NotificationPage> {
                                   child: Row(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      n.imagePath.isEmpty
-                                          ? Container(
+                                      if (n.imagePath.isNotEmpty) ...[
+                                        Image.asset(
+                                          n.imagePath,
+                                          width: 60,
+                                          height: 60,
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (_, _, _) {
+                                            return Container(
                                               width: 60,
                                               height: 60,
                                               color: const Color(0xffeeeeee),
                                               child: const Icon(Icons.image),
-                                            )
-                                          : Image.asset(
-                                              n.imagePath,
-                                              width: 60,
-                                              height: 60,
-                                              fit: BoxFit.contain,
-                                              errorBuilder: (_, _, _) {
-                                                return Container(
-                                                  width: 60,
-                                                  height: 60,
-                                                  color: const Color(0xffeeeeee),
-                                                  child: const Icon(Icons.image),
-                                                );
-                                              },
-                                            ),
-
-                                      const SizedBox(width: 14),
+                                            );
+                                          },
+                                        ),
+                                        const SizedBox(width: 14),
+                                      ],
 
                                       Expanded(
                                         child: Column(
