@@ -17,6 +17,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
   List<Map<String, dynamic>> _allProducts = [];
   List<Map<String, dynamic>> _myProducts = [];
   bool _isLoading = true;
+  String? _activeChipFilter;
 
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _kategoriController = TextEditingController();
@@ -86,7 +87,12 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
           matchTab = (product['stock'] as int) > 0 && (product['stock'] as int) <= 5;
         }
 
-        return matchSearch && matchKategori && matchTab;
+        bool matchChip = true;
+        if (_activeChipFilter == 'Stok Menipis') {
+          matchChip = (product['stock'] as int) > 0 && (product['stock'] as int) <= 5;
+        } 
+
+        return matchSearch && matchKategori && matchTab && matchChip;
       }).toList();
     });
   }
@@ -378,8 +384,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
         children: [
           Text('${_myProducts.length} Produk', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           const SizedBox(width: 12),
-          _buildChip('Perlu Dikirimkan'),
-          const SizedBox(width: 8),
+          
           _buildChip('Stok Menipis'),
         ],
       ),
@@ -387,13 +392,34 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
   }
 
   Widget _buildChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.black),
-        borderRadius: BorderRadius.circular(20),
+    bool isActive = _activeChipFilter == label;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          if (_activeChipFilter == label) {
+            _activeChipFilter = null;
+          } else {
+            _activeChipFilter = label;
+          }
+          _applyFilters();
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? const Color(0xFFF0BF00) : Colors.transparent,
+          border: Border.all(color: isActive ? const Color(0xFFF0BF00) : Colors.black),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label, 
+          style: TextStyle(
+            fontSize: 12, 
+            color: isActive ? Colors.white : Colors.black,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal
+          ),
+        ),
       ),
-      child: Text(label, style: const TextStyle(fontSize: 12)),
     );
   }
 
@@ -537,6 +563,8 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
     return Colors.green;
   }
 }
+
+
 
 
 
