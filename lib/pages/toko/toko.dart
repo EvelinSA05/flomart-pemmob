@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../services/app_state.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../app_routes.dart';
@@ -514,8 +515,7 @@ class _ProductCard extends StatelessWidget {
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            product.image,
+                          child: buildProductImage(product.image,
                             fit: BoxFit.contain,
                           ),
                         ),
@@ -900,3 +900,4 @@ class _PagePill extends StatelessWidget {
     );
   }
 }
+

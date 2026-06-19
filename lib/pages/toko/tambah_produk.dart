@@ -3,9 +3,11 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
 
 class TambahProdukPage extends StatefulWidget {
-  const TambahProdukPage({super.key});
+  final Map<String, dynamic>? productData;
+  const TambahProdukPage({super.key, this.productData});
 
   @override
   State<TambahProdukPage> createState() => _TambahProdukPageState();
@@ -15,6 +17,22 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   
   bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.productData != null) {
+      _namaController.text = widget.productData!['name'] ?? '';
+      _hargaController.text = widget.productData!['price']?.toString() ?? '';
+      _deskripsiController.text = widget.productData!['desc'] ?? '';
+      _stokController.text = widget.productData!['stok']?.toString() ?? '';
+      
+      String cat = widget.productData!['category'] ?? '';
+      if (cat.contains('Bunga')) _selectedKategori = 'Bunga';
+      else if (cat.contains('Buah')) _selectedKategori = 'Buah';
+      else if (cat.contains('Sayur') || cat.contains('Sayuran')) _selectedKategori = 'Sayur';
+    }
+  }
 
   Future<void> _simpanProduk() async {
     String nama = _namaController.text.trim();
@@ -57,23 +75,43 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
     else if (_selectedKategori == 'Sayur') categoryName = 'Benih Sayuran';
 
     try {
-      final docRef = FirebaseFirestore.instance.collection('products').doc();
+      String message = '';
+      String? base64Image;
+      if (_imageBytes != null) {
+        base64Image = 'data:image/png;base64,' + base64Encode(_imageBytes!);
+      }
       
-      await docRef.set({
-        'id': docRef.id,
-        'name': nama,
-        'price': priceValue,
-        'rating': 0.0, // Default rating untuk produk baru
-        'category': categoryName,
-        'image': 'assets/img/produk/15.png', // Gambar default
-        'desc': deskripsi,
-        'stok': int.tryParse(_stokController.text.trim()) ?? 0,
-      });
+      if (widget.productData != null) {
+        Map<String, dynamic> updateData = {
+          'name': nama,
+          'price': priceValue,
+          'category': categoryName,
+          'desc': deskripsi,
+          'stok': int.tryParse(_stokController.text.trim()) ?? 0,
+        };
+        if (base64Image != null) updateData['image'] = base64Image;
+        
+        await FirebaseFirestore.instance.collection('products').doc(widget.productData!['id']).update(updateData);
+        message = 'Produk berhasil diperbarui!';
+      } else {
+        final docRef = FirebaseFirestore.instance.collection('products').doc();
+        await docRef.set({
+          'id': docRef.id,
+          'name': nama,
+          'price': priceValue,
+          'rating': 0.0,
+          'category': categoryName,
+          'image': base64Image ?? 'assets/img/produk/15.png',
+          'desc': deskripsi,
+          'stok': int.tryParse(_stokController.text.trim()) ?? 0,
+        });
+        message = 'Produk berhasil ditambahkan ke Firebase!';
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Produk berhasil ditambahkan ke Firebase!', style: TextStyle(color: Colors.white)),
+          SnackBar(
+            content: Text(message, style: const TextStyle(color: Colors.white)),
             backgroundColor: Colors.green,
           )
         );
@@ -114,7 +152,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, maxWidth: 400, imageQuality: 50);
     if (pickedFile != null) {
       final bytes = await pickedFile.readAsBytes();
       setState(() {
@@ -202,7 +240,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
             child: const Text('Produk Saya', style: TextStyle(color: Colors.grey, fontSize: 12)),
           ),
           const Icon(Icons.chevron_right, color: Colors.grey, size: 16),
-          const Text('Tambah Produk', style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
+          Text(widget.productData != null ? 'Ubah Produk' : 'Tambah Produk', style: const TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -226,7 +264,7 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
             constraints: const BoxConstraints(),
           ),
           const SizedBox(width: 16),
-          const Text('Tambah Produk', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          Text(widget.productData != null ? 'Ubah Produk' : 'Tambah Produk', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -293,6 +331,24 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
   }
 
   Widget _buildImageSection() {
+    bool hasImageBytes = _imageBytes != null;
+    String? existingImage = widget.productData?['image'];
+    bool hasExistingImage = existingImage != null && existingImage.isNotEmpty;
+    bool isNetworkImage = hasExistingImage && existingImage.startsWith('http');
+
+    ImageProvider? imageProvider;
+    if (hasImageBytes) {
+      imageProvider = MemoryImage(_imageBytes!);
+    } else if (hasExistingImage) {
+      if (isNetworkImage) {
+        imageProvider = NetworkImage(existingImage);
+      } else if (existingImage.startsWith('data:image')) {
+        imageProvider = MemoryImage(base64Decode(existingImage.split(',').last));
+      } else {
+        imageProvider = AssetImage(existingImage);
+      }
+    }
+
     return Column(
       children: [
         Center(
@@ -302,12 +358,12 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
               color: Colors.grey.shade200,
-              image: _imageBytes != null ? DecorationImage(
-                image: MemoryImage(_imageBytes!),
+              image: imageProvider != null ? DecorationImage(
+                image: imageProvider,
                 fit: BoxFit.cover,
               ) : null,
             ),
-            child: _imageBytes == null ? const Icon(Icons.image, size: 80, color: Colors.grey) : null,
+            child: imageProvider == null ? const Icon(Icons.image, size: 80, color: Colors.grey) : null,
           ),
         ),
         const SizedBox(height: 16),
@@ -322,9 +378,9 @@ class _TambahProdukPageState extends State<TambahProdukPage> {
               ),
               child: CustomPaint(
                 painter: DashedRectPainter(color: Colors.grey),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                  child: Text('Tambah Gambar Produk', style: TextStyle(color: Colors.black)),
+                  child: Text(widget.productData != null ? 'Ubah Gambar Produk' : 'Tambah Gambar Produk', style: const TextStyle(color: Colors.black)),
                 ),
               ),
             ),
@@ -487,5 +543,8 @@ class DashedRectPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
+
+
+
 
 

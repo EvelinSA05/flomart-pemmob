@@ -1,6 +1,7 @@
 import '../../services/app_state.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'tambah_produk.dart';
 
 class ProdukSayaPage extends StatefulWidget {
   const ProdukSayaPage({super.key});
@@ -56,6 +57,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
             'sales': 0,
             'analysis': stok == 0 ? 'Stok Habis' : (stok <= 5 ? 'Stok Menipis' : 'Produk Masih Banyak'),
             'image': imageUrl,
+            'raw_data': data,
           };
         }).toList();
         _applyFilters();
@@ -451,9 +453,7 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(4),
-                          child: p['image'].startsWith('http') 
-                            ? Image.network(p['image'], width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_,_,_) => Image.asset('assets/img/produk/15.png', width: 40, height: 40, fit: BoxFit.cover))
-                            : Image.asset(p['image'], width: 40, height: 40, fit: BoxFit.cover),
+                          child: buildProductImage(p['image'], width: 40, height: 40, fit: BoxFit.cover),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -485,16 +485,37 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
                   ),
                   if (AppState().userRole != 'owner')
                     SizedBox(
-                      width: 32,
-                      child: IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
-                        onPressed: () {
-                          if (p['id_produk'] != null) {
-                            _confirmDeleteProduct(p['id_produk'].toString());
-                          }
-                        },
+                      width: 48,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue, size: 18),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => TambahProdukPage(productData: p['raw_data']),
+                                ),
+                              ).then((_) {
+                                _fetchProducts();
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            onPressed: () {
+                              if (p['id_produk'] != null) {
+                                _confirmDeleteProduct(p['id_produk'].toString());
+                              }
+                            },
+                          ),
+                        ],
                       ),
                     ),
                 ],
@@ -516,6 +537,9 @@ class _ProdukSayaPageState extends State<ProdukSayaPage> with SingleTickerProvid
     return Colors.green;
   }
 }
+
+
+
 
 
 
