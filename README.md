@@ -193,42 +193,42 @@ Menyimpan percakapan antara pembeli dan penjual dengan tracking pesan baru dan t
 ## 9️⃣ Screenshot Aplikasi (Minimal 3 Halaman)
 
 ### Halaman 1: Beranda (Home)
-![Halaman Beranda](/assets/img/konten_beranda/home-screen.jpg "Halaman Beranda Flomart")
+![Halaman Beranda](/assets/img/konten_beranda/home-screen.png "Halaman Beranda Flomart")
 
 Menampilkan dashboard dengan banner promosi, kategori produk, dan produk unggulan terbaru dengan rating.
 
 ---
 
 ### Halaman 2: Katalog Produk (Products)
-![Katalog Produk](/assets/img/produk/product-catalog.jpg "Katalog Produk Flomart")
+![Katalog Produk](/assets/img/produk/product-catalog.png "Katalog Produk Flomart")
 
 Menampilkan daftar lengkap produk dengan fitur filter kategori, harga, dan pencarian produk.
 
 ---
 
 ### Halaman 3: Detail Produk & Keranjang
-![Detail Produk](/assets/img/produk/product-detail.jpg "Detail Produk Flomart")
+![Detail Produk](/assets/img/produk/product-detail.png "Detail Produk Flomart")
 
 Menampilkan informasi lengkap produk termasuk deskripsi, harga, rating, dan opsi tambah ke keranjang dengan pilihan ukuran.
 
 ---
 
 ### Halaman 4: Keranjang Belanja (Cart)
-![Keranjang Belanja](/assets/img/system/cart-screen.jpg "Keranjang Belanja Flomart")
+![Keranjang Belanja](/assets/img/system/cart-screen.png "Keranjang Belanja Flomart")
 
 Menampilkan item di keranjang dengan opsi edit quantity, hapus, pilih ukuran, dan lanjut ke checkout.
 
 ---
 
 ### Halaman 5: Manajemen Pesanan (Orders)
-![Pesanan](/assets/img/system/orders-screen.jpg "Manajemen Pesanan Flomart")
+![Pesanan](/assets/img/system/orders-screen.png "Manajemen Pesanan Flomart")
 
 Menampilkan riwayat pesanan dengan status, alamat kirim, bukti pembayaran, dan catatan pesanan.
 
 ---
 
 ### Halaman 6: Chat & Customer Service
-![Chat](/assets/img/system/chat-screen.jpg "Chat Flomart")
+![Chat](/assets/img/system/chat-screen.png "Chat Flomart")
 
 Menampilkan daftar chat dengan pembeli/penjual, pesan terakhir, dan akses ke percakapan detail.
 
