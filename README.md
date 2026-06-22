@@ -205,7 +205,7 @@ Menampilkan dashboard dengan banner promosi, kategori produk, dan produk unggula
 ### Halaman 2: Katalog Produk (Products)
 
 <div align="center">
-  <img src="/assets/img/produk/product-catalog.png" alt="Katalog Produk Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <img src="/assets/img/produk/product-catalog.png" alt="Katalog Produk Flomart" width="200" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 </div>
 
 Menampilkan daftar lengkap produk dengan fitur filter kategori, harga, dan pencarian produk.
@@ -215,7 +215,7 @@ Menampilkan daftar lengkap produk dengan fitur filter kategori, harga, dan penca
 ### Halaman 3: Detail Produk & Keranjang
 
 <div align="center">
-  <img src="/assets/img/produk/product-detail.png" alt="Detail Produk Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <img src="/assets/img/produk/product-detail.png" alt="Detail Produk Flomart" width="200" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 </div>
 
 Menampilkan informasi lengkap produk termasuk deskripsi, harga, rating, dan opsi tambah ke keranjang dengan pilihan ukuran.
@@ -225,7 +225,7 @@ Menampilkan informasi lengkap produk termasuk deskripsi, harga, rating, dan opsi
 ### Halaman 4: Keranjang Belanja (Cart)
 
 <div align="center">
-  <img src="/assets/img/system/cart-screen.png" alt="Keranjang Belanja Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <img src="/assets/img/system/cart-screen.png" alt="Keranjang Belanja Flomart" width="200" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 </div>
 
 Menampilkan item di keranjang dengan opsi edit quantity, hapus, pilih ukuran, dan lanjut ke checkout.
@@ -235,7 +235,7 @@ Menampilkan item di keranjang dengan opsi edit quantity, hapus, pilih ukuran, da
 ### Halaman 5: Manajemen Pesanan (Orders)
 
 <div align="center">
-  <img src="/assets/img/system/orders-screen.png" alt="Manajemen Pesanan Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <img src="/assets/img/system/orders-screen.png" alt="Manajemen Pesanan Flomart" width="200" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 </div>
 
 Menampilkan riwayat pesanan dengan status, alamat kirim, bukti pembayaran, dan catatan pesanan.
@@ -245,7 +245,7 @@ Menampilkan riwayat pesanan dengan status, alamat kirim, bukti pembayaran, dan c
 ### Halaman 6: Chat & Customer Service
 
 <div align="center">
-  <img src="/assets/img/system/chat-screen.png" alt="Chat Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <img src="/assets/img/system/chat-screen.png" alt="Chat Flomart" width="200" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 </div>
 
 Menampilkan daftar chat dengan pembeli/penjual, pesan terakhir, dan akses ke percakapan detail.
