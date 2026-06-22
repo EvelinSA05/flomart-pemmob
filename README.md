@@ -195,7 +195,7 @@ Menyimpan percakapan antara pembeli dan penjual dengan tracking pesan baru dan t
 ### Halaman 1: Beranda (Home)
 
 <div align="center">
-  <img src="/assets/img/konten_beranda/home-screen.png" alt="Halaman Beranda Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <img src="/assets/img/konten_beranda/home-screen.png" alt="Halaman Beranda Flomart" width="200" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
 </div>
 
 Menampilkan dashboard dengan banner promosi, kategori produk, dan produk unggulan terbaru dengan rating.
