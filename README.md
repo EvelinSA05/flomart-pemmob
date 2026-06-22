@@ -28,7 +28,7 @@
 
 ## 3️⃣ Tema Aplikasi
 
-**E-Commerce & Business** - Platform jual-beli online dengan fokus pada penjualan produk bunga, buket, dan aksesori bunga dengan fitur-fitur modern seperti katalog produk, keranjang belanja, profil pengguna, chat customer service, dan halaman order management.
+**E-Commerce & Business** - Platform jual-beli online dengan fokus pada penjualan produk bunga, buket, dan aksesori bunga dengan fitur-fitur modern seperti katalog produk, keranjang belanja, profi layanan pelanggan, dan halaman order management.
 
 ---
 
@@ -193,42 +193,60 @@ Menyimpan percakapan antara pembeli dan penjual dengan tracking pesan baru dan t
 ## 9️⃣ Screenshot Aplikasi (Minimal 3 Halaman)
 
 ### Halaman 1: Beranda (Home)
-![Halaman Beranda](/assets/img/konten_beranda/home-screen.png "Halaman Beranda Flomart")
+
+<div align="center">
+  <img src="/assets/img/konten_beranda/home-screen.png" alt="Halaman Beranda Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+</div>
 
 Menampilkan dashboard dengan banner promosi, kategori produk, dan produk unggulan terbaru dengan rating.
 
 ---
 
 ### Halaman 2: Katalog Produk (Products)
-![Katalog Produk](/assets/img/produk/product-catalog.png "Katalog Produk Flomart")
+
+<div align="center">
+  <img src="/assets/img/produk/product-catalog.png" alt="Katalog Produk Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+</div>
 
 Menampilkan daftar lengkap produk dengan fitur filter kategori, harga, dan pencarian produk.
 
 ---
 
 ### Halaman 3: Detail Produk & Keranjang
-![Detail Produk](/assets/img/produk/product-detail.png "Detail Produk Flomart")
+
+<div align="center">
+  <img src="/assets/img/produk/product-detail.png" alt="Detail Produk Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+</div>
 
 Menampilkan informasi lengkap produk termasuk deskripsi, harga, rating, dan opsi tambah ke keranjang dengan pilihan ukuran.
 
 ---
 
 ### Halaman 4: Keranjang Belanja (Cart)
-![Keranjang Belanja](/assets/img/system/cart-screen.png "Keranjang Belanja Flomart")
+
+<div align="center">
+  <img src="/assets/img/system/cart-screen.png" alt="Keranjang Belanja Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+</div>
 
 Menampilkan item di keranjang dengan opsi edit quantity, hapus, pilih ukuran, dan lanjut ke checkout.
 
 ---
 
 ### Halaman 5: Manajemen Pesanan (Orders)
-![Pesanan](/assets/img/system/orders-screen.png "Manajemen Pesanan Flomart")
+
+<div align="center">
+  <img src="/assets/img/system/orders-screen.png" alt="Manajemen Pesanan Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+</div>
 
 Menampilkan riwayat pesanan dengan status, alamat kirim, bukti pembayaran, dan catatan pesanan.
 
 ---
 
 ### Halaman 6: Chat & Customer Service
-![Chat](/assets/img/system/chat-screen.png "Chat Flomart")
+
+<div align="center">
+  <img src="/assets/img/system/chat-screen.png" alt="Chat Flomart" width="400" style="border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+</div>
 
 Menampilkan daftar chat dengan pembeli/penjual, pesan terakhir, dan akses ke percakapan detail.
 
@@ -587,9 +605,10 @@ Jika Anda memiliki pertanyaan, saran, atau melaporkan bug:
 - ✅ Struktur Firestore direvisi dengan koleksi: users, products, carts, orders, chats
 - ✅ Menambahkan detail anggota kelompok dan NPM
 - ✅ Dokumentasi fitur utama (Home, Products, Cart, Orders, Chats, Profile)
-- ✅ Placeholder untuk 6 screenshot halaman utama
+- ✅ 6 screenshot halaman utama dengan ukuran optimal
 - ✅ Petunjuk instalasi Firebase Cloud Firestore lengkap
 - ✅ Cara menjalankan aplikasi (clone, install, setup, run, build)
+- ✅ Optimasi ukuran gambar dengan lebar 400px dan styling rapi
 
 ---
 
